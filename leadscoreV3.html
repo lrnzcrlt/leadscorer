@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lead Scorer v2 — Piscine San Lorenzo</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f3;--surf:#ffffff;--surf2:#f0efed;--surf3:#e8e7e4;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.16);
+  --text:#1a1a18;--text2:#5a5a56;--text3:#9a9a96;
+  --green:#1D9E75;--green-bg:#E1F5EE;--green-dk:#0F6E56;
+  --amber:#EF9F27;--amber-bg:#FAEEDA;--amber-dk:#854F0B;
+  --red:#E24B4A;--red-bg:#FCEBEB;--red-dk:#A32D2D;
+  --blue:#3B82F6;--blue-bg:#EFF6FF;--blue-dk:#1D4ED8;
+  --purple:#7F77DD;--purple-bg:#EEEDFE;--purple-dk:#3C3489;
+  --r-md:8px;--r-lg:12px;--r-xl:16px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#181816;--surf:#232321;--surf2:#2c2c2a;--surf3:#363634;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --text:#f0efe8;--text2:#a0a09a;--text3:#606060;
+  --green-bg:#04342C;--green-dk:#8FDFC5;
+  --amber-bg:#3D2200;--amber-dk:#F5C470;
+  --red-bg:#4A1414;--red-dk:#F2ABAB;
+  --blue-bg:#1E3A5F;--blue-dk:#93C5FD;
+  --purple-bg:#231F54;--purple-dk:#C4BFFF;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5}
+
+/* NAV TABS */
+.nav-bar{background:var(--surf);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:50;display:flex;align-items:center;padding:0 1.25rem;gap:0}
+.nav-logo{font-size:13px;font-weight:600;color:var(--text);padding:0.9rem 0;margin-right:1.5rem;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.nav-logo span{color:var(--green)}
+.nav-tabs{display:flex;gap:0;flex:1;overflow-x:auto}
+.tab-btn{padding:0.9rem 1rem;font-size:13px;color:var(--text3);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green);font-weight:500}
+
+/* PAGES */
+.page{display:none;padding:1.25rem;max-width:820px;margin:0 auto;padding-bottom:3rem}
+.page.active{display:block}
+
+/* SCORE PANEL */
+.score-panel{background:var(--surf);border:0.5px solid var(--border);border-radius:var(--r-xl);padding:1.25rem;margin-bottom:1rem;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.metric{background:var(--surf2);border-radius:var(--r-md);padding:.875rem 1rem;text-align:center}
+.metric-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:5px}
+.metric-val{font-size:26px;font-weight:600;color:var(--text);line-height:1}
+.metric-sub{font-size:12px;margin-top:4px;color:var(--text2)}
+.conf-row{grid-column:1/-1;border-top:.5px solid var(--border);padding-top:10px;margin-top:2px}
+.conf-hd{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px}
+.bar-track{height:6px;background:var(--surf3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:var(--green);transition:width .35s ease}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
+
+/* SECTION CARDS */
+.section-card{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:.75rem}
+.section-hd{padding:.75rem 1.1rem;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;transition:background .15s}
+.section-hd:hover{background:var(--surf2)}
+.stag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:.04em;flex-shrink:0}
+.tag-a{background:var(--green-bg);color:var(--green-dk)}
+.tag-b{background:var(--purple-bg);color:var(--purple-dk)}
+.tag-c{background:var(--amber-bg);color:var(--amber-dk)}
+.tag-obj{background:var(--red-bg);color:var(--red-dk)}
+.tag-leva{background:var(--blue-bg);color:var(--blue-dk)}
+.sec-title{font-size:14px;font-weight:500;flex:1}
+.sec-prog{font-size:12px;color:var(--text3);flex-shrink:0}
+.chevron{font-size:18px;color:var(--text3);transition:transform .2s;flex-shrink:0;line-height:1}
+.chevron.open{transform:rotate(180deg)}
+.sec-body{padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.875rem}
+.sec-body.hidden{display:none}
+
+/* FIELDS */
+.field-row{display:flex;flex-direction:column;gap:5px}
+.field-lbl{font-size:13px;color:var(--text2);display:flex;align-items:flex-start;gap:7px;flex-wrap:wrap}
+.field-lbl .note{font-size:11px;color:var(--text3);font-style:italic;flex-basis:100%;margin-top:1px}
+.w-badge{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surf2);color:var(--text3);border:.5px solid var(--border);white-space:nowrap;flex-shrink:0}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:5px 12px;border-radius:20px;font-size:13px;cursor:pointer;border:.5px solid var(--border2);background:var(--surf);color:var(--text);transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none}
+.chip:hover{background:var(--surf2)}
+.chip.sel-pos{background:var(--green-bg);border-color:var(--green);color:var(--green-dk)}
+.chip.sel-neg{background:var(--red-bg);border-color:var(--red);color:var(--red-dk)}
+.chip.sel-neu{background:var(--purple-bg);border-color:var(--purple);color:var(--purple-dk)}
+.chip.sel-warn{background:var(--amber-bg);border-color:var(--amber);color:var(--amber-dk)}
+
+/* Number input */
+.num-row{display:flex;align-items:center;gap:8px}
+.num-row input[type=number]{width:100px;padding:5px 9px;font-size:13px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);outline:none}
+.num-row input:focus{border-color:var(--green)}
+.num-unit{font-size:12px;color:var(--text2)}
+
+/* WEIGHT EDITOR */
+.weight-editor{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:1.1rem;margin-bottom:.75rem}
+.weight-editor h3{font-size:14px;font-weight:500;margin-bottom:.875rem;display:flex;align-items:center;gap:8px}
+.weight-grid{display:grid;grid-template-columns:1fr auto auto;gap:6px 12px;align-items:center}
+.weight-grid .var-name{font-size:13px;color:var(--text2)}
+.weight-grid input[type=range]{width:120px;accent-color:var(--green)}
+.weight-grid .w-val{font-size:13px;font-weight:500;width:32px;text-align:right;color:var(--text)}
+.w-section-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);grid-column:1/-1;margin-top:.5rem;padding-top:.5rem;border-top:.5px solid var(--border)}
+
+/* LEVE / OUTPUT */
+.leve-panel{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:1.1rem;margin-bottom:.75rem}
+.leva-title{font-size:14px;font-weight:500;margin-bottom:.75rem;color:var(--text)}
+.leva-card{background:var(--surf2);border-radius:var(--r-md);padding:.875rem 1rem;margin-bottom:.5rem;display:flex;gap:12px;align-items:flex-start}
+.leva-icon{font-size:22px;flex-shrink:0;line-height:1;margin-top:2px}
+.leva-body{}
+.leva-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.leva-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.leva-urgency{font-size:11px;margin-top:4px;font-weight:500}
+.urgency-alta{color:var(--red-dk)}
+.urgency-media{color:var(--amber-dk)}
+.urgency-bassa{color:var(--green-dk)}
+.no-leve{font-size:13px;color:var(--text3);text-align:center;padding:1.5rem}
+
+/* STATS TABLE */
+.stats-section{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:1.1rem;margin-bottom:.75rem}
+.stats-section h3{font-size:14px;font-weight:500;margin-bottom:.875rem}
+.stats-table{width:100%;border-collapse:collapse;font-size:13px}
+.stats-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);padding:.4rem .6rem;border-bottom:.5px solid var(--border)}
+.stats-table td{padding:.45rem .6rem;border-bottom:.5px solid var(--border);color:var(--text2)}
+.stats-table td:first-child{color:var(--text);font-weight:500}
+.stats-table tr:last-child td{border-bottom:none}
+.coeff-bar{display:inline-block;height:8px;border-radius:4px;background:var(--green);min-width:2px;vertical-align:middle}
+
+/* BOTTOM BAR */
+.bottom-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:1rem}
+.filled-count{font-size:12px;color:var(--text3);margin-right:auto}
+.btn{padding:8px 15px;font-size:13px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
+.btn:hover{background:var(--surf2)}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-green:hover{background:var(--green-dk);border-color:var(--green-dk)}
+
+/* CLIENT BAR */
+.client-bar{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:.875rem 1.1rem;margin-bottom:.75rem;display:flex;flex-direction:column;gap:10px}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;width:100%}
+.contact-field{display:flex;flex-direction:column;gap:4px}
+.contact-field.full{grid-column:1/-1}
+.contact-field label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text3)}
+.contact-field input,.contact-field textarea{width:100%;padding:6px 9px;font-size:14px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);outline:none;font-family:inherit}
+.contact-field textarea{min-height:72px;resize:vertical;line-height:1.45}
+.contact-field input:focus,.contact-field textarea:focus{border-color:var(--green)}
+.lead-status{font-size:12px;color:var(--text3)}
+.lead-status.saved{color:var(--green-dk)}
+
+/* ARCHIVE + COMPARE */
+.lead-list{display:flex;flex-direction:column;gap:8px}
+.lead-card{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:.9rem 1rem;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.lead-card.current{border-color:var(--green)}
+.lead-card-main{flex:1;min-width:180px}
+.lead-card-name{font-size:14px;font-weight:500}
+.lead-card-meta{font-size:12px;color:var(--text2);margin-top:3px}
+.lead-card-score{font-size:22px;font-weight:600;line-height:1;min-width:52px;text-align:right}
+.lead-card-actions{display:flex;gap:6px;flex-wrap:wrap}
+.lead-search{width:100%;padding:7px 10px;font-size:14px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);outline:none;margin-bottom:.75rem}
+.compare-picks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem}
+.compare-picks select{width:100%;padding:7px 10px;font-size:13px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text)}
+.compare-head{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem}
+.compare-col{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:1rem}
+.compare-name{font-size:14px;font-weight:500;margin-bottom:.5rem}
+.compare-table{width:100%;border-collapse:collapse;font-size:13px}
+.compare-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);padding:.4rem .5rem;border-bottom:.5px solid var(--border)}
+.compare-table td{padding:.4rem .5rem;border-bottom:.5px solid var(--border);color:var(--text2);vertical-align:top}
+.compare-table td:first-child{color:var(--text);font-weight:500;width:28%}
+.diff-up{color:var(--green-dk);font-weight:500}
+.diff-down{color:var(--red-dk);font-weight:500}
+.toast{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--bg);padding:.65rem 1rem;border-radius:var(--r-md);font-size:13px;z-index:300;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* INFO BOX */
+.info-box{background:var(--blue-bg);border:.5px solid rgba(59,130,246,.25);border-radius:var(--r-md);padding:.75rem 1rem;font-size:12px;color:var(--blue-dk);margin-bottom:.875rem;line-height:1.6}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.modal-ov.open{display:flex}
+.modal{background:var(--surf);border-radius:var(--r-xl);padding:1.5rem;max-width:520px;width:100%;border:.5px solid var(--border);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:1rem}
+.modal pre{background:var(--surf2);border-radius:var(--r-md);padding:1rem;font-size:12px;white-space:pre-wrap;color:var(--text);font-family:'Courier New',monospace;border:.5px solid var(--border);margin-bottom:1rem;line-height:1.65}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* OBJ WARNING */
+.obj-alert{background:var(--amber-bg);border:.5px solid var(--amber);border-radius:var(--r-md);padding:.6rem 1rem;font-size:12px;color:var(--amber-dk);margin-bottom:.5rem;display:none}
+.obj-alert.show{display:block}
+
+@media(max-width:540px){
+  .score-panel{grid-template-columns:1fr 1fr}
+  .metric-val{font-size:22px}
+  .nav-logo{font-size:12px}
+  .tab-btn{padding:.8rem .7rem;font-size:12px}
+  .weight-grid input[type=range]{width:80px}
+  .contact-grid,.compare-picks,.compare-head{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="nav-logo">🌊 <span>PSL</span> Lead Scorer</div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" data-page="profilo" onclick="showPage('profilo')">Profilo cliente</button>
+    <button class="tab-btn" data-page="trattativa" onclick="showPage('trattativa')">Trattativa</button>
+    <button class="tab-btn" data-page="leve" onclick="showPage('leve')">Leve suggerite</button>
+    <button class="tab-btn" data-page="statistica" onclick="showPage('statistica')">Statistiche</button>
+    <button class="tab-btn" data-page="archivio" onclick="showPage('archivio')">Archivio</button>
+    <button class="tab-btn" data-page="confronta" onclick="showPage('confronta')">Confronta</button>
+    <button class="tab-btn" data-page="pesi" onclick="showPage('pesi')">⚙ Pesi</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 1 — PROFILO CLIENTE
+═══════════════════════════════════════════════════ -->
+<div class="page active" id="page-profilo">
+
+  <div class="client-bar">
+    <div class="contact-grid">
+      <div class="contact-field">
+        <label>Cliente</label>
+        <input type="text" id="clientName" placeholder="Nome e cognome" oninput="markUnsaved()"/>
+      </div>
+      <div class="contact-field">
+        <label>Comune</label>
+        <input type="text" id="clientComune" placeholder="es. Padova" oninput="markUnsaved()"/>
+      </div>
+      <div class="contact-field">
+        <label>Telefono</label>
+        <input type="tel" id="clientPhone" placeholder="+39 …" oninput="markUnsaved()"/>
+      </div>
+      <div class="contact-field">
+        <label>Email</label>
+        <input type="email" id="clientEmail" placeholder="nome@email.it" oninput="markUnsaved()"/>
+      </div>
+      <div class="contact-field full">
+        <label>Note del commerciale</label>
+        <textarea id="clientNotes" placeholder="Appunti dalla visita, contesto, prossimi passi…" oninput="markUnsaved()"></textarea>
+      </div>
+    </div>
+    <div class="lead-status" id="lead-status">Nuovo lead — non ancora salvato</div>
+  </div>
+
+  <div class="score-panel" id="score-panel">
+    <div class="metric">
+      <div class="metric-lbl">Score propensione</div>
+      <div class="metric-val" id="score-val">—</div>
+      <div class="metric-sub" id="score-lbl">Nessun dato</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Budget stimato</div>
+      <div class="metric-val" id="budget-val" style="font-size:16px;padding-top:6px">—</div>
+      <div class="metric-sub" id="budget-range">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-lbl">Priorità</div>
+      <div class="metric-val" id="priority-val" style="font-size:14px;padding-top:6px">—</div>
+      <div class="metric-sub" id="priority-sub">—</div>
+    </div>
+    <div class="conf-row">
+      <div class="conf-hd"><span>Confidenza previsione</span><span id="conf-pct">0%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="conf-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- GRUPPO A -->
+  <div class="section-card">
+    <div class="section-hd" onclick="toggleSec('sA','cvA')">
+      <span class="stag tag-a">GRUPPO A</span>
+      <span class="sec-title">Proprietà e abitazione</span>
+      <span class="sec-prog" id="prA">0/5</span>
+      <span class="chevron open" id="cvA">▾</span>
+    </div>
+    <div class="sec-body" id="sA">
+      <div class="info-box">💡 Variabili con peso più alto — determinano ~45% dello score finale. Compila queste per prime.</div>
+
+      <div class="field-row">
+        <div class="field-lbl">Tipo di abitazione <span class="w-badge" id="wb-tipo">peso ×3.0</span>
+          <span class="note">Villa singola = massima probabilità + budget premium. Appartamento = quasi sempre non qualificato.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="tipo" data-s="100" data-b="premium" data-t="pos" onclick="pick(this)">Villa singola</span>
+          <span class="chip" data-f="tipo" data-s="78" data-b="premium" data-t="pos" onclick="pick(this)">Bifamiliare</span>
+          <span class="chip" data-f="tipo" data-s="60" data-b="mid" data-t="pos" onclick="pick(this)">Villetta a schiera</span>
+          <span class="chip" data-f="tipo" data-s="5" data-t="neg" onclick="pick(this)">Appartamento</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Grandezza giardino <span class="w-badge" id="wb-giardino">peso ×2.5</span>
+          <span class="note">Sotto 80m² la fattibilità tecnica è quasi nulla. Sopra 300m² = cliente premium con ampio budget per complementi (pavimentazione, verde, illuminazione).</span></div>
+        <div class="num-row">
+          <input type="number" id="giardino" min="0" max="5000" placeholder="es. 200" oninput="updateNum('giardino')"/>
+          <span class="num-unit">m²</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Proprietà o affitto <span class="w-badge" id="wb-prop">peso ×2.5</span>
+          <span class="note">Chi è in affitto non investe mai in piscina. Proprietario = precondizione necessaria.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="prop" data-s="100" data-t="pos" onclick="pick(this)">Proprietario</span>
+          <span class="chip" data-f="prop" data-s="0" data-t="neg" onclick="pick(this)">In affitto</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Valore auto percepito <span class="w-badge" id="wb-auto">peso ×2.0</span>
+          <span class="note">Proxy rapida di reddito disponibile e propensione alla spesa in beni di lusso. Chi guida un'auto >€50k ha già dimostrato di investire in stile di vita.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="auto" data-s="100" data-b="premium" data-t="pos" onclick="pick(this)">&gt;€50k (lusso)</span>
+          <span class="chip" data-f="auto" data-s="70" data-b="mid" data-t="pos" onclick="pick(this)">€25k–€50k</span>
+          <span class="chip" data-f="auto" data-s="30" data-b="entry" data-t="neu" onclick="pick(this)">&lt;€25k</span>
+          <span class="chip" data-f="auto" data-s="45" data-t="neu" onclick="pick(this)">Non visibile</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Valore immobile stimato <span class="w-badge" id="wb-immobile">peso ×2.0</span>
+          <span class="note">Il valore dell'immobile definisce il tetto psicologico di spesa. Una piscina da €40k su una casa da €120k è percepita come eccessiva; su una da €500k è naturale.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="immobile" data-s="100" data-b="premium" data-t="pos" onclick="pick(this)">&gt;€600k</span>
+          <span class="chip" data-f="immobile" data-s="80" data-b="premium" data-t="pos" onclick="pick(this)">€350k–€600k</span>
+          <span class="chip" data-f="immobile" data-s="50" data-b="mid" data-t="neu" onclick="pick(this)">€180k–€350k</span>
+          <span class="chip" data-f="immobile" data-s="12" data-b="entry" data-t="neg" onclick="pick(this)">&lt;€180k</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRUPPO B -->
+  <div class="section-card">
+    <div class="section-hd" onclick="toggleSec('sB','cvB')">
+      <span class="stag tag-b">GRUPPO B</span>
+      <span class="sec-title">Famiglia, stile di vita e comportamenti derivati</span>
+      <span class="sec-prog" id="prB">0/7</span>
+      <span class="chevron" id="cvB">▾</span>
+    </div>
+    <div class="sec-body hidden" id="sB">
+      <div class="info-box">💡 Queste variabili rivelano le <strong>motivazioni profonde</strong> d'acquisto. La professione non è solo reddito: determina quanto tempo libero ha il cliente e quindi quanto userebbe la piscina.</div>
+
+      <div class="field-row">
+        <div class="field-lbl">Figli (età 0–16) <span class="w-badge" id="wb-figli">peso ×2.0</span>
+          <span class="note">Famiglie con figli piccoli sono il segmento #1 mondiale per acquisto piscine (APSP: 67% dei proprietari). Motivazione: gioco sicuro, intrattenimento estivo, evitare vacanze costose.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="figli" data-s="100" data-t="pos" onclick="pick(this)">2+ figli piccoli</span>
+          <span class="chip" data-f="figli" data-s="80" data-t="pos" onclick="pick(this)">1 figlio piccolo</span>
+          <span class="chip" data-f="figli" data-s="45" data-t="neu" onclick="pick(this)">Figli adulti / nessuno</span>
+          <span class="chip" data-f="figli" data-s="60" data-b="premium" data-t="pos" onclick="pick(this)">Nipoti frequenti</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Professione percepita <span class="w-badge" id="wb-prof">peso ×1.8</span>
+          <span class="note">L'imprenditore fa vacanze flessibili e lunghe, lavora da casa o ibrido → usa la piscina molto. Il dipendente ha 4 settimane fisse e spesso parte in agosto → usa la piscina meno. Il libero professionista è intermedio.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="prof" data-s="100" data-b="premium" data-t="pos" onclick="pick(this)">Imprenditore</span>
+          <span class="chip" data-f="prof" data-s="85" data-b="mid" data-t="pos" onclick="pick(this)">Libero professionista</span>
+          <span class="chip" data-f="prof" data-s="72" data-b="mid" data-t="pos" onclick="pick(this)">Manager / dirigente</span>
+          <span class="chip" data-f="prof" data-s="42" data-b="entry" data-t="neu" onclick="pick(this)">Dipendente</span>
+          <span class="chip" data-f="prof" data-s="58" data-t="neu" onclick="pick(this)">Pensionato</span>
+          <span class="chip" data-f="prof" data-s="65" data-b="mid" data-t="pos" onclick="pick(this)">Professionista sanitario</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Abitudini vacanza estiva <span class="w-badge" id="wb-vacanza">peso ×1.6</span>
+          <span class="note">Chi resta a casa o fa brevi viaggi valuta la piscina come sostituto della vacanza (ROI percepito alto). Chi va sempre al mare tende a non vedere il bisogno — a meno che abbia figli.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="vacanza" data-s="95" data-t="pos" onclick="pick(this)">Resta spesso a casa</span>
+          <span class="chip" data-f="vacanza" data-s="75" data-t="pos" onclick="pick(this)">Mix casa + brevi viaggi</span>
+          <span class="chip" data-f="vacanza" data-s="40" data-t="neu" onclick="pick(this)">Vacanza lunga al mare</span>
+          <span class="chip" data-f="vacanza" data-s="30" data-t="neg" onclick="pick(this)">Viaggi internazionali frequenti</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Seconda casa <span class="w-badge" id="wb-seconda">peso ×1.5</span>
+          <span class="note">Forte segnale di disponibilità economica e propensione agli investimenti immobiliari. Se la seconda casa è al mare, la piscina in prima casa ha più senso.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="seconda" data-s="88" data-b="premium" data-t="pos" onclick="pick(this)">Sì</span>
+          <span class="chip" data-f="seconda" data-s="38" data-t="neu" onclick="pick(this)">No</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Giardino attuale <span class="w-badge" id="wb-giardinoCurato">peso ×1.5</span>
+          <span class="note">Un giardino curato con design rivela che il cliente già investe nell'outdoor living. Chi ha già speso in pavimentazione, pergolati, verde curato ha una barriera psicologica molto più bassa.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="giardinoCurato" data-s="95" data-t="pos" onclick="pick(this)">Curato + design (pergola, pavé, ecc.)</span>
+          <span class="chip" data-f="giardinoCurato" data-s="62" data-t="pos" onclick="pick(this)">Curato ma semplice (prato, siepe)</span>
+          <span class="chip" data-f="giardinoCurato" data-s="18" data-t="neg" onclick="pick(this)">Trascurato / incolto</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Socialità e intrattenimento <span class="w-badge" id="wb-social">peso ×1.4</span>
+          <span class="note">Chi ospita frequentemente vede la piscina come investimento sociale e status symbol. Chi vive in modo riservato valuta di meno i benefici sociali.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="social" data-s="92" data-b="premium" data-t="pos" onclick="pick(this)">Ospita spesso (BBQ, cene, feste)</span>
+          <span class="chip" data-f="social" data-s="58" data-t="neu" onclick="pick(this)">Ospita occasionalmente</span>
+          <span class="chip" data-f="social" data-s="28" data-t="neg" onclick="pick(this)">Vita riservata / poco sociale</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Attività fisica / sport acquatici <span class="w-badge" id="wb-sport">peso ×1.0</span>
+          <span class="note">Chi già nuota o pratica sport acquatici ha una motivazione funzionale aggiuntiva (fitness, non solo relax). Aumenta frequenza d'uso percepita → ROI più alto.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="sport" data-s="85" data-t="pos" onclick="pick(this)">Nuota / pratica sport acquatici</span>
+          <span class="chip" data-f="sport" data-s="55" data-t="neu" onclick="pick(this)">Sport generici all'aperto</span>
+          <span class="chip" data-f="sport" data-s="35" data-t="neu" onclick="pick(this)">Sedentario</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRUPPO C -->
+  <div class="section-card">
+    <div class="section-hd" onclick="toggleSec('sC','cvC')">
+      <span class="stag tag-c">GRUPPO C</span>
+      <span class="sec-title">Contesto, segnali e rete sociale</span>
+      <span class="sec-prog" id="prC">0/5</span>
+      <span class="chevron" id="cvC">▾</span>
+    </div>
+    <div class="sec-body hidden" id="sC">
+
+      <div class="field-row">
+        <div class="field-lbl">Canale di contatto / interesse espresso <span class="w-badge" id="wb-interesse">peso ×2.2</span>
+          <span class="note">Il referral è il segnale più forte in assoluto — chi viene su raccomandazione ha già superato la barriera di fiducia. Il cold outreach ha tasso di chiusura bassissimo.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="interesse" data-s="100" data-t="pos" onclick="pick(this)">Referral / passaparola</span>
+          <span class="chip" data-f="interesse" data-s="90" data-t="pos" onclick="pick(this)">Ha visitato showroom</span>
+          <span class="chip" data-f="interesse" data-s="82" data-t="pos" onclick="pick(this)">Ha chiesto preventivo</span>
+          <span class="chip" data-f="interesse" data-s="55" data-t="neu" onclick="pick(this)">Social / online</span>
+          <span class="chip" data-f="interesse" data-s="25" data-t="neg" onclick="pick(this)">Cold outreach nostro</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Vicini o amici con piscina <span class="w-badge" id="wb-vicini">peso ×1.3</span>
+          <span class="note">Effetto sociale potentissimo. Il 78% dei proprietari di piscina dice che la piscina dei vicini ha influenzato la loro decisione (APSP). "Keeping up with the Joneses" è reale.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="vicini" data-s="88" data-t="pos" onclick="pick(this)">Sì, vicini diretti</span>
+          <span class="chip" data-f="vicini" data-s="65" data-t="pos" onclick="pick(this)">Amici / conoscenti</span>
+          <span class="chip" data-f="vicini" data-s="30" data-t="neu" onclick="pick(this)">No / non sa</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Architetto o studio coinvolto <span class="w-badge" id="wb-arch">peso ×1.5</span>
+          <span class="note">Quando c'è un architetto in un progetto di ristrutturazione o costruzione, la piscina viene spesso integrata direttamente nel budget totale → cliente molto qualificato.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="arch" data-s="95" data-b="premium" data-t="pos" onclick="pick(this)">Sì, progetto in corso</span>
+          <span class="chip" data-f="arch" data-s="72" data-t="pos" onclick="pick(this)">Si sta consultando</span>
+          <span class="chip" data-f="arch" data-s="38" data-t="neu" onclick="pick(this)">No</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Distanza dal mare <span class="w-badge" id="wb-mare">peso ×1.0</span>
+          <span class="note">Chi vive lontano dal mare cerca acqua nel giardino. Chi è a 5km dal mare ha già la spiaggia — il vantaggio della piscina è minore (ma non nullo, per privacy e praticità).</span></div>
+        <div class="chips">
+          <span class="chip" data-f="mare" data-s="88" data-t="pos" onclick="pick(this)">&gt;50 km</span>
+          <span class="chip" data-f="mare" data-s="65" data-t="neu" onclick="pick(this)">20–50 km</span>
+          <span class="chip" data-f="mare" data-s="32" data-t="neg" onclick="pick(this)">&lt;20 km</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Zona residenziale <span class="w-badge" id="wb-zona">peso ×0.8</span>
+          <span class="note">Zone periferiche e campagna = più spazio, più privacy, più propensione a investire in outdoor. Centro città = spazi ridotti, condomini, vincoli paesaggistici.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="zona" data-s="88" data-t="pos" onclick="pick(this)">Periferica / campagna</span>
+          <span class="chip" data-f="zona" data-s="58" data-t="neu" onclick="pick(this)">Semicentrale</span>
+          <span class="chip" data-f="zona" data-s="22" data-t="neg" onclick="pick(this)">Centro città</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <span class="filled-count" id="filled-count-p">0/17 variabili inserite</span>
+    <button class="btn" onclick="newLead()">＋ Nuovo</button>
+    <button class="btn" onclick="resetAll()">↺ Reset scheda</button>
+    <button class="btn btn-green" onclick="saveCurrentLead()">💾 Salva lead</button>
+    <button class="btn btn-green" onclick="openExport()">↓ Esporta riepilogo</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 2 — TRATTATIVA / OBIEZIONI
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-trattativa">
+  <div class="info-box" style="margin-bottom:.75rem">📋 Registra le perplessità e obiezioni emerse durante la conversazione. Ogni obiezione abbassa lo score finale e attiva suggerimenti specifici nella tab <strong>Leve suggerite</strong>.</div>
+
+  <!-- OBIEZIONI ECONOMICHE -->
+  <div class="section-card">
+    <div class="section-hd" onclick="toggleSec('sOE','cvOE')">
+      <span class="stag tag-obj">ECONOMICHE</span>
+      <span class="sec-title">Prezzo, costi e finanziamento</span>
+      <span class="sec-prog" id="prOE">0/4</span>
+      <span class="chevron open" id="cvOE">▾</span>
+    </div>
+    <div class="sec-body" id="sOE">
+      <div class="field-row">
+        <div class="field-lbl">Reazione al preventivo / prezzo <span class="w-badge" id="wb-obj-prezzo">impatto −score</span>
+          <span class="note">Come ha reagito il cliente quando ha sentito o visto il prezzo?</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-prezzo" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Nessun problema</span>
+          <span class="chip" data-f="obj-prezzo" data-s="0" data-penalty="8" data-t="warn" onclick="pickObj(this)">Lieve esitazione</span>
+          <span class="chip" data-f="obj-prezzo" data-s="0" data-penalty="18" data-t="neg" onclick="pickObj(this)">Shock / resistenza forte</span>
+          <span class="chip" data-f="obj-prezzo" data-s="0" data-penalty="30" data-t="neg" onclick="pickObj(this)">Ha chiesto sconto immediato</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Preoccupazione costi manutenzione <span class="w-badge">impatto −score</span>
+          <span class="note">Obiezione #1 nel settore piscine (fonte: Pool & Spa News). Spesso nasce da ignoranza del costo reale (€600-1.200/anno fai-da-te, €1.500-3.000 con servizio professionale).</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-manu" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Non sollevata</span>
+          <span class="chip" data-f="obj-manu" data-s="0" data-penalty="10" data-t="warn" onclick="pickObj(this)">Ha chiesto info sui costi</span>
+          <span class="chip" data-f="obj-manu" data-s="0" data-penalty="20" data-t="neg" onclick="pickObj(this)">Preoccupato, ritiene sia troppo</span>
+          <span class="chip" data-f="obj-manu" data-s="0" data-penalty="28" data-t="neg" onclick="pickObj(this)">Bloccante — non vuole pensarci</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Disponibilità a finanziamento / rate <span class="w-badge">segnale</span>
+          <span class="note">Il 76% dei potenziali acquirenti (Gallup) si dice a disagio nel finanziare una piscina rispetto a un'auto o casa. Proporre rate può sbloccare deal fermi sul prezzo.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-fin" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Paga cash / non è tema</span>
+          <span class="chip" data-f="obj-fin" data-s="0" data-penalty="5" data-t="neu" onclick="pickObj(this)">Aperto a rate se proposte</span>
+          <span class="chip" data-f="obj-fin" data-s="0" data-penalty="15" data-t="warn" onclick="pickObj(this)">Chiede dilazione, budget stretto</span>
+          <span class="chip" data-f="obj-fin" data-s="0" data-penalty="25" data-t="neg" onclick="pickObj(this)">Nessuna disponibilità finanziaria</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Orizzonte temporale dell'investimento <span class="w-badge">segnale</span>
+          <span class="note">Chi pensa di vendere casa a breve vede la piscina come un costo, non un investimento. Chi intende restare >5 anni calcola il valore aggiunto nel tempo (studi US: +4-8% valore immobile).</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-orizzonte" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Resta nella casa a lungo termine</span>
+          <span class="chip" data-f="obj-orizzonte" data-s="0" data-penalty="8" data-t="neu" onclick="pickObj(this)">Incerto / forse si sposta</span>
+          <span class="chip" data-f="obj-orizzonte" data-s="0" data-penalty="22" data-t="neg" onclick="pickObj(this)">Vende casa a breve / in vendita</span>
+          <span class="chip" data-f="obj-orizzonte" data-s="0" data-penalty="12" data-t="warn" onclick="pickObj(this)">Vuole piscina per rivalutare e vendere</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBIEZIONI LOGISTICHE -->
+  <div class="section-card">
+    <div class="section-hd" onclick="toggleSec('sOL','cvOL')">
+      <span class="stag tag-obj">LOGISTICHE</span>
+      <span class="sec-title">Spazio, permessi e cantiere</span>
+      <span class="sec-prog" id="prOL">0/3</span>
+      <span class="chevron" id="cvOL">▾</span>
+    </div>
+    <div class="sec-body hidden" id="sOL">
+      <div class="field-row">
+        <div class="field-lbl">Dubbi sullo spazio disponibile <span class="w-badge">impatto −score</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-spazio" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Spazio adeguato, nessun dubbio</span>
+          <span class="chip" data-f="obj-spazio" data-s="0" data-penalty="10" data-t="warn" onclick="pickObj(this)">Incerto se il giardino basta</span>
+          <span class="chip" data-f="obj-spazio" data-s="0" data-penalty="20" data-t="neg" onclick="pickObj(this)">Spazio molto limitato</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Preoccupazione per permessi / burocrazia <span class="w-badge">impatto −score</span>
+          <span class="note">In Veneto le piscine interrate richiedono SCIA o permesso di costruire a seconda del Comune. Molti clienti si bloccano su questo — informarli è una leva chiave.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-permessi" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Non è un tema</span>
+          <span class="chip" data-f="obj-permessi" data-s="0" data-penalty="8" data-t="warn" onclick="pickObj(this)">Ha chiesto info sui permessi</span>
+          <span class="chip" data-f="obj-permessi" data-s="0" data-penalty="18" data-t="neg" onclick="pickObj(this)">Molto preoccupato / frenato</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Timori per i lavori / cantiere <span class="w-badge">impatto −score</span>
+          <span class="note">Il disagio del cantiere (rumore, polvere, giardino distrutto temporaneamente) è una barriera emotiva reale. Mostrare foto di cantieri rapidi e ordinati aiuta.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-cantiere" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Non preoccupato</span>
+          <span class="chip" data-f="obj-cantiere" data-s="0" data-penalty="8" data-t="warn" onclick="pickObj(this)">Qualche riserva sui tempi</span>
+          <span class="chip" data-f="obj-cantiere" data-s="0" data-penalty="15" data-t="neg" onclick="pickObj(this)">Molto frenato dall'idea del cantiere</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBIEZIONI PSICOLOGICHE -->
+  <div class="section-card">
+    <div class="section-hd" onclick="toggleSec('sOP','cvOP')">
+      <span class="stag tag-obj">PSICOLOGICHE</span>
+      <span class="sec-title">Sicurezza, utilizzo e decisione</span>
+      <span class="sec-prog" id="prOP">0/4</span>
+      <span class="chevron" id="cvOP">▾</span>
+    </div>
+    <div class="sec-body hidden" id="sOP">
+      <div class="field-row">
+        <div class="field-lbl">Preoccupazione sicurezza (bambini, annegamento) <span class="w-badge">impatto −score</span>
+          <span class="note">Obiezione comune per famiglie con bambini piccoli — paradossalmente lo stesso segmento che compra di più. La soluzione sono coperture, allarmi e recinzioni (da proporre attivamente).</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-sicurezza" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Non sollevata</span>
+          <span class="chip" data-f="obj-sicurezza" data-s="0" data-penalty="8" data-t="warn" onclick="pickObj(this)">Ha chiesto delle sicurezze</span>
+          <span class="chip" data-f="obj-sicurezza" data-s="0" data-penalty="18" data-t="neg" onclick="pickObj(this)">Molto preoccupato, frena la decisione</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Dubbi sull'utilizzo effettivo <span class="w-badge">impatto −score</span>
+          <span class="note">"E poi la usiamo davvero?" — Obiezione tipica del partner scettico. Dati: 76% dei proprietari si dice soddisfatto. Il punto è far immaginare concretamente l'uso quotidiano estivo.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-utilizzo" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Sicuro di utilizzarla molto</span>
+          <span class="chip" data-f="obj-utilizzo" data-s="0" data-penalty="10" data-t="warn" onclick="pickObj(this)">Qualche dubbio sull'uso effettivo</span>
+          <span class="chip" data-f="obj-utilizzo" data-s="0" data-penalty="20" data-t="neg" onclick="pickObj(this)">Molto scettico ("non la useremo mai")</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Dinamica decisionale in famiglia <span class="w-badge">segnale critico</span>
+          <span class="note">Chi decide nella coppia? Se il partner non è presente e non è convinto, il deal si blocca. È fondamentale coinvolgere entrambi o sapere chi ha l'ultima parola.</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-decisore" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Decide autonomamente</span>
+          <span class="chip" data-f="obj-decisore" data-s="0" data-penalty="5" data-t="neu" onclick="pickObj(this)">Decide con partner (entrambi coinvolti)</span>
+          <span class="chip" data-f="obj-decisore" data-s="0" data-penalty="18" data-t="warn" onclick="pickObj(this)">Partner non ancora convinto / assente</span>
+          <span class="chip" data-f="obj-decisore" data-s="0" data-penalty="25" data-t="neg" onclick="pickObj(this)">Partner contrario</span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-lbl">Confronto con concorrenza / altri preventivi <span class="w-badge">segnale</span></div>
+        <div class="chips">
+          <span class="chip" data-f="obj-concorrenza" data-s="0" data-penalty="0" data-t="pos" onclick="pickObj(this)">Nessun confronto attivo</span>
+          <span class="chip" data-f="obj-concorrenza" data-s="0" data-penalty="8" data-t="warn" onclick="pickObj(this)">Sta raccogliendo preventivi</span>
+          <span class="chip" data-f="obj-concorrenza" data-s="0" data-penalty="15" data-t="neg" onclick="pickObj(this)">Ha già un'offerta concorrente</span>
+          <span class="chip" data-f="obj-concorrenza" data-s="0" data-penalty="20" data-t="neg" onclick="pickObj(this)">Incline verso un concorrente</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <span class="filled-count" id="filled-count-t">0/11 segnali registrati</span>
+    <button class="btn" onclick="resetObjezioni()">↺ Reset obiezioni</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 3 — LEVE SUGGERITE
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-leve">
+  <div class="info-box" style="margin-bottom:.75rem">🎯 Le leve vengono generate automaticamente incrociando il profilo cliente con le obiezioni registrate. Aggiornale inserendo più dati nelle tab precedenti.</div>
+  <div id="leve-container">
+    <div class="no-leve">Inserisci dati nelle tab <strong>Profilo</strong> e <strong>Trattativa</strong> per generare le leve strategiche.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 4 — STATISTICHE / COEFFICIENTI
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-statistica">
+  <div class="info-box" style="margin-bottom:.75rem">📊 Vista stile SPSS — mostra il contributo di ogni variabile allo score finale e il dettaglio della composizione del punteggio.</div>
+
+  <div class="stats-section">
+    <h3>Riepilogo score composito</h3>
+    <table class="stats-table" id="stats-summary">
+      <tr><th>Metrica</th><th>Valore</th><th>Interpretazione</th></tr>
+      <tr><td>Score grezzo profilo</td><td id="st-score-raw">—</td><td id="st-score-int">—</td></tr>
+      <tr><td>Penalità obiezioni</td><td id="st-penalty">—</td><td id="st-penalty-int">—</td></tr>
+      <tr><td>Score finale aggiustato</td><td id="st-score-adj">—</td><td id="st-score-adj-int">—</td></tr>
+      <tr><td>Confidenza previsione</td><td id="st-conf">—</td><td id="st-conf-int">—</td></tr>
+      <tr><td>Budget stimato</td><td id="st-budget">—</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <div class="stats-section">
+    <h3>Coefficienti di contribuzione — variabili profilo</h3>
+    <table class="stats-table" id="stats-coeff">
+      <tr><th>Variabile</th><th>Peso (W)</th><th>Score raw</th><th>Contributo</th><th>Barra</th></tr>
+    </table>
+  </div>
+
+  <div class="stats-section">
+    <h3>Penalità obiezioni registrate</h3>
+    <table class="stats-table" id="stats-obj">
+      <tr><th>Obiezione</th><th>Penalità</th><th>Stato</th></tr>
+      <tr><td colspan="3" style="color:var(--text3);text-align:center;padding:.75rem">Nessuna obiezione registrata</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 5 — PESI (editor)
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-pesi">
+  <div class="info-box" style="margin-bottom:.75rem">⚙️ Modifica i pesi in base alla tua esperienza di vendita. Le modifiche si applicano immediatamente allo score. I valori iniziali sono basati su ricerche di settore e letteratura sul comportamento d'acquisto.</div>
+
+  <div class="weight-editor">
+    <h3>🏠 Gruppo A — Proprietà e abitazione</h3>
+    <div class="weight-grid" id="wg-a"></div>
+  </div>
+  <div class="weight-editor">
+    <h3>👨‍👩‍👧 Gruppo B — Famiglia e stile di vita</h3>
+    <div class="weight-grid" id="wg-b"></div>
+  </div>
+  <div class="weight-editor">
+    <h3>🌍 Gruppo C — Contesto e segnali</h3>
+    <div class="weight-grid" id="wg-c"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn" onclick="resetWeights()">↺ Ripristina pesi default</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 6 — ARCHIVIO
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-archivio">
+  <div class="info-box" style="margin-bottom:.75rem">📁 I lead restano su questo browser (niente server). Puoi riaprirli, eliminarli e usarli nella tab <strong>Confronta</strong>.</div>
+  <input class="lead-search" id="archive-search" type="search" placeholder="Cerca per nome, comune, telefono…" oninput="renderArchive()"/>
+  <div class="bottom-bar" style="margin-top:0;margin-bottom:.75rem">
+    <span class="filled-count" id="archive-count">0 lead salvati</span>
+    <button class="btn" onclick="newLead();showPage('profilo')">＋ Nuovo lead</button>
+  </div>
+  <div class="lead-list" id="archive-list"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE 7 — CONFRONTA
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-confronta">
+  <div class="info-box" style="margin-bottom:.75rem">⚖️ Scegli due lead salvati. Lo score viene ricalcolato con i pesi attuali.</div>
+  <div class="compare-picks">
+    <select id="compare-a" onchange="renderCompare()"><option value="">Lead A…</option></select>
+    <select id="compare-b" onchange="renderCompare()"><option value="">Lead B…</option></select>
+  </div>
+  <div id="compare-body">
+    <div class="no-leve">Salva almeno due lead in Archivio per confrontarli.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL EXPORT -->
+<div class="modal-ov" id="modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h2>📄 Riepilogo lead</h2>
+    <pre id="export-text"></pre>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('modal').classList.remove('open')">Chiudi</button>
+      <button class="btn btn-green" onclick="copyExport()">⧉ Copia testo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// DATI E CONFIGURAZIONE
+// ══════════════════════════════════════════
+const DEFAULT_WEIGHTS = {
+  tipo:3.0, giardino:2.5, prop:2.5, auto:2.0, immobile:2.0,
+  figli:2.0, prof:1.8, vacanza:1.6, seconda:1.5, giardinoCurato:1.5, social:1.4, sport:1.0,
+  interesse:2.2, vicini:1.3, arch:1.5, mare:1.0, zona:0.8
+};
+
+const GROUPS = {
+  a: ['tipo','giardino','prop','auto','immobile'],
+  b: ['figli','prof','vacanza','seconda','giardinoCurato','social','sport'],
+  c: ['interesse','vicini','arch','mare','zona']
+};
+
+const VAR_LABELS = {
+  tipo:'Tipo abitazione', giardino:'Giardino (m²)', prop:'Proprietà', auto:'Auto',
+  immobile:'Valore immobile', figli:'Figli', prof:'Professione', vacanza:'Vacanza estiva',
+  seconda:'Seconda casa', giardinoCurato:'Giardino curato', social:'Socialità',
+  sport:'Sport / attività', interesse:'Canale interesse', vicini:'Vicini con piscina',
+  arch:'Architetto', mare:'Distanza mare', zona:'Zona'
+};
+
+const OBJ_LABELS = {
+  'obj-prezzo':'Reazione al prezzo', 'obj-manu':'Manutenzione',
+  'obj-fin':'Finanziamento', 'obj-orizzonte':'Orizzonte temporale',
+  'obj-spazio':'Spazio', 'obj-permessi':'Permessi',
+  'obj-cantiere':'Cantiere', 'obj-sicurezza':'Sicurezza',
+  'obj-utilizzo':'Utilizzo effettivo', 'obj-decisore':'Dinamica decisionale',
+  'obj-concorrenza':'Concorrenza'
+};
+
+let weights = {...DEFAULT_WEIGHTS};
+const state = {};
+const objState = {};
+const budgetVotes = {};
+let currentLeadId = null;
+let dirty = false;
+const LIBRARY_KEY = 'psl_leads_v2';
+
+const TOTAL_W = () => Object.values(weights).reduce((a,b)=>a+b,0);
+
+function uid() {
+  return (crypto.randomUUID && crypto.randomUUID()) || ('ld-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+}
+
+function loadLibrary() {
+  try { return JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function writeLibrary(list) {
+  localStorage.setItem(LIBRARY_KEY, JSON.stringify(list));
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+function contactFields() {
+  return {
+    name: document.getElementById('clientName').value.trim(),
+    comune: document.getElementById('clientComune').value.trim(),
+    phone: document.getElementById('clientPhone').value.trim(),
+    email: document.getElementById('clientEmail').value.trim(),
+    notes: document.getElementById('clientNotes').value.trim()
+  };
+}
+
+function setContact(c) {
+  document.getElementById('clientName').value = c.name || '';
+  document.getElementById('clientComune').value = c.comune || '';
+  document.getElementById('clientPhone').value = c.phone || '';
+  document.getElementById('clientEmail').value = c.email || '';
+  document.getElementById('clientNotes').value = c.notes || '';
+}
+
+function selectedChip(f) {
+  return document.querySelector(`.chip.sel-pos[data-f="${f}"],.chip.sel-neg[data-f="${f}"],.chip.sel-neu[data-f="${f}"],.chip.sel-warn[data-f="${f}"]`);
+}
+
+function fieldDisplay(f) {
+  if (f === 'giardino') {
+    const v = document.getElementById('giardino').value;
+    return v ? v+' m²' : '—';
+  }
+  const el = selectedChip(f);
+  return el ? el.textContent.trim() : '—';
+}
+
+function scoreLeadData(lead) {
+  const keys = Object.keys(lead.profile || {});
+  if (!keys.length) return null;
+  let ws=0, tw=0;
+  keys.forEach(f=>{
+    const w = weights[f] || 1;
+    ws += lead.profile[f].s * w;
+    tw += w;
+  });
+  const raw = Math.round(ws/tw);
+  const penalty = Object.values(lead.objections || {}).reduce((a,o)=>a+(o.penalty||0),0);
+  const adj = Math.max(0, raw-penalty);
+  const conf = Math.min(100, Math.round((tw/TOTAL_W())*100));
+  return {raw, penalty, adj, conf};
+}
+
+function budgetFromLead(lead) {
+  const votes = Object.values(lead.budgetVotes || {});
+  if (!votes.length) return null;
+  const cnt={premium:0,mid:0,entry:0};
+  votes.forEach(v=>cnt[v]++);
+  if(cnt.premium>=cnt.mid&&cnt.premium>=cnt.entry) return {label:'Premium',range:'€55.000 +'};
+  if(cnt.mid>=cnt.entry) return {label:'Mid',range:'€30.000 – €55.000'};
+  return {label:'Entry',range:'€15.000 – €30.000'};
+}
+
+function snapshotLead() {
+  const profile = {};
+  Object.keys(state).forEach(f=>{
+    profile[f] = {
+      s: state[f],
+      label: fieldDisplay(f),
+      giardino: f==='giardino' ? document.getElementById('giardino').value : undefined
+    };
+  });
+  const objections = {};
+  Object.keys(objState).forEach(f=>{
+    const el = selectedChip(f);
+    objections[f] = { penalty: objState[f], label: el ? el.textContent.trim() : '', t: el ? el.dataset.t : '' };
+  });
+  const sc = calcScore();
+  const bgt = calcBudget();
+  const c = contactFields();
+  return {
+    id: currentLeadId || uid(),
+    savedAt: Date.now(),
+    contact: c,
+    profile,
+    objections,
+    budgetVotes: {...budgetVotes},
+    preview: {
+      score: sc ? sc.adj : null,
+      conf: sc ? sc.conf : 0,
+      budget: bgt ? bgt.label : '—',
+      title: c.name || 'Senza nome'
+    }
+  };
+}
+
+function clearFormKeepId(keepId) {
+  Object.keys(state).forEach(k=>delete state[k]);
+  Object.keys(objState).forEach(k=>delete objState[k]);
+  Object.keys(budgetVotes).forEach(k=>delete budgetVotes[k]);
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
+  document.querySelectorAll('input[type=number]').forEach(i=>i.value='');
+  setContact({name:'',comune:'',phone:'',email:'',notes:''});
+  if (!keepId) currentLeadId = null;
+  dirty = false;
+  refreshAll();
+  updateObjProgress();
+  updateLeadStatus();
+}
+
+function applyChipByLabel(f, label, score) {
+  const chips = [...document.querySelectorAll(`.chip[data-f="${f}"]`)];
+  let el = chips.find(c=>c.textContent.trim()===label);
+  if (!el && score!=null) el = chips.find(c=>parseInt(c.dataset.s)===score || parseInt(c.dataset.penalty)===score);
+  if (!el) return;
+  if (el.dataset.penalty !== undefined) pickObj(el, true);
+  else pick(el, true);
+}
+
+function loadLead(id, goProfilo) {
+  const lead = loadLibrary().find(l=>l.id===id);
+  if (!lead) { toast('Lead non trovato'); return; }
+  clearFormKeepId(true);
+  currentLeadId = lead.id;
+  setContact(lead.contact || {});
+  Object.entries(lead.budgetVotes || {}).forEach(([k,v])=>budgetVotes[k]=v);
+  Object.entries(lead.profile || {}).forEach(([f,p])=>{
+    if (f==='giardino') {
+      document.getElementById('giardino').value = p.giardino || '';
+      updateNum('giardino', true);
+    } else {
+      applyChipByLabel(f, p.label, p.s);
+    }
+  });
+  Object.entries(lead.objections || {}).forEach(([f,o])=>{
+    applyChipByLabel(f, o.label, o.penalty);
+  });
+  dirty = false;
+  refreshAll();
+  updateObjProgress();
+  updateLeadStatus();
+  if (goProfilo !== false) showPage('profilo');
+  toast('Lead aperto: '+(lead.contact?.name || 'Senza nome'));
+}
+
+function saveCurrentLead() {
+  const lead = snapshotLead();
+  currentLeadId = lead.id;
+  const list = loadLibrary();
+  const i = list.findIndex(l=>l.id===lead.id);
+  if (i>=0) list[i]=lead; else list.unshift(lead);
+  writeLibrary(list);
+  dirty = false;
+  updateLeadStatus();
+  renderArchive();
+  fillCompareSelects();
+  toast('Lead salvato');
+}
+
+function deleteLead(id) {
+  if (!confirm('Eliminare questo lead dall\'archivio?')) return;
+  writeLibrary(loadLibrary().filter(l=>l.id!==id));
+  if (currentLeadId===id) {
+    currentLeadId = null;
+    dirty = true;
+    updateLeadStatus();
+  }
+  renderArchive();
+  fillCompareSelects();
+  renderCompare();
+  toast('Lead eliminato');
+}
+
+function newLead() {
+  clearFormKeepId(false);
+  showPage('profilo');
+  toast('Nuova scheda');
+}
+
+function markUnsaved() {
+  dirty = true;
+  updateLeadStatus();
+}
+
+function updateLeadStatus() {
+  const el = document.getElementById('lead-status');
+  if (!el) return;
+  const n = loadLibrary().length;
+  if (!currentLeadId) {
+    el.className = 'lead-status';
+    el.textContent = 'Nuovo lead — non ancora salvato · '+n+' in archivio';
+  } else if (dirty) {
+    el.className = 'lead-status';
+    el.textContent = 'Modifiche non salvate · '+n+' in archivio';
+  } else {
+    el.className = 'lead-status saved';
+    el.textContent = 'Salvato in questo browser · '+n+' in archivio';
+  }
+}
+
+function renderArchive() {
+  const q = (document.getElementById('archive-search')?.value || '').toLowerCase().trim();
+  const list = loadLibrary().filter(l=>{
+    if (!q) return true;
+    const c = l.contact || {};
+    return [c.name,c.comune,c.phone,c.email,c.notes].join(' ').toLowerCase().includes(q);
+  });
+  const count = document.getElementById('archive-count');
+  if (count) count.textContent = loadLibrary().length+' lead salvati';
+  const box = document.getElementById('archive-list');
+  if (!box) return;
+  if (!list.length) {
+    box.innerHTML = '<div class="no-leve">'+(q?'Nessun risultato.':'Nessun lead salvato. Compila il profilo e premi Salva lead.')+'</div>';
+    return;
+  }
+  box.innerHTML = list.map(l=>{
+    const sc = scoreLeadData(l);
+    const c = l.contact || {};
+    const when = new Date(l.savedAt).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const cur = l.id===currentLeadId ? ' current' : '';
+    return `<div class="lead-card${cur}">
+      <div class="lead-card-main">
+        <div class="lead-card-name">${esc(c.name || 'Senza nome')}</div>
+        <div class="lead-card-meta">${esc(c.comune || 'Comune n/d')} · ${esc(c.phone || 'niente tel.')} · ${when}</div>
+      </div>
+      <div class="lead-card-score">${sc?sc.adj:'—'}</div>
+      <div class="lead-card-actions">
+        <button class="btn btn-green" onclick="loadLead('${l.id}')">Apri</button>
+        <button class="btn" onclick="deleteLead('${l.id}')">Elimina</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function fillCompareSelects() {
+  const list = loadLibrary();
+  ['compare-a','compare-b'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Scegli lead…</option>'+list.map(l=>{
+      const sc = scoreLeadData(l);
+      const label = (l.contact?.name || 'Senza nome')+' · '+(l.contact?.comune || 'n/d')+' · score '+(sc?sc.adj:'—');
+      return `<option value="${l.id}">${esc(label)}</option>`;
+    }).join('');
+    if (list.some(l=>l.id===prev)) sel.value = prev;
+  });
+}
+
+function renderCompare() {
+  fillCompareSelects();
+  const aId = document.getElementById('compare-a').value;
+  const bId = document.getElementById('compare-b').value;
+  const box = document.getElementById('compare-body');
+  const lib = loadLibrary();
+  if (lib.length < 2) {
+    box.innerHTML = '<div class="no-leve">Salva almeno due lead in Archivio per confrontarli.</div>';
+    return;
+  }
+  const a = lib.find(l=>l.id===aId);
+  const b = lib.find(l=>l.id===bId);
+  if (!a || !b) {
+    box.innerHTML = '<div class="no-leve">Seleziona un lead a sinistra e uno a destra.</div>';
+    return;
+  }
+  const sa = scoreLeadData(a), sb = scoreLeadData(b);
+  const ba = budgetFromLead(a), bb = budgetFromLead(b);
+  const col = (lead, sc, bgt) => {
+    const c = lead.contact || {};
+    return `<div class="compare-col">
+      <div class="compare-name">${esc(c.name || 'Senza nome')}</div>
+      <div class="metric-sub">${esc(c.comune || '—')} · ${esc(c.phone || '—')}</div>
+      <div class="metric-val" style="margin:.6rem 0 .2rem">${sc?sc.adj:'—'}</div>
+      <div class="metric-sub">score · conf. ${sc?sc.conf+'%':'—'}</div>
+      <div class="metric-sub" style="margin-top:6px">${bgt?bgt.label+' · '+bgt.range:'Budget n/d'}</div>
+    </div>`;
+  };
+  const delta = (va, vb, higherBetter) => {
+    if (va==null || vb==null || va===vb) return '—';
+    const d = va-vb;
+    const cls = (higherBetter ? d>0 : d<0) ? 'diff-up' : 'diff-down';
+    const sign = d>0?'+':'';
+    return `<span class="${cls}">${sign}${d}</span>`;
+  };
+  const rows = [];
+  rows.push(`<tr><td>Score finale</td><td>${sa?sa.adj:'—'}</td><td>${sb?sb.adj:'—'}</td><td>${delta(sa?.adj, sb?.adj, true)}</td></tr>`);
+  rows.push(`<tr><td>Penalità obiezioni</td><td>${sa?'−'+sa.penalty:'—'}</td><td>${sb?'−'+sb.penalty:'—'}</td><td>${delta(sa?.penalty, sb?.penalty, false)}</td></tr>`);
+  rows.push(`<tr><td>Confidenza</td><td>${sa?sa.conf+'%':'—'}</td><td>${sb?sb.conf+'%':'—'}</td><td>${delta(sa?.conf, sb?.conf, true)}</td></tr>`);
+  rows.push(`<tr><td>Comune</td><td>${esc(a.contact?.comune||'—')}</td><td>${esc(b.contact?.comune||'—')}</td><td></td></tr>`);
+  rows.push(`<tr><td>Telefono</td><td>${esc(a.contact?.phone||'—')}</td><td>${esc(b.contact?.phone||'—')}</td><td></td></tr>`);
+  rows.push(`<tr><td>Email</td><td>${esc(a.contact?.email||'—')}</td><td>${esc(b.contact?.email||'—')}</td><td></td></tr>`);
+  [...GROUPS.a,...GROUPS.b,...GROUPS.c].forEach(f=>{
+    const pa = a.profile?.[f], pb = b.profile?.[f];
+    rows.push(`<tr><td>${VAR_LABELS[f]}</td><td>${esc(pa?pa.label:'—')}</td><td>${esc(pb?pb.label:'—')}</td><td>${delta(pa?.s, pb?.s, true)}</td></tr>`);
+  });
+  Object.keys(OBJ_LABELS).forEach(f=>{
+    const oa = a.objections?.[f], ob = b.objections?.[f];
+    rows.push(`<tr><td>${OBJ_LABELS[f]}</td><td>${esc(oa?(oa.label||('−'+oa.penalty)):'—')}</td><td>${esc(ob?(ob.label||('−'+ob.penalty)):'—')}</td><td>${delta(oa?.penalty, ob?.penalty, false)}</td></tr>`);
+  });
+  if (a.contact?.notes || b.contact?.notes) {
+    rows.push(`<tr><td>Note</td><td>${esc(a.contact?.notes||'—')}</td><td>${esc(b.contact?.notes||'—')}</td><td></td></tr>`);
+  }
+  box.innerHTML = `<div class="compare-head">${col(a,sa,ba)}${col(b,sb,bb)}</div>
+    <div class="stats-section">
+      <table class="compare-table">
+        <tr><th>Campo</th><th>${esc(a.contact?.name||'Lead A')}</th><th>${esc(b.contact?.name||'Lead B')}</th><th>Δ A−B</th></tr>
+        ${rows.join('')}
+      </table>
+    </div>`;
+}
+
+// ══════════════════════════════════════════
+// NAVIGAZIONE
+// ══════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tab = document.querySelector(`.tab-btn[data-page="${id}"]`);
+  if (tab) tab.classList.add('active');
+  if(id==='statistica') refreshStats();
+  if(id==='leve') refreshLeve();
+  if(id==='pesi') renderWeightEditor();
+  if(id==='archivio') renderArchive();
+  if(id==='confronta') renderCompare();
+}
+
+function toggleSec(id, cvId) {
+  const body = document.getElementById(id);
+  const cv = document.getElementById(cvId);
+  const h = body.classList.toggle('hidden');
+  cv.classList.toggle('open', !h);
+}
+
+// ══════════════════════════════════════════
+// PROFILO CHIP SELECTION
+// ══════════════════════════════════════════
+function pick(el, silent) {
+  const f = el.dataset.f;
+  document.querySelectorAll(`[data-f="${f}"]`).forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
+  el.classList.add('sel-'+el.dataset.t);
+  state[f] = parseInt(el.dataset.s);
+  if(el.dataset.b) budgetVotes[f]=el.dataset.b; else delete budgetVotes[f];
+  if (!silent) { markUnsaved(); refreshAll(); }
+}
+
+function pickObj(el, silent) {
+  const f = el.dataset.f;
+  document.querySelectorAll(`[data-f="${f}"]`).forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
+  el.classList.add('sel-'+el.dataset.t);
+  objState[f] = parseInt(el.dataset.penalty);
+  if (!silent) { markUnsaved(); refreshAll(); updateObjProgress(); }
+}
+
+function updateNum(id, silent) {
+  const v = parseFloat(document.getElementById(id).value);
+  if(isNaN(v)||v<0){delete state[id]; if(!silent){markUnsaved();refreshAll();} return;}
+  let s=0;
+  if(id==='giardino'){
+    if(v>=400)s=100; else if(v>=200)s=82; else if(v>=100)s=58; else if(v>=60)s=28; else s=8;
+  }
+  state[id]=s;
+  if (!silent) { markUnsaved(); refreshAll(); }
+}
+
+// ══════════════════════════════════════════
+// CALCOLO SCORE
+// ══════════════════════════════════════════
+function calcScore() {
+  const keys = Object.keys(state);
+  if(!keys.length) return null;
+  let ws=0, tw=0;
+  keys.forEach(f=>{const w=weights[f]||1;ws+=state[f]*w;tw+=w;});
+  const raw = Math.round(ws/tw);
+  const penalty = Object.values(objState).reduce((a,b)=>a+b,0);
+  const adj = Math.max(0, raw-penalty);
+  const conf = Math.min(100, Math.round((tw/TOTAL_W())*100));
+  return {raw, penalty, adj, conf};
+}
+
+function calcBudget() {
+  const votes = Object.values(budgetVotes);
+  if(!votes.length) return null;
+  const cnt={premium:0,mid:0,entry:0};
+  votes.forEach(v=>cnt[v]++);
+  if(cnt.premium>=cnt.mid&&cnt.premium>=cnt.entry) return {label:'Premium',range:'€55.000 +'};
+  if(cnt.mid>=cnt.entry) return {label:'Mid',range:'€30.000 – €55.000'};
+  return {label:'Entry',range:'€15.000 – €30.000'};
+}
+
+// ══════════════════════════════════════════
+// REFRESH UI
+// ══════════════════════════════════════════
+function refreshAll() {
+  const sc = calcScore();
+  const bgt = calcBudget();
+  const totalVars = Object.values(GROUPS).flat().length;
+  const filled = Object.keys(state).length;
+
+  document.getElementById('filled-count-p').textContent = filled+'/'+totalVars+' variabili inserite';
+
+  Object.keys(GROUPS).forEach(g=>{
+    const cnt = GROUPS[g].filter(f=>state[f]!==undefined).length;
+    document.getElementById('pr'+g.toUpperCase()).textContent = cnt+'/'+GROUPS[g].length;
+  });
+
+  // update weight badges
+  Object.keys(weights).forEach(f=>{
+    const el=document.getElementById('wb-'+f);
+    if(el) el.textContent='peso ×'+weights[f].toFixed(1);
+  });
+
+  if(!sc){setEmpty();return;}
+
+  const score = sc.adj;
+  document.getElementById('conf-bar').style.width=sc.conf+'%';
+  document.getElementById('conf-pct').textContent=sc.conf+'%';
+  document.getElementById('score-val').textContent=score;
+
+  const sl=document.getElementById('score-lbl');
+  if(score>=70){sl.innerHTML='<span class="dot" style="background:var(--green)"></span>Alta propensione';sl.style.color='var(--green-dk)';}
+  else if(score>=42){sl.innerHTML='<span class="dot" style="background:var(--amber)"></span>Propensione media';sl.style.color='var(--amber-dk)';}
+  else{sl.innerHTML='<span class="dot" style="background:var(--red)"></span>Bassa propensione';sl.style.color='var(--red-dk)';}
+
+  document.getElementById('budget-val').textContent = bgt?bgt.label:'—';
+  document.getElementById('budget-range').textContent = bgt?bgt.range:'—';
+
+  let pv='—',ps='—';
+  if(score>=76){pv='🔴 Urgente';ps='Contattare entro 24h';}
+  else if(score>=55){pv='🟡 Normale';ps='Follow-up entro 1 settimana';}
+  else if(score>=36){pv='🔵 Bassa';ps='Tenere in lista warm';}
+  else{pv='⚪ Sospendi';ps='Non prioritizzare ora';}
+  document.getElementById('priority-val').textContent=pv;
+  document.getElementById('priority-sub').textContent=ps;
+}
+
+function setEmpty() {
+  ['score-val','budget-val','budget-range','priority-val','priority-sub'].forEach(id=>{
+    document.getElementById(id).textContent='—';
+  });
+  document.getElementById('score-lbl').textContent='Nessun dato';
+  document.getElementById('score-lbl').style.color='var(--text2)';
+  document.getElementById('conf-bar').style.width='0%';
+  document.getElementById('conf-pct').textContent='0%';
+}
+
+function updateObjProgress() {
+  const grps = {
+    'OE':['obj-prezzo','obj-manu','obj-fin','obj-orizzonte'],
+    'OL':['obj-spazio','obj-permessi','obj-cantiere'],
+    'OP':['obj-sicurezza','obj-utilizzo','obj-decisore','obj-concorrenza']
+  };
+  Object.keys(grps).forEach(g=>{
+    const cnt=grps[g].filter(f=>objState[f]!==undefined).length;
+    document.getElementById('prO'+g.replace('O','')).textContent=cnt+'/'+grps[g].length;
+  });
+  const total=Object.keys(objState).length;
+  document.getElementById('filled-count-t').textContent=total+'/11 segnali registrati';
+}
+
+// ══════════════════════════════════════════
+// LEVE SUGGERITE
+// ══════════════════════════════════════════
+function refreshLeve() {
+  const sc = calcScore();
+  const con = document.getElementById('leve-container');
+  const leve = [];
+
+  // Leve basate sul profilo
+  if(state['figli']>=80) leve.push({icon:'🏊',name:'Angolo sicurezza bambini',desc:'Il cliente ha figli piccoli. Mostra subito coperture, allarmi e recinzioni. Trasforma la paura in rassicurazione — è il tuo differenziatore #1 con questo profilo.',urgency:'alta'});
+  if(state['social']>=80) leve.push({icon:'🎉',name:'Piscina come centro sociale',desc:'Cliente socievole che ospita spesso. Punta sul concetto di "resort privato" — mostra configurazioni con zona lounge, illuminazione, sistema audio. Valore percepito molto alto.',urgency:'alta'});
+  if(state['prof']===100) leve.push({icon:'💼',name:'Leva imprenditore — tempo libero flessibile',desc:'Imprenditore = lavoro ibrido, vacanze flessibili, presenza in casa maggiore. Calcola con lui quante ore/anno userebbe la piscina. ROI emotivo spesso superiore al costo.',urgency:'alta'});
+  if(state['vacanza']>=85) leve.push({icon:'🏖️',name:'Piscina come alternativa alla vacanza',desc:'Resta spesso a casa d\'estate. Proponi il calcolo: "Una settimana in hotel per 4 persone = €2.000. In 15 anni = €30.000. La piscina costa €35k e dura 30 anni." ROI concretissimo.',urgency:'media'});
+  if(state['giardinoCurato']>=90) leve.push({icon:'🌿',name:'Garden design integrato',desc:'Il cliente già investe nel giardino. Presenta la piscina come completamento di un progetto di outdoor living — non come prodotto isolato. Collabora con un garden designer.',urgency:'media'});
+  if(state['arch']>=90) leve.push({icon:'📐',name:'Lavora con l\'architetto',desc:'C\'è già un progetto in corso. Contatta direttamente l\'architetto per integrare la piscina nel progetto — il cliente non dovrà nemmeno decidere separatamente.',urgency:'alta'});
+  if(state['vicini']>=80) leve.push({icon:'🏘️',name:'Effetto sociale — i vicini l\'hanno già',desc:'I vicini hanno la piscina. Usa questo: "Ormai è diventata una caratteristica normale in questo quartiere — aumenta anche il valore della sua proprietà rispetto alle case senza."',urgency:'media'});
+  if(state['immobile']>=80) leve.push({icon:'📈',name:'Valorizzazione immobiliare',desc:'Immobile di valore elevato. Studi US mostrano +4-8% di valore su immobili con piscina. In Veneto con mercato immobiliare attivo, è un argomento concreto.',urgency:'media'});
+
+  // Leve basate sulle obiezioni
+  if(objState['obj-manu']>=10) leve.push({icon:'🔧',name:'Controbattere l\'obiezione manutenzione',desc:'Dai numeri reali: fai-da-te €600-1.200/anno, servizio professionale €1.500-3.000/anno. Diviso per 365 giorni = €4-8 al giorno. "Meno di un caffè al bar." Offri il servizio di manutenzione già nel pacchetto.',urgency:'alta'});
+  if(objState['obj-prezzo']>=18) leve.push({icon:'💰',name:'Gestire la resistenza al prezzo',desc:'Non scendere subito sul prezzo. Prima ricostruisci il valore: "Quanto vale avere un\'estate diversa ogni anno per i prossimi 20 anni?" Poi eventualmente proponi la dilazione in 3-5 anni (finanziamento leasing).',urgency:'alta'});
+  if(objState['obj-decisore']>=18) leve.push({icon:'👫',name:'Coinvolgere il partner nella prossima call',desc:'Il partner non è ancora convinto. Proponi un secondo incontro con entrambi — mai con uno solo. Prepara una presentazione visiva con progetto 3D per colpire emotivamente entrambi.',urgency:'alta'});
+  if(objState['obj-sicurezza']>=8) leve.push({icon:'🛡️',name:'Kit sicurezza incluso nel preventivo',desc:'Includi già nel preventivo: copertura automatica, allarme perimetrale, recinzione. Non aspettare che lo chiedano. Mostra le certificazioni EN 13451. La sicurezza diventa un plus, non un costo.',urgency:'alta'});
+  if(objState['obj-permessi']>=8) leve.push({icon:'📋',name:'Gestione burocrazia chiavi in mano',desc:'Offri il servizio di gestione permessi (SCIA / PDC) incluso o a costo fisso. Rimuovi completamente questa barriera. "Pensiamo a tutto noi, lei firma solo l\'accettazione finale."',urgency:'media'});
+  if(objState['obj-orizzonte']>=20) leve.push({icon:'🏡',name:'Piscina per vendere la casa meglio',desc:'Vuole vendere la casa? Usa i dati: case con piscina si vendono più velocemente e a prezzi superiori in Veneto. Presenta casi reali nella zona se disponibili.',urgency:'media'});
+  if(objState['obj-concorrenza']>=15) leve.push({icon:'⚡',name:'Differenziazione dalla concorrenza',desc:'Ha altri preventivi. Non sparare sul prezzo — differenziati su: garanzia, assistenza post-vendita, qualità materiali Piscine San Lorenzo, referenze nella zona. Proponi visita a un cantiere completato.',urgency:'alta'});
+  if(objState['obj-utilizzo']>=10) leve.push({icon:'📅',name:'Far immaginare l\'estate concretamente',desc:'"Immagini: luglio, 35 gradi, i suoi figli in piscina alle 17:00 mentre lei lavora in giardino." Usa immagini, video di clienti reali. Il problema non è la logica — è la visualizzazione emotiva.',urgency:'media'});
+  if(objState['obj-cantiere']>=8) leve.push({icon:'📸',name:'Mostra cantieri veloci e ordinati',desc:'Porta foto/video di cantieri precedenti — prima, durante, dopo. Specifica i tempi medi (6-12 settimane). "Il cantiere è una settimana difficile, poi ha qualcosa che vale 30 anni."',urgency:'media'});
+
+  if(!leve.length){con.innerHTML='<div class="no-leve">Aggiungi più informazioni per generare leve strategiche personalizzate.</div>';return;}
+
+  const urgOrd = {alta:0,media:1,bassa:2};
+  leve.sort((a,b)=>urgOrd[a.urgency]-urgOrd[b.urgency]);
+
+  con.innerHTML='<div class="leva-title">'+leve.length+' leve generate (ordinate per urgenza)</div>'+
+    leve.map(l=>`<div class="leva-card">
+      <div class="leva-icon">${l.icon}</div>
+      <div class="leva-body">
+        <div class="leva-name">${l.name}</div>
+        <div class="leva-desc">${l.desc}</div>
+        <div class="leva-urgency urgency-${l.urgency}">● Urgenza: ${l.urgency.toUpperCase()}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// STATISTICHE STILE SPSS
+// ══════════════════════════════════════════
+function refreshStats() {
+  const sc = calcScore();
+  const bgt = calcBudget();
+
+  document.getElementById('st-score-raw').textContent = sc?sc.raw+'/100':'—';
+  document.getElementById('st-score-int').textContent = sc?(sc.raw>=70?'Alta propensione':sc.raw>=42?'Media':'Bassa'):'—';
+  document.getElementById('st-penalty').textContent = sc?'−'+sc.penalty+'pt':'—';
+  document.getElementById('st-penalty-int').textContent = sc?Object.keys(objState).length+' obiezioni registrate':'—';
+  document.getElementById('st-score-adj').textContent = sc?sc.adj+'/100':'—';
+  document.getElementById('st-score-adj-int').textContent = sc?(sc.adj>=70?'🟢 Alta':sc.adj>=42?'🟡 Media':'🔴 Bassa'):'—';
+  document.getElementById('st-conf').textContent = sc?sc.conf+'%':'—';
+  document.getElementById('st-conf-int').textContent = sc?(sc.conf>=70?'Affidabile':sc.conf>=40?'Parziale':'Insufficiente — inserire più dati'):'—';
+  document.getElementById('st-budget').textContent = bgt?bgt.label+' ('+bgt.range+')':'—';
+
+  // Coefficients table
+  const tbody = document.getElementById('stats-coeff');
+  const rows = [['<th>Variabile</th><th>Peso (W)</th><th>Score raw</th><th>Contributo</th><th>Barra</th>','']];
+  const allVars = [...GROUPS.a,...GROUPS.b,...GROUPS.c];
+  let maxContrib=0;
+  const contribs=[];
+  allVars.forEach(f=>{
+    if(state[f]!==undefined){
+      const w=weights[f]||1;const s=state[f];const c=parseFloat((w*s/100).toFixed(2));
+      contribs.push({f,w,s,c});if(c>maxContrib)maxContrib=c;
+    }
+  });
+  tbody.innerHTML=`<tr><th>Variabile</th><th>Peso (W)</th><th>Score raw</th><th>Contributo</th><th>Barra</th></tr>`+
+    (contribs.length?contribs.map(x=>{
+      const barW=maxContrib>0?Math.round((x.c/maxContrib)*120):0;
+      return `<tr><td>${VAR_LABELS[x.f]||x.f}</td><td>${x.w.toFixed(1)}</td><td>${x.s}</td><td>${x.c}</td><td><span class="coeff-bar" style="width:${barW}px"></span></td></tr>`;
+    }).join(''):
+    '<tr><td colspan="5" style="color:var(--text3);text-align:center;padding:.75rem">Nessuna variabile inserita</td></tr>');
+
+  // Objection table
+  const objTbl=document.getElementById('stats-obj');
+  const objKeys=Object.keys(objState);
+  objTbl.innerHTML='<tr><th>Obiezione</th><th>Penalità</th><th>Stato</th></tr>'+
+    (objKeys.length?objKeys.map(f=>`<tr><td>${OBJ_LABELS[f]||f}</td><td>−${objState[f]} pt</td><td>${objState[f]===0?'✅ Nessun impatto':objState[f]<=10?'⚠️ Lieve':'🔴 Rilevante'}</td></tr>`).join(''):
+    '<tr><td colspan="3" style="color:var(--text3);text-align:center;padding:.75rem">Nessuna obiezione registrata</td></tr>');
+}
+
+// ══════════════════════════════════════════
+// EDITOR PESI
+// ══════════════════════════════════════════
+function renderWeightEditor() {
+  ['a','b','c'].forEach(g=>{
+    const el=document.getElementById('wg-'+g);
+    el.innerHTML=GROUPS[g].map(f=>`
+      <div class="var-name">${VAR_LABELS[f]||f}</div>
+      <input type="range" min="0.2" max="5" step="0.1" value="${weights[f]}" oninput="updateWeight('${f}',this.value)" id="range-${f}"/>
+      <div class="w-val" id="wval-${f}">${weights[f].toFixed(1)}</div>
+    `).join('');
+  });
+}
+
+function updateWeight(f, val) {
+  weights[f]=parseFloat(val);
+  document.getElementById('wval-'+f).textContent=parseFloat(val).toFixed(1);
+  refreshAll();
+}
+
+function resetWeights() {
+  weights={...DEFAULT_WEIGHTS};
+  renderWeightEditor();
+  refreshAll();
+}
+
+// ══════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════
+function openExport() {
+  const sc=calcScore();const bgt=calcBudget();
+  const c=contactFields();
+  const name=c.name||'Non specificato';
+  const date=new Date().toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+
+  const allVars=[...GROUPS.a,...GROUPS.b,...GROUPS.c];
+  const varsStr=allVars.filter(f=>state[f]!==undefined).map(f=>`  • ${VAR_LABELS[f]}: ${fieldDisplay(f)} (score:${state[f]}, w:${weights[f].toFixed(1)})`).join('\n');
+  const objStr=Object.keys(objState).filter(f=>objState[f]>0).map(f=>`  • ${OBJ_LABELS[f]}: −${objState[f]}pt`).join('\n')||'  Nessuna rilevante';
+  const penTot=Object.values(objState).reduce((a,b)=>a+b,0);
+
+  const txt=`LEAD SCORER v2 — PISCINE SAN LORENZO
+Data: ${date}  |  Cliente: ${name}
+Comune: ${c.comune||'—'}  |  Tel: ${c.phone||'—'}  |  Email: ${c.email||'—'}
+${'─'.repeat(46)}
+RISULTATO
+  Score profilo grezzo:    ${sc?sc.raw+'/100':'—'}
+  Penalità obiezioni:      −${penTot} pt
+  Score finale aggiustato: ${sc?sc.adj+'/100':'—'}
+  Confidenza:              ${sc?sc.conf+'%':'—'} (${Object.keys(state).length}/17 variabili)
+  Budget stimato:          ${bgt?bgt.label+' — '+bgt.range:'—'}
+  Priorità:                ${document.getElementById('priority-val').textContent}
+${'─'.repeat(46)}
+NOTE COMMERCIALE
+${c.notes||'  (nessuna)'}
+${'─'.repeat(46)}
+VARIABILI PROFILO
+${varsStr||'  (nessuna inserita)'}
+${'─'.repeat(46)}
+OBIEZIONI CON IMPATTO
+${objStr}
+${'─'.repeat(46)}
+Lead Scorer v2.0 — Piscine San Lorenzo`;
+
+  document.getElementById('export-text').textContent=txt;
+  document.getElementById('modal').classList.add('open');
+}
+
+function copyExport() {
+  const txt=document.getElementById('export-text').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const b=event.currentTarget;b.textContent='✓ Copiato!';
+    setTimeout(()=>{b.innerHTML='⧉ Copia testo';},1800);
+  });
+}
+
+// ══════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════
+function resetAll() {
+  Object.keys(state).forEach(k=>delete state[k]);
+  Object.keys(budgetVotes).forEach(k=>delete budgetVotes[k]);
+  document.querySelectorAll('#page-profilo .chip').forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
+  document.querySelectorAll('input[type=number]').forEach(i=>i.value='');
+  setContact({name:'',comune:'',phone:'',email:'',notes:''});
+  markUnsaved();
+  refreshAll();
+}
+
+function resetObjezioni() {
+  Object.keys(objState).forEach(k=>delete objState[k]);
+  document.querySelectorAll('[data-penalty]').forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
+  markUnsaved();
+  updateObjProgress();
+  refreshAll();
+}
+
+// init
+refreshAll();
+updateObjProgress();
+updateLeadStatus();
+renderArchive();
+fillCompareSelects();
+</script>
+</body>
+</html>
