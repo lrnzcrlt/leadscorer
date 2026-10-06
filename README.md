@@ -27,3 +27,6 @@ Su iPhone/Safari i dati di siti non visitati per un po' possono essere cancellat
 ## Limiti noti
 - Nessuna sincronizzazione tra due persone/dispositivi (richiederebbe un backend, es. Google Sheet).
 - Il calcolo delle penalità delle obiezioni può superare la scala 0–100 (formula v2.1 replicata, correzione prevista a parte).
+
+## Pubblicare un aggiornamento
+Ogni volta che si cambia `leadscoreV3.html`, aggiornare anche `BUILD` nel file e `build` in `version.json` con lo stesso valore nuovo: chi ha la pagina aperta (o salvata sul telefono) vede l'avviso "Nuova versione disponibile — Aggiorna".

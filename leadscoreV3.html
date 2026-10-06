@@ -198,6 +198,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .contact-grid,.compare-picks,.compare-head{grid-template-columns:1fr}
 }
 
+/* AVVISO AGGIORNAMENTO */
+#update-bar{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:300;background:var(--text);color:var(--bg);border-radius:var(--r-lg);padding:.7rem .9rem;align-items:center;gap:10px;justify-content:space-between;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.3)}
+#update-bar.show{display:flex}
+#update-bar button{background:var(--green);color:#fff;border:none;border-radius:var(--r-md);padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer}
 /* CRM */
 .outcome-box{margin-bottom:.8rem}
 .outcome-box .row{display:flex;gap:8px;flex-wrap:wrap}
@@ -265,6 +269,8 @@ a.btn.disabled{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
+
+<div id="update-bar"><span>🔄 È disponibile una nuova versione.</span><button type="button" onclick="applyUpdate()">Aggiorna</button></div>
 
 <div class="nav-bar">
   <div class="nav-logo">🌊 <span>PSL</span> Lead Scorer</div>
@@ -2336,6 +2342,22 @@ function renderDash() {
       <table class="dash-table"><tr><th>Fonte</th><th>Lead</th><th>Vinti</th><th>Conv.</th></tr>${srcRows || '<tr><td colspan="4">Indica la fonte nei lead per vedere questa tabella.</td></tr>'}</table></div>
     ${lost.length ? `<div class="dash-block"><h3>Perché perdiamo</h3>${lossRows}</div>` : ''}`;
 }
+
+// ── Controllo nuova versione ──
+const BUILD = '2026-10-06-3';
+let newBuild = null;
+function applyUpdate() {
+  flushAutosave();
+  location.href = location.pathname + '?v=' + encodeURIComponent(newBuild || Date.now());
+}
+function checkForUpdate() {
+  if (!/^https?:$/.test(location.protocol)) return;
+  fetch('version.json?t='+Date.now(), { cache:'no-store' }).then(r=>r.ok ? r.json() : null).then(v=>{
+    if (v && typeof v.build === 'string' && v.build !== BUILD) { newBuild = v.build.slice(0,40); document.getElementById('update-bar').classList.add('show'); }
+  }).catch(()=>{});
+}
+checkForUpdate();
+document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible') checkForUpdate(); });
 
 // init
 loadWeights();
