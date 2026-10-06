@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Lead Scorer v3 — Piscine San Lorenzo</title>
+<title>Lead Scorer v4 — Piscine San Lorenzo</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -197,6 +197,63 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .weight-grid input[type=range]{width:80px}
   .contact-grid,.compare-picks,.compare-head{grid-template-columns:1fr}
 }
+
+/* CRM */
+.crm-card{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:1rem 1.1rem;margin-bottom:1rem}
+.crm-card h3{font-size:13px;font-weight:600;margin-bottom:.7rem;color:var(--text)}
+.crm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.crm-grid .full{grid-column:1/-1}
+.crm-field label{display:block;font-size:11px;color:var(--text3);margin-bottom:3px}
+.crm-field input,.crm-field select{width:100%;padding:7px 10px;font-size:14px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);outline:none}
+.quick-days{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.quick-days button,.mini-btn{padding:4px 10px;font-size:12px;border:.5px solid var(--border2);border-radius:20px;background:var(--surf2);color:var(--text2);cursor:pointer}
+.contact-actions{display:flex;flex-wrap:wrap;gap:8px;margin:.6rem 0}
+a.btn{text-decoration:none}
+a.btn.disabled{opacity:.4;pointer-events:none}
+.stage-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--surf3);color:var(--text2);white-space:nowrap}
+.stage-nuovo{background:var(--blue-bg);color:var(--blue-dk)}
+.stage-contattato,.stage-sopralluogo{background:var(--purple-bg);color:var(--purple-dk)}
+.stage-preventivo,.stage-trattativa{background:var(--amber-bg);color:var(--amber-dk)}
+.stage-vinto{background:var(--green-bg);color:var(--green-dk)}
+.stage-perso{background:var(--red-bg);color:var(--red-dk)}
+.crm-log{margin-top:.7rem;font-size:12px;color:var(--text2);max-height:180px;overflow-y:auto}
+.crm-log div{padding:3px 0;border-top:.5px solid var(--border)}
+.crm-log time{color:var(--text3);margin-right:6px}
+.chk-group{margin-top:.7rem;border-top:.5px solid var(--border);padding-top:.5rem}
+.chk-group summary{font-size:13px;font-weight:500;cursor:pointer;padding:4px 0}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:14px;cursor:pointer}
+.chk input{margin-top:3px;width:18px;height:18px;flex:none}
+.today-sec{margin-bottom:1.1rem}
+.today-sec h3{font-size:13px;font-weight:600;margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.today-sec h3 .n{font-size:11px;background:var(--surf3);color:var(--text2);border-radius:20px;padding:1px 8px}
+.today-sec.late h3{color:var(--red-dk)}
+.today-card{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:.7rem .9rem;margin-bottom:.5rem;display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center}
+.today-card .tc-name{font-size:15px;font-weight:600}
+.today-card .tc-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.today-card .tc-act{font-size:13px;margin-top:3px}
+.today-card .tc-score{font-size:20px;font-weight:600;color:var(--green-dk)}
+.today-card .tc-btns{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.today-card .tc-btns .btn{padding:7px 12px}
+.stale-tag{font-size:11px;color:var(--amber-dk);background:var(--amber-bg);padding:1px 7px;border-radius:20px;margin-left:6px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:1rem}
+.kpi{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:.7rem .9rem}
+.kpi .k{font-size:11px;color:var(--text3)}
+.kpi .v{font-size:22px;font-weight:600}
+.dash-block{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:1rem 1.1rem;margin-bottom:.9rem}
+.dash-block h3{font-size:13px;font-weight:600;margin-bottom:.6rem}
+.dash-note{font-size:11px;color:var(--text3);margin-top:.5rem;line-height:1.5}
+.hbar{display:grid;grid-template-columns:120px 1fr 36px;gap:8px;align-items:center;font-size:12px;margin:4px 0}
+.hbar .track{background:var(--surf3);border-radius:4px;height:10px;overflow:hidden}
+.hbar .fill{background:var(--green);height:100%}
+.dash-table{width:100%;border-collapse:collapse;font-size:12px}
+.dash-table th,.dash-table td{text-align:left;padding:5px 6px;border-top:.5px solid var(--border)}
+.dash-table th{color:var(--text3);font-weight:500;border-top:none}
+@media(max-width:600px){
+  .btn,.quick-days button,.mini-btn{min-height:40px}
+  input,select,textarea{font-size:16px !important}
+  .crm-grid{grid-template-columns:1fr}
+  .hbar{grid-template-columns:90px 1fr 30px}
+}
 </style>
 </head>
 <body>
@@ -204,11 +261,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="nav-bar">
   <div class="nav-logo">🌊 <span>PSL</span> Lead Scorer</div>
   <div class="nav-tabs">
+    <button class="tab-btn" data-page="oggi" onclick="showPage('oggi')">📋 Oggi</button>
     <button class="tab-btn active" data-page="profilo" onclick="showPage('profilo')">Profilo cliente</button>
     <button class="tab-btn" data-page="trattativa" onclick="showPage('trattativa')">Trattativa</button>
     <button class="tab-btn" data-page="leve" onclick="showPage('leve')">Leve suggerite</button>
     <button class="tab-btn" data-page="statistica" onclick="showPage('statistica')">Statistiche</button>
     <button class="tab-btn" data-page="archivio" onclick="showPage('archivio')">Archivio</button>
+    <button class="tab-btn" data-page="dash" onclick="showPage('dash')">📊 Cruscotto</button>
     <button class="tab-btn" data-page="confronta" onclick="showPage('confronta')">Confronta</button>
     <button class="tab-btn" data-page="pesi" onclick="showPage('pesi')">⚙ Pesi</button>
   </div>
@@ -242,7 +301,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <textarea id="clientNotes" placeholder="Appunti dalla visita, contesto, prossimi passi…" oninput="markUnsaved()"></textarea>
       </div>
     </div>
+    <div class="contact-actions">
+      <a class="btn disabled" id="call-link" href="#">📞 Chiama</a>
+      <a class="btn disabled" id="map-link" href="#" target="_blank" rel="noopener">📍 Mappa</a>
+      <a class="btn disabled" id="mail-link" href="#">✉ Email</a>
+    </div>
     <div class="lead-status" id="lead-status">Nuovo lead — non ancora salvato</div>
+  </div>
+
+  <div class="crm-card" id="crm-card">
+    <h3>📌 Pipeline e prossima azione</h3>
+    <div class="crm-grid">
+      <div class="crm-field"><label>Fase</label>
+        <select id="crm-stage" onchange="onCrmField()"></select></div>
+      <div class="crm-field"><label>Fonte del contatto</label>
+        <select id="crm-source" onchange="onCrmField()"></select></div>
+      <div class="crm-field full"><label>Prossima azione</label>
+        <input type="text" id="crm-next-action" maxlength="200" placeholder="es. Richiamare per fissare il sopralluogo" oninput="onCrmField()"/></div>
+      <div class="crm-field full"><label>Entro il</label>
+        <input type="date" id="crm-next-date" onchange="onCrmField()"/>
+        <div class="quick-days">
+          <button type="button" onclick="setNextIn(0)">Oggi</button>
+          <button type="button" onclick="setNextIn(1)">Domani</button>
+          <button type="button" onclick="setNextIn(3)">+3 giorni</button>
+          <button type="button" onclick="setNextIn(7)">+1 settimana</button>
+          <button type="button" onclick="setNextIn(14)">+2 settimane</button>
+        </div></div>
+      <div class="crm-field" id="crm-closed-a" style="display:none"><label id="crm-reason-lbl">Motivo</label>
+        <select id="crm-reason" onchange="onCrmField()"></select></div>
+      <div class="crm-field" id="crm-closed-b" style="display:none"><label>Valore del contratto (€)</label>
+        <input type="number" id="crm-value" min="0" step="100" inputmode="numeric" oninput="onCrmField()"/></div>
+      <div class="crm-field full"><label>Registra un contatto</label>
+        <div style="display:flex;gap:8px"><input type="text" id="crm-log-input" maxlength="300" placeholder="es. Telefonata: vuole un preventivo, richiamare giovedì"/>
+        <button class="btn" type="button" onclick="addContactLog()">＋ Registra</button></div></div>
+    </div>
+    <div class="crm-log" id="crm-log"></div>
+    <div id="crm-checklists"></div>
   </div>
 
   <div class="score-panel" id="score-panel">
@@ -719,6 +813,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 
 <!-- ═══════════════════════════════════════════════════
+     PAGE — OGGI
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-oggi">
+  <div class="info-box" style="margin-bottom:.75rem" id="oggi-intro"></div>
+  <div id="oggi-list"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PAGE — CRUSCOTTO
+═══════════════════════════════════════════════════ -->
+<div class="page" id="page-dash">
+  <div id="dash-body"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
      PAGE 6 — ARCHIVIO
 ═══════════════════════════════════════════════════ -->
 <div class="page" id="page-archivio">
@@ -746,6 +855,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="backup-note">⚠ Il file di backup contiene nomi e telefoni dei clienti: non caricarlo su GitHub e non condividerlo pubblicamente.</div>
   </div>
   <input class="lead-search" id="archive-search" type="search" placeholder="Cerca per nome, comune, telefono…" oninput="renderArchive()"/>
+  <select class="lead-search" id="archive-stage" onchange="renderArchive()"></select>
   <div class="bottom-bar" style="margin-top:0;margin-bottom:.75rem">
     <span class="filled-count" id="archive-count">0 lead salvati</span>
     <button class="btn" onclick="newLead();showPage('profilo')">＋ Nuovo lead</button>
@@ -903,6 +1013,7 @@ function setContact(c) {
   document.getElementById('clientPhone').value = c.phone || '';
   document.getElementById('clientEmail').value = c.email || '';
   document.getElementById('clientNotes').value = c.notes || '';
+  updateContactLinks();
 }
 
 function selectedChip(f) {
@@ -968,6 +1079,7 @@ function snapshotLead() {
     profile,
     objections,
     budgetVotes: {...budgetVotes},
+    crm: (function(){ if (!crm.createdAt) crm.createdAt = Date.now(); return JSON.parse(JSON.stringify(crm)); })(),
     preview: {
       score: sc ? sc.adj : null,
       conf: sc ? sc.conf : 0,
@@ -984,6 +1096,7 @@ function clearFormKeepId(keepId) {
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
   document.querySelectorAll('input[type=number]').forEach(i=>i.value='');
   setContact({name:'',comune:'',phone:'',email:'',notes:''});
+  crm = defaultCrm(); renderCrmForm();
   if (!keepId) currentLeadId = null;
   dirty = false;
   autoBlocked = false;
@@ -1009,6 +1122,7 @@ function loadLead(id, goProfilo) {
   currentLeadId = lead.id;
   lastSavedAt = lead.savedAt;
   setContact(lead.contact || {});
+  crm = cleanCrm(lead.crm); renderCrmForm();
   Object.entries(lead.budgetVotes || {}).forEach(([k,v])=>budgetVotes[k]=v);
   Object.entries(lead.profile || {}).forEach(([f,p])=>{
     if (f==='giardino') {
@@ -1111,6 +1225,7 @@ function newLead() {
 
 function markUnsaved(noAuto) {
   dirty = true;
+  updateContactLinks();
   if (noAuto) { autoBlocked = true; clearTimeout(autoTimer); }
   updateLeadStatus();
   scheduleAutosave();
@@ -1139,8 +1254,12 @@ function updateLeadStatus() {
 }
 
 function renderArchive() {
+  fillStageFilter();
+  refreshCrmViews();
+  const stF = (document.getElementById('archive-stage')||{}).value || '';
   const q = (document.getElementById('archive-search')?.value || '').toLowerCase().trim();
   const list = loadLibrary().filter(l=>{
+    if (stF && cleanCrm(l.crm).stage !== stF) return false;
     if (!q) return true;
     const c = l.contact || {};
     return [c.name,c.comune,c.phone,c.email,c.notes].join(' ').toLowerCase().includes(q);
@@ -1157,12 +1276,14 @@ function renderArchive() {
   box.innerHTML = list.map(l=>{
     const sc = scoreLeadData(l);
     const c = l.contact || {};
+    const cc = cleanCrm(l.crm);
     const when = new Date(l.savedAt).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const cur = l.id===currentLeadId ? ' current' : '';
     return `<div class="lead-card${cur}">
       <div class="lead-card-main">
         <div class="lead-card-name">${esc(c.name || 'Senza nome')}</div>
-        <div class="lead-card-meta">${esc(c.comune || 'Comune n/d')} · ${esc(c.phone || 'niente tel.')} · ${when}</div>
+        <div class="lead-card-meta"><span class="stage-badge stage-${esc(cc.stage)}">${esc(STAGE_LABEL[cc.stage]||'')}</span> ${esc(c.comune || 'Comune n/d')} · ${esc(c.phone || 'niente tel.')} · ${when}</div>
+        ${cc.nextAction||cc.nextDate ? `<div class="lead-card-meta">➜ ${esc(cc.nextAction||'Prossima azione')}${cc.nextDate?' · '+esc(fmtDate(cc.nextDate)):''}</div>`:''}
       </div>
       <div class="lead-card-score">${sc?sc.adj:'—'}</div>
       <div class="lead-card-actions">
@@ -1240,7 +1361,7 @@ function sanitizeLead(l) {
     if ((f in DEFAULT_WEIGHTS) && ['premium','mid','entry'].includes(l.budgetVotes[f])) budgetVotes[f] = l.budgetVotes[f];
   });
   const sa = Number(l.savedAt);
-  const lead = { id, savedAt:(isFinite(sa) && sa>0) ? sa : Date.now(), contact, profile, objections, budgetVotes };
+  const lead = { id, savedAt:(isFinite(sa) && sa>0) ? sa : Date.now(), contact, profile, objections, budgetVotes, crm: cleanCrm(l.crm) };
   const sc = scoreLeadData(lead);
   const bg = budgetFromLead(lead);
   lead.preview = { score: sc ? sc.adj : null, conf: sc ? sc.conf : 0, budget: bg ? bg.label : '—', title: contact.name || 'Senza nome' };
@@ -1381,6 +1502,8 @@ function showPage(id) {
   if(id==='pesi') renderWeightEditor();
   if(id==='archivio') renderArchive();
   if(id==='confronta') renderCompare();
+  if(id==='oggi') renderOggi();
+  if(id==='dash') renderDash();
 }
 
 function toggleSec(id, cvId) {
@@ -1852,6 +1975,291 @@ function syncLogout() {
 }
 window.addEventListener('online', ()=>{ if (fbUser) startSync(); });
 
+// ══════════════════════════════════════════
+// PIPELINE / CRM
+// ══════════════════════════════════════════
+const STAGES = [['nuovo','Da chiamare'],['contattato','Contattato'],['sopralluogo','Sopralluogo fissato'],['preventivo','Preventivo inviato'],['trattativa','In trattativa'],['vinto','Vinto ✅'],['perso','Perso ❌']];
+const STAGE_KEYS = STAGES.map(x=>x[0]);
+const STAGE_LABEL = Object.fromEntries(STAGES);
+const SOURCES = [['','—'],['lista','Lista contatti'],['passaparola','Passaparola'],['web','Sito / social'],['fiera','Fiera / evento'],['altro','Altro']];
+const LOSS_REASONS = [['','—'],['prezzo','Prezzo'],['tempi','Tempi'],['concorrente','Ha scelto un concorrente'],['nessuna-risposta','Nessuna risposta'],['rinviato','Progetto rinviato'],['altro','Altro']];
+const WIN_REASONS = [['','—'],['qualita','Qualità / garanzia'],['prezzo','Prezzo'],['fiducia','Fiducia nel venditore'],['tempi','Tempi di consegna'],['finanziamento','Finanziamento'],['altro','Altro']];
+const CHECKLISTS = {
+  tel: { title:'📞 Checklist telefonata', items:[
+    ['presenta','Presentarsi e chiedere se è un buon momento'],
+    ['piscina','Ha già una piscina o la sta progettando?'],
+    ['decisore','È proprietario? Chi decide (coniuge, famiglia)?'],
+    ['giardino','Tipo di giardino e metratura approssimativa'],
+    ['budget','Budget indicativo / interesse al finanziamento'],
+    ['tempi','Tempi desiderati (stagione, scadenze)'],
+    ['concorrenti','Altri preventivi in corso?'],
+    ['sopralluogo','Fissare il sopralluogo (data e ora)'],
+    ['indirizzo','Confermare indirizzo e come arrivare']] },
+  visita: { title:'🏡 Checklist sopralluogo', items:[
+    ['misure','Misure e forma del terreno'],
+    ['accessi','Accesso per mezzi e cantiere'],
+    ['terreno','Pendenza, falda, ombreggiamento'],
+    ['impianti','Posizione di impianti e utenze'],
+    ['vincoli','Vincoli (distanze, permessi del comune)'],
+    ['desideri','Forma, dimensioni e complementi desiderati'],
+    ['foto','Mostrate foto di piscine realizzate'],
+    ['depliant','Consegnato il dépliant'],
+    ['garanzia','Spiegati garanzia, tempi e finanziamento'],
+    ['followup','Fissato il follow-up con data']] }
+};
+let crm = defaultCrm();
+
+function defaultCrm() {
+  return { stage:'nuovo', nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
+}
+function cleanCrm(raw) {
+  const c = defaultCrm();
+  if (!raw || typeof raw !== 'object') return c;
+  const str = (v,n)=> typeof v==='string' ? v.slice(0,n) : '';
+  if (STAGE_KEYS.includes(raw.stage)) c.stage = raw.stage;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw.nextDate || '')) c.nextDate = raw.nextDate;
+  c.nextAction = str(raw.nextAction, 200);
+  if (SOURCES.some(x=>x[0]===raw.source)) c.source = raw.source;
+  if (LOSS_REASONS.some(x=>x[0]===raw.closeReason) || WIN_REASONS.some(x=>x[0]===raw.closeReason)) c.closeReason = raw.closeReason;
+  if (raw.closeValue !== null && raw.closeValue !== '' && raw.closeValue !== undefined) {
+    const v = Number(raw.closeValue);
+    if (isFinite(v) && v >= 0 && v <= 10000000) c.closeValue = v;
+  }
+  [['closedAt'],['createdAt']].forEach(([k])=>{ const n = Number(raw[k]); if (raw[k] != null && isFinite(n) && n > 0) c[k] = n; });
+  if (Array.isArray(raw.log)) {
+    c.log = raw.log.slice(-200).map(e=>({ t:Number(e && e.t), type:['nota','fase','contatto'].includes(e && e.type) ? e.type : 'nota', text:str(e && e.text, 300) }))
+      .filter(e=>isFinite(e.t) && e.t>0 && e.text);
+  }
+  Object.keys(CHECKLISTS).forEach(k=>{
+    const src = raw.checklist && raw.checklist[k];
+    CHECKLISTS[k].items.forEach(([id])=>{ if (src && src[id] === true) c.checklist[k][id] = true; });
+  });
+  return c;
+}
+
+function pad2(n) { return String(n).padStart(2,'0'); }
+function dateISO(d) { return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function todayISO() { return dateISO(new Date()); }
+function addDaysISO(n) { const d = new Date(); d.setDate(d.getDate()+n); return dateISO(d); }
+function fmtDate(iso) { const [y,m,d] = iso.split('-'); return d+'/'+m+'/'+y; }
+function fmtDT(ts) { return new Date(ts).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function telHref(phone) { const n = String(phone||'').replace(/[^\d+]/g,''); return n ? 'tel:'+n : ''; }
+function isClosed(c) { return c.stage==='vinto' || c.stage==='perso'; }
+function optionsHtml(list, cur) { return list.map(([v,l])=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`).join(''); }
+function stageBadge(st) { return `<span class="stage-badge stage-${esc(st)}">${esc(STAGE_LABEL[st]||st)}</span>`; }
+
+function updateContactLinks() {
+  const call = document.getElementById('call-link'), map = document.getElementById('map-link'), mail = document.getElementById('mail-link');
+  if (!call) return;
+  const c = contactFields();
+  const t = telHref(c.phone);
+  call.href = t || '#'; call.classList.toggle('disabled', !t);
+  const q = [c.comune].filter(Boolean).join(' ');
+  map.href = q ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q) : '#'; map.classList.toggle('disabled', !q);
+  const okMail = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(c.email);
+  mail.href = okMail ? 'mailto:'+c.email : '#'; mail.classList.toggle('disabled', !okMail);
+}
+
+function renderCrmForm() {
+  const st = document.getElementById('crm-stage');
+  if (!st) return;
+  st.innerHTML = optionsHtml(STAGES, crm.stage);
+  document.getElementById('crm-source').innerHTML = optionsHtml(SOURCES, crm.source);
+  document.getElementById('crm-next-action').value = crm.nextAction;
+  document.getElementById('crm-next-date').value = crm.nextDate;
+  const closed = isClosed(crm);
+  document.getElementById('crm-closed-a').style.display = closed ? '' : 'none';
+  document.getElementById('crm-closed-b').style.display = crm.stage==='vinto' ? '' : 'none';
+  document.getElementById('crm-reason-lbl').textContent = crm.stage==='vinto' ? 'Perché ha scelto noi' : 'Motivo della perdita';
+  document.getElementById('crm-reason').innerHTML = optionsHtml(crm.stage==='vinto' ? WIN_REASONS : LOSS_REASONS, crm.closeReason);
+  document.getElementById('crm-value').value = crm.closeValue == null ? '' : crm.closeValue;
+  document.getElementById('crm-log').innerHTML = crm.log.slice().reverse().slice(0,60).map(e=>`<div><time>${esc(fmtDT(e.t))}</time>${esc(e.text)}</div>`).join('');
+  document.getElementById('crm-checklists').innerHTML = Object.entries(CHECKLISTS).map(([k,g])=>{
+    const done = g.items.filter(([id])=>crm.checklist[k][id]).length;
+    return `<details class="chk-group"><summary>${esc(g.title)} (${done}/${g.items.length})</summary>`+
+      g.items.map(([id,txt])=>`<label class="chk"><input type="checkbox" ${crm.checklist[k][id]?'checked':''} onchange="toggleCheck('${k}','${id}',this.checked)"><span>${esc(txt)}</span></label>`).join('')+`</details>`;
+  }).join('');
+}
+function pushLog(c, type, text) { c.log.push({ t:Date.now(), type, text:String(text).slice(0,300) }); if (c.log.length>200) c.log = c.log.slice(-200); }
+
+function onCrmField() {
+  const prev = crm.stage;
+  crm.stage = document.getElementById('crm-stage').value;
+  crm.source = document.getElementById('crm-source').value;
+  crm.nextAction = document.getElementById('crm-next-action').value.slice(0,200);
+  crm.nextDate = document.getElementById('crm-next-date').value;
+  const rs = document.getElementById('crm-reason'); if (rs && isClosed(crm)) crm.closeReason = rs.value;
+  const vl = document.getElementById('crm-value').value;
+  crm.closeValue = (vl === '' || !isFinite(Number(vl)) || Number(vl) < 0) ? null : Number(vl);
+  if (crm.stage !== prev) {
+    pushLog(crm, 'fase', 'Fase: '+STAGE_LABEL[prev]+' → '+STAGE_LABEL[crm.stage]);
+    if (isClosed(crm)) { crm.closedAt = Date.now(); crm.closeReason = ''; if (crm.stage==='perso') crm.closeValue = null; crm.nextAction = ''; crm.nextDate = ''; }
+    else { crm.closedAt = null; crm.closeReason = ''; crm.closeValue = null; }
+    renderCrmForm();
+  }
+  markUnsaved();
+}
+function setNextIn(days) {
+  crm.nextDate = addDaysISO(days);
+  document.getElementById('crm-next-date').value = crm.nextDate;
+  markUnsaved();
+}
+function addContactLog() {
+  const inp = document.getElementById('crm-log-input');
+  const txt = inp.value.trim() || 'Contatto effettuato';
+  pushLog(crm, 'contatto', txt);
+  if (crm.stage === 'nuovo') { pushLog(crm, 'fase', 'Fase: '+STAGE_LABEL.nuovo+' → '+STAGE_LABEL.contattato); crm.stage = 'contattato'; }
+  inp.value = '';
+  renderCrmForm();
+  markUnsaved();
+  toast(crm.nextDate ? 'Contatto registrato' : 'Registrato: ora imposta la prossima azione');
+}
+function toggleCheck(list, id, on) {
+  if (on) crm.checklist[list][id] = true; else delete crm.checklist[list][id];
+  renderCrmForm();
+  markUnsaved();
+}
+
+// modifica la parte CRM di un lead, anche se non è quello aperto nel form
+function updateCrmFor(id, fn) {
+  if (id === currentLeadId) { fn(crm); renderCrmForm(); markUnsaved(); flushAutosave(); return true; }
+  const list = loadLibrary();
+  const l = list.find(x=>x.id===id);
+  if (!l) return false;
+  const c = cleanCrm(l.crm);
+  fn(c);
+  l.crm = c; l.savedAt = Date.now();
+  if (!writeLibrary(list)) { toast('⚠ Salvataggio non riuscito'); return false; }
+  syncPush(l);
+  renderArchive();
+  return true;
+}
+function quickPostpone(id, days) {
+  updateCrmFor(id, c=>{ c.nextDate = addDaysISO(days); pushLog(c, 'nota', 'Prossima azione rinviata al '+fmtDate(c.nextDate)); });
+  toast('Rinviato al '+fmtDate(addDaysISO(days)));
+}
+function quickDone(id) {
+  loadLead(id);
+  if (currentLeadId !== id) return;
+  pushLog(crm, 'contatto', crm.nextAction ? 'Fatto: '+crm.nextAction : 'Contatto effettuato');
+  if (crm.stage === 'nuovo') { pushLog(crm, 'fase', 'Fase: '+STAGE_LABEL.nuovo+' → '+STAGE_LABEL.contattato); crm.stage = 'contattato'; }
+  crm.nextAction = ''; crm.nextDate = '';
+  renderCrmForm(); markUnsaved();
+  const el = document.getElementById('crm-next-action');
+  if (el) { el.scrollIntoView({block:'center'}); el.focus(); }
+  toast('Segnato come fatto: scrivi la prossima azione');
+}
+function openLeadFromOggi(id) { loadLead(id, true); showPage('profilo'); }
+
+function fillStageFilter() {
+  const sel = document.getElementById('archive-stage');
+  if (!sel || sel.dataset.ready) return;
+  sel.innerHTML = '<option value="">Tutte le fasi</option>' + STAGES.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join('');
+  sel.dataset.ready = '1';
+}
+function refreshCrmViews() {
+  if (document.getElementById('page-oggi')?.classList.contains('active')) renderOggi();
+  if (document.getElementById('page-dash')?.classList.contains('active')) renderDash();
+}
+
+// ── Schermata OGGI ──
+function lastTouchTs(l, c) {
+  const lastLog = c.log.length ? Math.max(...c.log.map(e=>e.t)) : 0;
+  return lastLog || c.createdAt || l.savedAt || 0;
+}
+function renderOggi() {
+  const box = document.getElementById('oggi-list');
+  const intro = document.getElementById('oggi-intro');
+  if (!box) return;
+  const t = todayISO(), t7 = addDaysISO(7);
+  const items = loadLibrary().map(l=>({ l, c:cleanCrm(l.crm), sc:scoreLeadData(l) })).filter(x=>!isClosed(x.c));
+  const byScore = (a,b)=>((b.sc?b.sc.adj:-1)-(a.sc?a.sc.adj:-1));
+  const late = items.filter(x=>x.c.nextDate && x.c.nextDate < t).sort((a,b)=>a.c.nextDate.localeCompare(b.c.nextDate));
+  const today = items.filter(x=>x.c.nextDate === t).sort(byScore);
+  const none = items.filter(x=>!x.c.nextDate).sort(byScore);
+  const soon = items.filter(x=>x.c.nextDate > t && x.c.nextDate <= t7).sort((a,b)=>a.c.nextDate.localeCompare(b.c.nextDate));
+  const later = items.filter(x=>x.c.nextDate > t7).length;
+  const total = loadLibrary().length;
+  if (!total) {
+    intro.innerHTML = '👋 <strong>Qui vedrai cosa fare ogni giorno.</strong> Crea il primo lead dal tab <em>Profilo cliente</em>: ricordati di impostare la fase e la prossima azione con la data.';
+    box.innerHTML = '';
+    return;
+  }
+  intro.innerHTML = `📋 <strong>${new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})}</strong> — ${late.length} in ritardo · ${today.length} per oggi · ${none.length} senza prossima azione`;
+  const card = (x, mode)=>{
+    const { l, c, sc } = x; const ct = l.contact || {};
+    const th = telHref(ct.phone);
+    const idle = Math.floor((Date.now()-lastTouchTs(l,c))/86400000);
+    const stale = idle >= 14 ? `<span class="stale-tag">⏳ fermo da ${idle} gg</span>` : '';
+    const when = c.nextDate ? ' · '+(c.nextDate<t ? '<strong style="color:var(--red-dk)">scaduto il '+esc(fmtDate(c.nextDate))+'</strong>' : esc(fmtDate(c.nextDate))) : '';
+    return `<div class="today-card">
+      <div><div class="tc-name">${esc(ct.name || 'Senza nome')}${stale}</div>
+        <div class="tc-meta">${stageBadge(c.stage)} ${esc(ct.comune || 'Comune n/d')}${ct.phone ? ' · '+esc(ct.phone) : ''}</div>
+        <div class="tc-act">${c.nextAction || c.nextDate ? '➜ '+esc(c.nextAction || 'Prossima azione')+when : '<em style="color:var(--amber-dk)">Nessuna prossima azione: decidi cosa fare con questo lead</em>'}</div></div>
+      <div class="tc-score">${sc ? sc.adj : '—'}</div>
+      <div class="tc-btns">
+        ${th ? `<a class="btn btn-green" href="${esc(th)}">📞 Chiama</a>` : ''}
+        <button class="btn" onclick="openLeadFromOggi('${esc(l.id)}')">Apri</button>
+        ${c.nextDate || c.nextAction ? `<button class="btn" onclick="quickDone('${esc(l.id)}')">✓ Fatto</button>` : ''}
+        <button class="btn" onclick="quickPostpone('${esc(l.id)}',3)">+3 gg</button>
+      </div></div>`;
+  };
+  const sec = (title, arr, cls)=> arr.length ? `<div class="today-sec ${cls||''}"><h3>${title} <span class="n">${arr.length}</span></h3>${arr.map(x=>card(x)).join('')}</div>` : '';
+  const html = sec('🔴 In ritardo', late, 'late') + sec('🟢 Per oggi', today) + sec('❓ Senza prossima azione', none) + sec('🗓 Prossimi 7 giorni', soon);
+  box.innerHTML = html || '<div class="no-leve">Tutto in ordine: nessuna azione in scadenza.'+(later?' ('+later+' lead programmati più avanti)':'')+'</div>';
+}
+
+// ── CRUSCOTTO ──
+function renderDash() {
+  const body = document.getElementById('dash-body');
+  if (!body) return;
+  const all = loadLibrary().map(l=>({ l, c:cleanCrm(l.crm), sc:scoreLeadData(l) }));
+  if (!all.length) { body.innerHTML = '<div class="no-leve">Nessun dato: salva qualche lead per vedere il cruscotto.</div>'; return; }
+  const won = all.filter(x=>x.c.stage==='vinto'), lost = all.filter(x=>x.c.stage==='perso');
+  const active = all.filter(x=>!isClosed(x.c));
+  const closedN = won.length + lost.length;
+  const conv = closedN ? Math.round(won.length/closedN*100)+'%' : '—';
+  const wonVal = won.reduce((a,x)=>a+(x.c.closeValue||0),0);
+  const eur = n=>n.toLocaleString('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+  const t = todayISO();
+  const late = active.filter(x=>x.c.nextDate && x.c.nextDate < t).length;
+  const noAct = active.filter(x=>!x.c.nextDate).length;
+  const kpi = (k,v)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  const maxStage = Math.max(1, ...STAGES.map(([s])=>all.filter(x=>x.c.stage===s).length));
+  const funnel = STAGES.map(([s,lab])=>{ const n = all.filter(x=>x.c.stage===s).length; return `<div class="hbar"><span>${esc(lab)}</span><div class="track"><div class="fill" style="width:${Math.round(n/maxStage*100)}%"></div></div><span>${n}</span></div>`; }).join('');
+  const bands = [['0–39',0,39],['40–59',40,59],['60–79',60,79],['80+',80,1000]];
+  const bandRows = bands.map(([lab,lo,hi])=>{
+    const inB = all.filter(x=>x.sc && x.sc.adj>=lo && x.sc.adj<=hi);
+    const w = inB.filter(x=>x.c.stage==='vinto').length, lo2 = inB.filter(x=>x.c.stage==='perso').length;
+    const cl = w+lo2;
+    return `<tr><td>${lab}</td><td>${inB.length}</td><td>${w}</td><td>${lo2}</td><td>${cl ? Math.round(w/cl*100)+'%' : '—'}</td></tr>`;
+  }).join('');
+  const srcRows = SOURCES.filter(x=>x[0]).concat([['','Non indicata']]).map(([k,lab])=>{
+    const g = all.filter(x=>x.c.source===k);
+    if (!g.length) return '';
+    const w = g.filter(x=>x.c.stage==='vinto').length, l2 = g.filter(x=>x.c.stage==='perso').length;
+    return `<tr><td>${esc(lab)}</td><td>${g.length}</td><td>${w}</td><td>${(w+l2) ? Math.round(w/(w+l2)*100)+'%' : '—'}</td></tr>`;
+  }).join('');
+  const lossMap = {}; lost.forEach(x=>{ const k = x.c.closeReason || ''; lossMap[k] = (lossMap[k]||0)+1; });
+  const lossRows = Object.entries(lossMap).sort((a,b)=>b[1]-a[1]).map(([k,n])=>{ const lab = (LOSS_REASONS.find(r=>r[0]===k)||[0,'Non indicato'])[1]; return `<div class="hbar"><span>${esc(k?lab:'Non indicato')}</span><div class="track"><div class="fill" style="background:var(--red);width:${Math.round(n/lost.length*100)}%"></div></div><span>${n}</span></div>`; }).join('');
+  body.innerHTML = `
+    <div class="kpi-row">
+      ${kpi('Lead totali', all.length)}${kpi('Attivi', active.length)}${kpi('Vinti', won.length)}${kpi('Persi', lost.length)}
+      ${kpi('Conversione', conv)}${kpi('Valore vinto', wonVal ? eur(wonVal) : '—')}
+    </div>
+    <div class="dash-block"><h3>🚦 Da sistemare</h3>
+      <div class="hbar"><span>In ritardo</span><div class="track"><div class="fill" style="background:var(--red);width:${active.length?Math.round(late/active.length*100):0}%"></div></div><span>${late}</span></div>
+      <div class="hbar"><span>Senza azione</span><div class="track"><div class="fill" style="background:var(--amber);width:${active.length?Math.round(noAct/active.length*100):0}%"></div></div><span>${noAct}</span></div>
+    </div>
+    <div class="dash-block"><h3>Lead per fase</h3>${funnel}</div>
+    <div class="dash-block"><h3>Il punteggio funziona? (esiti per fascia)</h3>
+      <table class="dash-table"><tr><th>Score</th><th>Lead</th><th>Vinti</th><th>Persi</th><th>Conv.</th></tr>${bandRows}</table>
+      <div class="dash-note">${closedN < 15 ? 'Per ora hai solo '+closedN+' lead chiusi: servono almeno 15–20 esiti perché i confronti siano affidabili. Continua a segnare vinto/perso su ogni lead.' : 'Se le fasce alte non convertono di più delle basse, i pesi vanno rivisti.'}</div></div>
+    <div class="dash-block"><h3>Da dove arrivano i lead</h3>
+      <table class="dash-table"><tr><th>Fonte</th><th>Lead</th><th>Vinti</th><th>Conv.</th></tr>${srcRows || '<tr><td colspan="4">Indica la fonte nei lead per vedere questa tabella.</td></tr>'}</table></div>
+    ${lost.length ? `<div class="dash-block"><h3>Perché perdiamo</h3>${lossRows}</div>` : ''}`;
+}
+
 // init
 loadWeights();
 refreshAll();
@@ -1859,6 +2267,9 @@ updateObjProgress();
 updateLeadStatus();
 renderArchive();
 fillCompareSelects();
+renderCrmForm();
+updateContactLinks();
+if (loadLibrary().length) showPage('oggi');
 syncInit();
 if (libraryUnreadable) toast('⚠ Archivio non leggibile: una copia dei dati è stata conservata a parte. Importa un backup per ripartire.');
 

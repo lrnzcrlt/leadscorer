@@ -2,6 +2,12 @@
 
 Strumento a file singolo (`leadscoreV3.html`) per valutare i lead, seguire la trattativa e non perdere nessun contatto. Funziona su qualsiasi dispositivo: basta aprire il file nel browser.
 
+## Come si usa ogni giorno
+- **📋 Oggi**: si apre da solo e mostra cosa fare: lead in ritardo, per oggi, senza prossima azione, prossimi 7 giorni. Da qui: Chiama, Apri, ✓ Fatto, +3 gg.
+- **Profilo cliente → Pipeline**: fase (da chiamare → contattato → sopralluogo → preventivo → trattativa → vinto/perso), prossima azione con data, fonte, storico dei contatti, checklist per telefonata e sopralluogo.
+- Chiudendo un lead come **vinto/perso** si registrano motivo e valore: servono a ricalibrare i pesi con dati reali.
+- **📊 Cruscotto**: conversione, lead per fase, esiti per fascia di punteggio, fonti, motivi di perdita.
+
 ## Dove vengono salvati i lead
 - **Sul dispositivo e nel browser che stai usando** (localStorage). Telefono e PC hanno archivi **separati**.
 - Salvataggio automatico dopo 1,5 secondi dall'inserimento di nome, comune o telefono; salvataggio anche alla chiusura della pagina.
