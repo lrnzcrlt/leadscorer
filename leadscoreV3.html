@@ -2017,6 +2017,7 @@ const CHECKLISTS = {
     ['followup','Fissato il follow-up con data']] }
 };
 let crm = defaultCrm();
+const chkOpen = {};   // quali checklist sono aperte: resta così anche quando la scheda si ridisegna
 
 function defaultCrm() {
   return { stage:'nuovo', nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
@@ -2088,7 +2089,7 @@ function renderCrmForm() {
   document.getElementById('crm-log').innerHTML = crm.log.slice().reverse().slice(0,60).map(e=>`<div><time>${esc(fmtDT(e.t))}</time>${esc(e.text)}</div>`).join('');
   document.getElementById('crm-checklists').innerHTML = Object.entries(CHECKLISTS).map(([k,g])=>{
     const done = g.items.filter(([id])=>crm.checklist[k][id]).length;
-    return `<details class="chk-group"><summary>${esc(g.title)} (${done}/${g.items.length})</summary>`+
+    return `<details class="chk-group" data-k="${k}"${chkOpen[k] ? ' open' : ''} ontoggle="chkOpen['${k}']=this.open"><summary>${esc(g.title)} (<span class="chk-n">${done}</span>/${g.items.length})</summary>`+
       g.items.map(([id,txt])=>`<label class="chk"><input type="checkbox" ${crm.checklist[k][id]?'checked':''} onchange="toggleCheck('${k}','${id}',this.checked)"><span>${esc(txt)}</span></label>`).join('')+`</details>`;
   }).join('');
 }
@@ -2140,7 +2141,9 @@ function addContactLog() {
 }
 function toggleCheck(list, id, on) {
   if (on) crm.checklist[list][id] = true; else delete crm.checklist[list][id];
-  renderCrmForm();
+  chkOpen[list] = true;
+  const n = document.querySelector(`details[data-k="${list}"] .chk-n`);   // aggiorna solo il contatore: la lista non si richiude
+  if (n) n.textContent = Object.keys(crm.checklist[list]).length;
   markUnsaved();
 }
 
