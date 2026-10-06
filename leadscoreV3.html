@@ -199,6 +199,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 }
 
 /* CRM */
+.outcome-box{margin-bottom:.8rem}
+.outcome-box .row{display:flex;gap:8px;flex-wrap:wrap}
+.outcome-box .btn{flex:1;justify-content:center;padding:11px 14px;font-size:14px;font-weight:600}
+.btn-win{background:var(--green-bg);color:var(--green-dk);border-color:var(--green)}
+.btn-lose{background:var(--red-bg);color:var(--red-dk);border-color:var(--red)}
+.outcome-done{padding:.6rem .8rem;border-radius:var(--r-md);font-size:13px}
+.outcome-done.vinto{background:var(--green-bg);color:var(--green-dk)}
+.outcome-done.perso{background:var(--red-bg);color:var(--red-dk)}
 .crm-card{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-lg);padding:1rem 1.1rem;margin-bottom:1rem}
 .crm-card h3{font-size:13px;font-weight:600;margin-bottom:.7rem;color:var(--text)}
 .crm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -311,6 +319,7 @@ a.btn.disabled{opacity:.4;pointer-events:none}
 
   <div class="crm-card" id="crm-card">
     <h3>📌 Pipeline e prossima azione</h3>
+    <div class="outcome-box" id="outcome-box"></div>
     <div class="crm-grid">
       <div class="crm-field"><label>Fase</label>
         <select id="crm-stage" onchange="onCrmField()"></select></div>
@@ -2073,6 +2082,9 @@ function renderCrmForm() {
   document.getElementById('crm-reason-lbl').textContent = crm.stage==='vinto' ? 'Perché ha scelto noi' : 'Motivo della perdita';
   document.getElementById('crm-reason').innerHTML = optionsHtml(crm.stage==='vinto' ? WIN_REASONS : LOSS_REASONS, crm.closeReason);
   document.getElementById('crm-value').value = crm.closeValue == null ? '' : crm.closeValue;
+  document.getElementById('outcome-box').innerHTML = isClosed(crm)
+    ? `<div class="outcome-done ${esc(crm.stage)}"><strong>${crm.stage==='vinto' ? '✅ Lead vinto' : '❌ Lead perso'}</strong>${crm.closedAt ? ' il '+esc(fmtDT(crm.closedAt)) : ''} — compila qui sotto ${crm.stage==='vinto' ? 'il motivo e il valore del contratto' : 'il motivo della perdita'}. <button type="button" class="mini-btn" onclick="setOutcome('trattativa')">↩ Riapri</button></div>`
+    : `<div class="row"><button type="button" class="btn btn-win" onclick="setOutcome('vinto')">✅ Segna VINTO</button><button type="button" class="btn btn-lose" onclick="setOutcome('perso')">❌ Segna PERSO</button></div>`;
   document.getElementById('crm-log').innerHTML = crm.log.slice().reverse().slice(0,60).map(e=>`<div><time>${esc(fmtDT(e.t))}</time>${esc(e.text)}</div>`).join('');
   document.getElementById('crm-checklists').innerHTML = Object.entries(CHECKLISTS).map(([k,g])=>{
     const done = g.items.filter(([id])=>crm.checklist[k][id]).length;
@@ -2098,6 +2110,18 @@ function onCrmField() {
     renderCrmForm();
   }
   markUnsaved();
+}
+function setOutcome(stage) {
+  document.getElementById('crm-stage').value = stage;
+  onCrmField();
+  const el = document.getElementById('crm-reason');
+  if (isClosed(crm) && el) { el.scrollIntoView({block:'center'}); el.focus(); toast(stage==='vinto' ? 'Vinto! Indica perché e il valore' : 'Indica il motivo della perdita'); }
+}
+function openForOutcome(id) {
+  loadLead(id);
+  if (currentLeadId !== id) return;
+  showPage('profilo');
+  const c = document.getElementById('crm-card'); if (c) c.scrollIntoView({block:'start'});
 }
 function setNextIn(days) {
   crm.nextDate = addDaysISO(days);
@@ -2251,6 +2275,7 @@ function renderOggi() {
         <button class="btn" onclick="openLeadFromOggi('${esc(l.id)}')">Apri</button>
         ${c.nextDate || c.nextAction ? `<button class="btn" onclick="quickDone('${esc(l.id)}')">✓ Fatto</button>` : ''}
         <button class="btn" onclick="quickPostpone('${esc(l.id)}',3)">+3 gg</button>
+        <button class="btn" onclick="openForOutcome('${esc(l.id)}')">🏁 Esito</button>
       </div></div>`;
   };
   const sec = (title, arr, cls, extra)=> arr.length ? `<div class="today-sec ${cls||''}"><h3>${title} <span class="n">${arr.length}</span> ${extra||''}</h3>${arr.map(x=>card(x)).join('')}</div>` : '';
