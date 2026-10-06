@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Solo le due persone autorizzate (sostituisci le email con quelle vere) possono leggere e scrivere i lead.
+    // Tutto il resto del database è chiuso.
+    function autorizzato() {
+      return request.auth != null
+        && request.auth.token.email in ['EMAIL_PAPA@example.com', 'EMAIL_LORENZO@example.com'];
+    }
+    match /leads/{leadId} {
+      allow read: if autorizzato();
+      allow create, update: if autorizzato()
+        && request.resource.data.id == leadId
+        && request.resource.data.keys().size() < 20;
+      allow delete: if false;   // le cancellazioni sono "tombstone" (solo l'id), mai hard delete
+    }
+  }
+}

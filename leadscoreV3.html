@@ -147,6 +147,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .backup-info{font-size:12px;color:var(--text2);margin-bottom:.6rem;line-height:1.5}
 .backup-info.warn{color:var(--red-dk);font-weight:500}
 .backup-actions{display:flex;flex-wrap:wrap;gap:8px}
+.sync-input{flex:1;min-width:140px;padding:7px 10px;font-size:14px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);outline:none}
 .backup-note{font-size:11px;color:var(--text3);margin-top:.6rem;line-height:1.5}
 
 /* ARCHIVE + COMPARE */
@@ -722,6 +723,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 ═══════════════════════════════════════════════════ -->
 <div class="page" id="page-archivio">
   <div class="info-box" style="margin-bottom:.75rem">📁 I lead si salvano da soli su <strong>questo dispositivo</strong> (nel browser, niente server). Telefono e computer hanno archivi separati: per spostare i lead da uno all'altro usa <strong>Scarica backup</strong> e <strong>Importa backup</strong>.</div>
+  <div class="backup-panel" id="sync-panel" style="display:none">
+    <div class="backup-info" id="sync-info"></div>
+    <form class="backup-actions" id="sync-login" onsubmit="syncLogin(event)">
+      <input class="sync-input" type="email" id="sync-email" placeholder="Email" autocomplete="username" required/>
+      <input class="sync-input" type="password" id="sync-pass" placeholder="Password" autocomplete="current-password" required/>
+      <button class="btn" type="submit">☁ Accedi</button>
+    </form>
+    <div class="backup-actions" id="sync-out" style="display:none">
+      <button class="btn" onclick="syncManual()">↻ Sincronizza ora</button>
+      <button class="btn" onclick="syncLogout()">Esci</button>
+    </div>
+    <div class="backup-note">☁ Con l'accesso effettuato i lead vengono copiati anche nel cloud e compaiono sugli altri dispositivi. Il salvataggio su questo dispositivo continua a funzionare anche senza connessione.</div>
+  </div>
   <div class="backup-panel">
     <div class="backup-info" id="backup-info"></div>
     <div class="backup-actions">
@@ -767,6 +781,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   </div>
 </div>
 
+<script src="firebase-config.js"></script>
 <script>
 // ══════════════════════════════════════════
 // DATI E CONFIGURAZIONE
@@ -1035,6 +1050,7 @@ function saveCurrentLead(opts) {
   renderArchive();
   fillCompareSelects();
   if (!auto) toast('Lead salvato');
+  syncPush(lead);
   return true;
 }
 
@@ -1078,6 +1094,7 @@ function deleteLead(id) {
     dirty = true;
     updateLeadStatus();
   }
+  syncDelete(id);
   renderArchive();
   fillCompareSelects();
   renderCompare();
@@ -1263,6 +1280,7 @@ function importBackupFile(input) {
     renderArchive();
     fillCompareSelects();
     updateLeadStatus();
+    syncReconcile();
     toast('Importati: '+r.added+' nuovi, '+r.updated+' aggiornati, '+r.kept+' già presenti'+(r.invalid?', '+r.invalid+' scartati':''));
   };
   reader.readAsText(file);
@@ -1685,6 +1703,155 @@ function resetObjezioni() {
   refreshAll();
 }
 
+// ══ Sincronizzazione cloud (Firebase) — attiva solo se firebase-config.js contiene la configurazione ══
+const TOMB_KEY = 'psl_tombs_v1';
+let fbDb = null, fbUser = null, syncUnsub = null, syncState = 'off', syncMsg = '', lastSyncAt = null, remoteMeta = new Map();
+const ID_RE = /^[A-Za-z0-9._-]{1,64}$/;
+
+function syncEnabled() { return !!(window.PSL_FIREBASE && window.PSL_FIREBASE.apiKey); }
+function loadTombs() { try { const t = JSON.parse(localStorage.getItem(TOMB_KEY) || '{}'); return (t && typeof t==='object') ? t : {}; } catch { return {}; } }
+function saveTombs(t) { try { localStorage.setItem(TOMB_KEY, JSON.stringify(t)); } catch {} }
+function hhmm(ts) { return new Date(ts).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
+
+function loadScriptTag(src) {
+  return new Promise((res, rej)=>{
+    const el = document.createElement('script');
+    el.src = src; el.onload = res; el.onerror = ()=>rej(new Error('load '+src));
+    document.head.appendChild(el);
+  });
+}
+async function loadFirebaseSdk() {
+  if (window.firebase && window.firebase.firestore) return;
+  const base = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  await loadScriptTag(base+'firebase-app-compat.js');
+  await Promise.all([loadScriptTag(base+'firebase-auth-compat.js'), loadScriptTag(base+'firebase-firestore-compat.js')]);
+}
+
+function renderSyncPanel() {
+  const panel = document.getElementById('sync-panel');
+  if (!panel) return;
+  if (!syncEnabled()) { panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  const info = document.getElementById('sync-info');
+  const logged = !!fbUser;
+  document.getElementById('sync-login').style.display = logged ? 'none' : '';
+  document.getElementById('sync-out').style.display = logged ? '' : 'none';
+  let txt;
+  if (logged) txt = '☁ <strong>Sincronizzazione attiva</strong> ('+esc(fbUser.email||'')+')'+(lastSyncAt?' — ultimo allineamento alle '+hhmm(lastSyncAt):'');
+  else if (syncState==='loading') txt = '☁ Caricamento sincronizzazione…';
+  else txt = '☁ <strong>Sincronizzazione non attiva.</strong> Accedi per condividere i lead tra i dispositivi.';
+  if (syncState==='error' && syncMsg) txt += '<br><span style="color:var(--red,#b3261e)">⚠ '+esc(syncMsg)+'</span>';
+  info.classList.toggle('warn', syncState==='error');
+  info.innerHTML = txt;
+}
+function setSyncState(st, msg) { syncState = st; syncMsg = msg || ''; renderSyncPanel(); }
+
+async function syncInit() {
+  renderSyncPanel();
+  if (!syncEnabled()) return;
+  setSyncState('loading');
+  try {
+    await loadFirebaseSdk();
+    if (!(firebase.apps||[]).length) firebase.initializeApp(window.PSL_FIREBASE);
+    fbDb = firebase.firestore();
+    firebase.auth().onAuthStateChanged(u=>{ fbUser = u || null; if (u) startSync(); else stopSync(); });
+  } catch {
+    setSyncState('error', 'Sincronizzazione non raggiungibile (connessione assente?). I lead restano salvati su questo dispositivo.');
+  }
+}
+
+function startSync() {
+  if (!fbDb || !fbUser) return;
+  stopListener();
+  setSyncState('online');
+  syncUnsub = fbDb.collection('leads').onSnapshot(
+    snap => applyRemote(snap.docs.map(d=>({ id:d.id, data:d.data() }))),
+    err => setSyncState('error', 'Errore di sincronizzazione'+(err && err.code ? ' ('+err.code+')' : '')+'. I dati locali sono al sicuro.')
+  );
+}
+function stopListener() { if (syncUnsub) { try { syncUnsub(); } catch {} syncUnsub = null; } remoteMeta = new Map(); }
+function stopSync() { stopListener(); lastSyncAt = null; setSyncState('off'); }
+function syncManual() { startSync(); }
+function syncReconcile() { if (fbUser) startSync(); }
+
+function cleanForCloud(l) { return JSON.parse(JSON.stringify(l)); }
+
+function applyRemote(docs) {
+  remoteMeta = new Map();
+  const local = new Map(loadLibrary().map(l=>[l.id,l]));
+  const tombs = loadTombs();
+  let changed = false;
+  docs.forEach(({id, data})=>{
+    if (!ID_RE.test(id) || !data || typeof data!=='object') return;
+    const sa = Number(data.savedAt) || 0;
+    const deleted = data.deleted === true;
+    remoteMeta.set(id, { sa, deleted });
+    const cur = local.get(id);
+    if (deleted) {
+      if (cur && (cur.savedAt||0) <= sa) { local.delete(id); changed = true; }
+      return;
+    }
+    const t = tombs[id];
+    if (t && t >= sa) return;                         // cancellato qui dopo quella versione: si propaga sotto
+    const l = sanitizeLead(Object.assign({}, data, { id }));
+    if (!l) return;
+    if (!cur || l.savedAt > (cur.savedAt||0)) { local.set(id, l); changed = true; delete tombs[id]; }
+  });
+  // spinge verso il cloud ciò che è più nuovo qui
+  local.forEach(l=>{
+    const r = remoteMeta.get(l.id);
+    if (!r || l.savedAt > r.sa) { delete tombs[l.id]; pushDoc(l.id, cleanForCloud(l)); }
+  });
+  Object.keys(tombs).forEach(id=>{
+    const r = remoteMeta.get(id);
+    if (r && r.deleted && r.sa >= tombs[id]) { delete tombs[id]; return; }
+    if (!r || (!r.deleted && r.sa <= tombs[id])) pushDoc(id, { id, deleted:true, savedAt:tombs[id] });
+  });
+  saveTombs(tombs);
+  if (changed) {
+    const merged = [...local.values()].sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
+    if (writeLibrary(merged)) { renderArchive(); fillCompareSelects(); updateLeadStatus(); }
+    else setSyncState('error', 'Memoria del browser piena: impossibile salvare i lead ricevuti.');
+  }
+  lastSyncAt = Date.now();
+  if (syncState !== 'error') renderSyncPanel();
+}
+
+function pushDoc(id, data) {
+  if (!fbDb || !fbUser || !ID_RE.test(id)) return;
+  fbDb.collection('leads').doc(id).set(data).then(()=>{
+    remoteMeta.set(id, { sa: data.savedAt, deleted: data.deleted === true });
+    lastSyncAt = Date.now();
+    if (syncState === 'error') setSyncState('online'); else renderSyncPanel();
+  }).catch(err=>{
+    setSyncState('error', 'Salvataggio nel cloud non riuscito'+(err && err.code ? ' ('+err.code+')' : '')+': riproverò alla prossima sincronizzazione.');
+  });
+}
+function syncPush(lead) { pushDoc(lead.id, cleanForCloud(lead)); }
+function syncDelete(id) {
+  const tombs = loadTombs();
+  tombs[id] = Date.now();
+  saveTombs(tombs);
+  pushDoc(id, { id, deleted:true, savedAt:tombs[id] });   // nel cloud resta solo l'id, nessun dato personale
+}
+
+function syncLogin(ev) {
+  ev.preventDefault();
+  if (!fbDb) { setSyncState('error', 'Sincronizzazione non pronta: controlla la connessione e ricarica la pagina.'); return; }
+  const email = document.getElementById('sync-email').value.trim();
+  const pass = document.getElementById('sync-pass').value;
+  document.getElementById('sync-pass').value = '';
+  firebase.auth().signInWithEmailAndPassword(email, pass).catch(err=>{
+    const bad = ['auth/invalid-credential','auth/wrong-password','auth/user-not-found','auth/invalid-email'];
+    setSyncState('error', bad.includes(err && err.code) ? 'Email o password non corretti.' : 'Accesso non riuscito'+(err && err.code ? ' ('+err.code+')' : '')+'.');
+  });
+}
+function syncLogout() {
+  if (!confirm('Uscire dalla sincronizzazione? I lead restano su questo dispositivo.')) return;
+  firebase.auth().signOut();
+}
+window.addEventListener('online', ()=>{ if (fbUser) startSync(); });
+
 // init
 loadWeights();
 refreshAll();
@@ -1692,6 +1859,7 @@ updateObjProgress();
 updateLeadStatus();
 renderArchive();
 fillCompareSelects();
+syncInit();
 if (libraryUnreadable) toast('⚠ Archivio non leggibile: una copia dei dati è stata conservata a parte. Importa un backup per ripartire.');
 
 // Chiede al browser di non cancellare questi dati e salva quando si lascia la pagina
