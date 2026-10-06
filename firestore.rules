@@ -5,7 +5,7 @@ service cloud.firestore {
     // Tutto il resto del database è chiuso.
     function autorizzato() {
       return request.auth != null
-        && request.auth.token.email in ['EMAIL_PAPA@example.com', 'EMAIL_LORENZO@example.com'];
+        && request.auth.token.email in ['emilianocarlotti@alice.it', 'lrnz.crlt@gmail.com'];
     }
     match /leads/{leadId} {
       allow read: if autorizzato();
