@@ -2162,6 +2162,54 @@ function refreshCrmViews() {
   if (document.getElementById('page-dash')?.classList.contains('active')) renderDash();
 }
 
+// ── Azioni suggerite ──
+const PER_DAY = 6;   // telefonate pianificate al giorno
+const SUGGEST = {
+  nuovo:       { action:'Prima telefonata: presentarsi e proporre il sopralluogo', days:0 },
+  contattato:  { action:'Fissare il sopralluogo (data e ora)', days:1 },
+  sopralluogo: { action:'Preparare e inviare il preventivo', days:2 },
+  preventivo:  { action:'Sollecitare il preventivo: chiedere dubbi e obiezioni', days:3 },
+  trattativa:  { action:'Richiamare per chiudere: affrontare l\'obiezione principale', days:3 }
+};
+function suggestFor(c) { return SUGGEST[c.stage] || null; }
+function isSunday(offset) { const d = new Date(); d.setDate(d.getDate()+offset); return d.getDay() === 0; }
+function workdayOffset(n) {            // n-esimo giorno lavorativo da oggi (domenica esclusa)
+  let off = 0, count = 0;
+  while (true) { if (!isSunday(off)) { if (count === n) return off; count++; } off++; }
+}
+function applySuggestion(id) {
+  const l = loadLibrary().find(x=>x.id===id); if (!l) return;
+  const sg = suggestFor(cleanCrm(l.crm)); if (!sg) return;
+  let off = sg.days; while (isSunday(off)) off++;
+  updateCrmFor(id, c=>{ c.nextAction = sg.action; c.nextDate = addDaysISO(off); pushLog(c, 'nota', 'Pianificato: '+sg.action+' ('+fmtDate(c.nextDate)+')'); });
+  toast('Pianificato per '+fmtDate(addDaysISO(off)));
+}
+function planAll() {
+  const items = loadLibrary().map(l=>({ l, c:cleanCrm(l.crm), sc:scoreLeadData(l) })).filter(x=>!isClosed(x.c) && !x.c.nextDate && suggestFor(x.c));
+  if (!items.length) { toast('Niente da pianificare'); return; }
+  items.sort((a,b)=>((b.sc?b.sc.adj:-1)-(a.sc?a.sc.adj:-1)));
+  if (!confirm('Pianificare '+items.length+' lead? I più promettenti per primi, al massimo '+PER_DAY+' al giorno (domeniche escluse). Potrai cambiare ogni data.')) return;
+  const list = loadLibrary();
+  const plan = items.map((x,i)=>{
+    const sg = suggestFor(x.c);
+    let off = Math.max(sg.days, workdayOffset(Math.floor(i/PER_DAY))); while (isSunday(off)) off++;
+    return { id:x.l.id, action:sg.action, date:addDaysISO(off) };
+  });
+  const apply = (c, pl)=>{ c.nextAction = pl.action; c.nextDate = pl.date; pushLog(c, 'nota', 'Pianificato: '+pl.action+' ('+fmtDate(pl.date)+')'); };
+  const touched = [];
+  plan.forEach(pl=>{
+    if (pl.id === currentLeadId) return;
+    const l = list.find(y=>y.id===pl.id); if (!l) return;
+    const c = cleanCrm(l.crm); apply(c, pl); l.crm = c; l.savedAt = Date.now(); touched.push(l);
+  });
+  if (!writeLibrary(list)) { toast('⚠ Salvataggio non riuscito'); return; }
+  touched.forEach(syncPush);
+  const cur = plan.find(pl=>pl.id === currentLeadId);
+  if (cur) updateCrmFor(cur.id, c=>apply(c, cur));
+  renderArchive();
+  toast('Pianificati '+plan.length+' lead');
+}
+
 // ── Schermata OGGI ──
 function lastTouchTs(l, c) {
   const lastLog = c.log.length ? Math.max(...c.log.map(e=>e.t)) : 0;
@@ -2185,7 +2233,7 @@ function renderOggi() {
     box.innerHTML = '';
     return;
   }
-  intro.innerHTML = `📋 <strong>${new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})}</strong> — ${late.length} in ritardo · ${today.length} per oggi · ${none.length} senza prossima azione`;
+  intro.innerHTML = `📋 <strong>${new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})}</strong> — ${late.length} in ritardo · ${today.length} per oggi · ${none.length} senza prossima azione`+(none.length ? '<br>💡 Premi <strong>⚡ Pianifica tutti</strong> per assegnare in automatico prossima azione e data (prima i lead col punteggio più alto), oppure <strong>✓ Pianifica</strong> su un singolo lead.' : '');
   const card = (x, mode)=>{
     const { l, c, sc } = x; const ct = l.contact || {};
     const th = telHref(ct.phone);
@@ -2195,17 +2243,18 @@ function renderOggi() {
     return `<div class="today-card">
       <div><div class="tc-name">${esc(ct.name || 'Senza nome')}${stale}</div>
         <div class="tc-meta">${stageBadge(c.stage)} ${esc(ct.comune || 'Comune n/d')}${ct.phone ? ' · '+esc(ct.phone) : ''}</div>
-        <div class="tc-act">${c.nextAction || c.nextDate ? '➜ '+esc(c.nextAction || 'Prossima azione')+when : '<em style="color:var(--amber-dk)">Nessuna prossima azione: decidi cosa fare con questo lead</em>'}</div></div>
+        <div class="tc-act">${c.nextAction || c.nextDate ? '➜ '+esc(c.nextAction || 'Prossima azione')+when : (suggestFor(c) ? '<span style="color:var(--amber-dk)">💡 Suggerito: '+esc(suggestFor(c).action)+'</span>' : '<em style="color:var(--amber-dk)">Nessuna prossima azione</em>')}</div></div>
       <div class="tc-score">${sc ? sc.adj : '—'}</div>
       <div class="tc-btns">
-        ${th ? `<a class="btn btn-green" href="${esc(th)}">📞 Chiama</a>` : ''}
+        ${(!c.nextDate && !c.nextAction && suggestFor(c)) ? `<button class="btn btn-green" onclick="applySuggestion('${esc(l.id)}')">✓ Pianifica</button>` : ''}
+        ${th ? `<a class="btn ${(!c.nextDate && !c.nextAction && suggestFor(c)) ? '' : 'btn-green'}" href="${esc(th)}">📞 Chiama</a>` : ''}
         <button class="btn" onclick="openLeadFromOggi('${esc(l.id)}')">Apri</button>
         ${c.nextDate || c.nextAction ? `<button class="btn" onclick="quickDone('${esc(l.id)}')">✓ Fatto</button>` : ''}
         <button class="btn" onclick="quickPostpone('${esc(l.id)}',3)">+3 gg</button>
       </div></div>`;
   };
-  const sec = (title, arr, cls)=> arr.length ? `<div class="today-sec ${cls||''}"><h3>${title} <span class="n">${arr.length}</span></h3>${arr.map(x=>card(x)).join('')}</div>` : '';
-  const html = sec('🔴 In ritardo', late, 'late') + sec('🟢 Per oggi', today) + sec('❓ Senza prossima azione', none) + sec('🗓 Prossimi 7 giorni', soon);
+  const sec = (title, arr, cls, extra)=> arr.length ? `<div class="today-sec ${cls||''}"><h3>${title} <span class="n">${arr.length}</span> ${extra||''}</h3>${arr.map(x=>card(x)).join('')}</div>` : '';
+  const html = sec('🔴 In ritardo', late, 'late') + sec('🟢 Per oggi', today) + sec('❓ Senza prossima azione', none, '', '<button class="mini-btn" onclick="planAll()">⚡ Pianifica tutti</button>') + sec('🗓 Prossimi 7 giorni', soon);
   box.innerHTML = html || '<div class="no-leve">Tutto in ordine: nessuna azione in scadenza.'+(later?' ('+later+' lead programmati più avanti)':'')+'</div>';
 }
 
