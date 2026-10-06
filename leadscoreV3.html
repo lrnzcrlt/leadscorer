@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Lead Scorer v2 — Piscine San Lorenzo</title>
+<title>Lead Scorer v3 — Piscine San Lorenzo</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -142,6 +142,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .contact-field input:focus,.contact-field textarea:focus{border-color:var(--green)}
 .lead-status{font-size:12px;color:var(--text3)}
 .lead-status.saved{color:var(--green-dk)}
+.lead-status.warn{color:var(--red-dk);font-weight:500}
+.backup-panel{background:var(--surf);border:.5px solid var(--border);border-radius:var(--r-md);padding:.75rem 1rem;margin-bottom:.875rem}
+.backup-info{font-size:12px;color:var(--text2);margin-bottom:.6rem;line-height:1.5}
+.backup-info.warn{color:var(--red-dk);font-weight:500}
+.backup-actions{display:flex;flex-wrap:wrap;gap:8px}
+.backup-note{font-size:11px;color:var(--text3);margin-top:.6rem;line-height:1.5}
 
 /* ARCHIVE + COMPARE */
 .lead-list{display:flex;flex-direction:column;gap:8px}
@@ -715,7 +721,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
      PAGE 6 — ARCHIVIO
 ═══════════════════════════════════════════════════ -->
 <div class="page" id="page-archivio">
-  <div class="info-box" style="margin-bottom:.75rem">📁 I lead restano su questo browser (niente server). Puoi riaprirli, eliminarli e usarli nella tab <strong>Confronta</strong>.</div>
+  <div class="info-box" style="margin-bottom:.75rem">📁 I lead si salvano da soli su <strong>questo dispositivo</strong> (nel browser, niente server). Telefono e computer hanno archivi separati: per spostare i lead da uno all'altro usa <strong>Scarica backup</strong> e <strong>Importa backup</strong>.</div>
+  <div class="backup-panel">
+    <div class="backup-info" id="backup-info"></div>
+    <div class="backup-actions">
+      <button class="btn" onclick="exportBackup()">⬇ Scarica backup</button>
+      <button class="btn" onclick="document.getElementById('import-file').click()">⬆ Importa backup</button>
+      <input type="file" id="import-file" accept="application/json,.json" style="display:none" onchange="importBackupFile(this)"/>
+    </div>
+    <div class="backup-note">⚠ Il file di backup contiene nomi e telefoni dei clienti: non caricarlo su GitHub e non condividerlo pubblicamente.</div>
+  </div>
   <input class="lead-search" id="archive-search" type="search" placeholder="Cerca per nome, comune, telefono…" oninput="renderArchive()"/>
   <div class="bottom-bar" style="margin-top:0;margin-bottom:.75rem">
     <span class="filled-count" id="archive-count">0 lead salvati</span>
@@ -792,6 +807,15 @@ const budgetVotes = {};
 let currentLeadId = null;
 let dirty = false;
 const LIBRARY_KEY = 'psl_leads_v2';
+const CORRUPT_KEY = 'psl_leads_v2_illeggibile';
+const WEIGHTS_KEY = 'psl_weights_v1';
+const LAST_BACKUP_KEY = 'psl_last_backup';
+const BACKUP_MAX_DAYS = 7;
+let autoBlocked = false;   // salvataggio automatico sospeso (dopo un reset)
+let saveFailed = false;    // ultimo salvataggio non riuscito
+let lastSavedAt = null;
+let autoTimer = null;
+let libraryUnreadable = false;
 
 const TOTAL_W = () => Object.values(weights).reduce((a,b)=>a+b,0);
 
@@ -800,12 +824,44 @@ function uid() {
 }
 
 function loadLibrary() {
-  try { return JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]'); }
-  catch { return []; }
+  let raw = null;
+  try { raw = localStorage.getItem(LIBRARY_KEY); } catch { return []; }
+  if (!raw) return [];
+  try {
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) throw new Error('formato');
+    return data;
+  } catch {
+    // Dati illeggibili: non vengono mai sovrascritti in silenzio, ne resta una copia.
+    libraryUnreadable = true;
+    try { if (!localStorage.getItem(CORRUPT_KEY)) localStorage.setItem(CORRUPT_KEY, raw); } catch {}
+    return [];
+  }
 }
 
+// true se il salvataggio è riuscito, false se la memoria del browser rifiuta la scrittura
 function writeLibrary(list) {
-  localStorage.setItem(LIBRARY_KEY, JSON.stringify(list));
+  try {
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(list));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function loadWeights() {
+  try {
+    const w = JSON.parse(localStorage.getItem(WEIGHTS_KEY) || 'null');
+    if (!w || typeof w !== 'object') return;
+    Object.keys(DEFAULT_WEIGHTS).forEach(k=>{
+      const v = parseFloat(w[k]);
+      if (isFinite(v) && v >= 0.2 && v <= 5) weights[k] = v;
+    });
+  } catch {}
+}
+
+function saveWeights() {
+  try { localStorage.setItem(WEIGHTS_KEY, JSON.stringify(weights)); } catch {}
 }
 
 function toast(msg) {
@@ -915,6 +971,7 @@ function clearFormKeepId(keepId) {
   setContact({name:'',comune:'',phone:'',email:'',notes:''});
   if (!keepId) currentLeadId = null;
   dirty = false;
+  autoBlocked = false;
   refreshAll();
   updateObjProgress();
   updateLeadStatus();
@@ -932,8 +989,10 @@ function applyChipByLabel(f, label, score) {
 function loadLead(id, goProfilo) {
   const lead = loadLibrary().find(l=>l.id===id);
   if (!lead) { toast('Lead non trovato'); return; }
+  if (id !== currentLeadId && !confirmDiscard()) return;
   clearFormKeepId(true);
   currentLeadId = lead.id;
+  lastSavedAt = lead.savedAt;
   setContact(lead.contact || {});
   Object.entries(lead.budgetVotes || {}).forEach(([k,v])=>budgetVotes[k]=v);
   Object.entries(lead.profile || {}).forEach(([f,p])=>{
@@ -955,23 +1014,65 @@ function loadLead(id, goProfilo) {
   toast('Lead aperto: '+(lead.contact?.name || 'Senza nome'));
 }
 
-function saveCurrentLead() {
+function saveCurrentLead(opts) {
+  const auto = !!(opts && opts.auto);
   const lead = snapshotLead();
-  currentLeadId = lead.id;
   const list = loadLibrary();
   const i = list.findIndex(l=>l.id===lead.id);
   if (i>=0) list[i]=lead; else list.unshift(lead);
-  writeLibrary(list);
+  if (!writeLibrary(list)) {
+    saveFailed = true;
+    updateLeadStatus();
+    toast('⚠ Salvataggio non riuscito: memoria del browser non disponibile. Scarica un backup.');
+    return false;
+  }
+  saveFailed = false;
+  currentLeadId = lead.id;
+  lastSavedAt = lead.savedAt;
+  if (!auto) autoBlocked = false;
   dirty = false;
   updateLeadStatus();
   renderArchive();
   fillCompareSelects();
-  toast('Lead salvato');
+  if (!auto) toast('Lead salvato');
+  return true;
+}
+
+// ── Salvataggio automatico ──
+function hasContent() {
+  const c = contactFields();
+  return !!(c.name || c.comune || c.phone || c.email || c.notes ||
+            Object.keys(state).length || Object.keys(objState).length);
+}
+
+function canAutosave() {
+  if (!dirty || autoBlocked || !hasContent()) return false;
+  if (currentLeadId) return true;
+  const c = contactFields();           // un lead nuovo parte solo con un riferimento al cliente
+  return !!(c.name || c.comune || c.phone);
+}
+
+function flushAutosave() {
+  clearTimeout(autoTimer);
+  if (canAutosave()) saveCurrentLead({auto:true});
+}
+
+function scheduleAutosave() {
+  clearTimeout(autoTimer);
+  if (autoBlocked) return;
+  autoTimer = setTimeout(flushAutosave, 1500);
+}
+
+// Se ci sono dati non salvati chiede conferma prima di scartarli
+function confirmDiscard() {
+  flushAutosave();
+  if (dirty && hasContent()) return confirm('Ci sono dati non salvati su questa scheda. Vuoi scartarli?');
+  return true;
 }
 
 function deleteLead(id) {
   if (!confirm('Eliminare questo lead dall\'archivio?')) return;
-  writeLibrary(loadLibrary().filter(l=>l.id!==id));
+  if (!writeLibrary(loadLibrary().filter(l=>l.id!==id))) { toast('⚠ Eliminazione non riuscita'); return; }
   if (currentLeadId===id) {
     currentLeadId = null;
     dirty = true;
@@ -984,29 +1085,39 @@ function deleteLead(id) {
 }
 
 function newLead() {
+  if (!confirmDiscard()) return;
   clearFormKeepId(false);
+  lastSavedAt = null;
   showPage('profilo');
   toast('Nuova scheda');
 }
 
-function markUnsaved() {
+function markUnsaved(noAuto) {
   dirty = true;
+  if (noAuto) { autoBlocked = true; clearTimeout(autoTimer); }
   updateLeadStatus();
+  scheduleAutosave();
 }
 
 function updateLeadStatus() {
   const el = document.getElementById('lead-status');
   if (!el) return;
   const n = loadLibrary().length;
-  if (!currentLeadId) {
+  const t = lastSavedAt ? new Date(lastSavedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : '';
+  if (saveFailed) {
+    el.className = 'lead-status warn';
+    el.textContent = '⚠ NON salvato: memoria del browser non disponibile. Scarica un backup dall\'Archivio.';
+  } else if (!currentLeadId) {
     el.className = 'lead-status';
-    el.textContent = 'Nuovo lead — non ancora salvato · '+n+' in archivio';
+    el.textContent = 'Nuovo lead — il salvataggio automatico parte quando inserisci nome, comune o telefono · '+n+' in archivio';
   } else if (dirty) {
     el.className = 'lead-status';
-    el.textContent = 'Modifiche non salvate · '+n+' in archivio';
+    el.textContent = autoBlocked
+      ? 'Modifiche non salvate (salvataggio automatico sospeso dopo il reset): premi Salva lead · '+n+' in archivio'
+      : 'Modifiche in corso… · '+n+' in archivio';
   } else {
     el.className = 'lead-status saved';
-    el.textContent = 'Salvato in questo browser · '+n+' in archivio';
+    el.textContent = 'Salvato su questo dispositivo'+(t?' alle '+t:'')+' · '+n+' in archivio';
   }
 }
 
@@ -1019,6 +1130,7 @@ function renderArchive() {
   });
   const count = document.getElementById('archive-count');
   if (count) count.textContent = loadLibrary().length+' lead salvati';
+  renderBackupInfo();
   const box = document.getElementById('archive-list');
   if (!box) return;
   if (!list.length) {
@@ -1037,11 +1149,123 @@ function renderArchive() {
       </div>
       <div class="lead-card-score">${sc?sc.adj:'—'}</div>
       <div class="lead-card-actions">
-        <button class="btn btn-green" onclick="loadLead('${l.id}')">Apri</button>
-        <button class="btn" onclick="deleteLead('${l.id}')">Elimina</button>
+        <button class="btn btn-green" onclick="loadLead('${esc(l.id)}')">Apri</button>
+        <button class="btn" onclick="deleteLead('${esc(l.id)}')">Elimina</button>
       </div>
     </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════
+// BACKUP E IMPORT
+// ══════════════════════════════════════════
+function renderBackupInfo() {
+  const el = document.getElementById('backup-info');
+  if (!el) return;
+  const n = loadLibrary().length;
+  let last = 0;
+  try { last = parseInt(localStorage.getItem(LAST_BACKUP_KEY) || '0'); } catch {}
+  const days = last ? (Date.now()-last)/86400000 : Infinity;
+  if (n > 0 && days > BACKUP_MAX_DAYS) {
+    el.className = 'backup-info warn';
+    el.textContent = last
+      ? '⚠ Ultimo backup '+new Date(last).toLocaleDateString('it-IT')+': più di '+BACKUP_MAX_DAYS+' giorni fa. Scarica una copia.'
+      : '⚠ Nessun backup scaricato finora. Se il browser cancella i dati, i lead si perdono: scarica una copia.';
+  } else {
+    el.className = 'backup-info';
+    el.textContent = n+' lead in archivio · '+(last ? 'ultimo backup '+new Date(last).toLocaleDateString('it-IT') : 'nessun backup ancora');
+  }
+}
+
+function exportBackup() {
+  const list = loadLibrary();
+  if (!list.length) { toast('Nessun lead da esportare'); return; }
+  const payload = { app:'psl-lead-scorer', version:3, exportedAt:new Date().toISOString(), count:list.length, leads:list };
+  const blob = new Blob([JSON.stringify(payload, null, 1)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lead-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  try { localStorage.setItem(LAST_BACKUP_KEY, String(Date.now())); } catch {}
+  renderBackupInfo();
+  toast('Backup scaricato ('+list.length+' lead)');
+}
+
+// Accetta solo la forma attesa: il file può arrivare da fuori e non va mai preso per buono
+function sanitizeLead(l) {
+  if (!l || typeof l !== 'object') return null;
+  const str = (v,n)=> typeof v==='string' ? v.slice(0,n) : '';
+  const id = (typeof l.id==='string' && /^[A-Za-z0-9._-]{1,64}$/.test(l.id)) ? l.id : uid();
+  const c = (l.contact && typeof l.contact==='object') ? l.contact : {};
+  const contact = { name:str(c.name,120), comune:str(c.comune,120), phone:str(c.phone,60), email:str(c.email,160), notes:str(c.notes,5000) };
+  const profile = {};
+  if (l.profile && typeof l.profile==='object') Object.keys(l.profile).forEach(f=>{
+    if (!(f in DEFAULT_WEIGHTS)) return;
+    const p = l.profile[f];
+    const sc = Number(p && p.s);
+    if (!isFinite(sc) || sc<0 || sc>100) return;
+    profile[f] = { s:sc, label:str(p.label,120) };
+    if (f==='giardino') profile[f].giardino = str(String(p.giardino ?? ''),10);
+  });
+  const objections = {};
+  if (l.objections && typeof l.objections==='object') Object.keys(l.objections).forEach(f=>{
+    if (!(f in OBJ_LABELS)) return;
+    const o = l.objections[f];
+    const pen = Number(o && o.penalty);
+    if (!isFinite(pen) || pen<0 || pen>100) return;
+    objections[f] = { penalty:pen, label:str(o.label,120), t:str(o.t,10) };
+  });
+  const budgetVotes = {};
+  if (l.budgetVotes && typeof l.budgetVotes==='object') Object.keys(l.budgetVotes).forEach(f=>{
+    if ((f in DEFAULT_WEIGHTS) && ['premium','mid','entry'].includes(l.budgetVotes[f])) budgetVotes[f] = l.budgetVotes[f];
+  });
+  const sa = Number(l.savedAt);
+  const lead = { id, savedAt:(isFinite(sa) && sa>0) ? sa : Date.now(), contact, profile, objections, budgetVotes };
+  const sc = scoreLeadData(lead);
+  const bg = budgetFromLead(lead);
+  lead.preview = { score: sc ? sc.adj : null, conf: sc ? sc.conf : 0, budget: bg ? bg.label : '—', title: contact.name || 'Senza nome' };
+  return lead;
+}
+
+// Unisce senza cancellare nulla: i lead nuovi si aggiungono, a parità di id vince il più recente
+function mergeLeads(incoming) {
+  const byId = new Map(loadLibrary().map(l=>[l.id,l]));
+  const r = { added:0, updated:0, kept:0, invalid:0 };
+  incoming.forEach(raw=>{
+    const l = sanitizeLead(raw);
+    if (!l) { r.invalid++; return; }
+    const cur = byId.get(l.id);
+    if (!cur) { byId.set(l.id,l); r.added++; }
+    else if (l.savedAt > (cur.savedAt||0)) { byId.set(l.id,l); r.updated++; }
+    else r.kept++;
+  });
+  const merged = [...byId.values()].sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
+  return { merged, r };
+}
+
+function importBackupFile(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  if (file.size > 5*1024*1024) { toast('File troppo grande per essere un backup'); return; }
+  const reader = new FileReader();
+  reader.onerror = ()=>toast('Impossibile leggere il file');
+  reader.onload = ()=>{
+    let data;
+    try { data = JSON.parse(reader.result); } catch { toast('File non valido: non è un backup JSON'); return; }
+    const arr = Array.isArray(data) ? data : (data && Array.isArray(data.leads) ? data.leads : null);
+    if (!arr) { toast('File non valido: nessun lead trovato'); return; }
+    const { merged, r } = mergeLeads(arr);
+    if (!writeLibrary(merged)) { toast('⚠ Importazione non riuscita: memoria piena'); return; }
+    renderArchive();
+    fillCompareSelects();
+    updateLeadStatus();
+    toast('Importati: '+r.added+' nuovi, '+r.updated+' aggiornati, '+r.kept+' già presenti'+(r.invalid?', '+r.invalid+' scartati':''));
+  };
+  reader.readAsText(file);
 }
 
 function esc(s) {
@@ -1380,11 +1604,13 @@ function renderWeightEditor() {
 function updateWeight(f, val) {
   weights[f]=parseFloat(val);
   document.getElementById('wval-'+f).textContent=parseFloat(val).toFixed(1);
+  saveWeights();
   refreshAll();
 }
 
 function resetWeights() {
   weights={...DEFAULT_WEIGHTS};
+  saveWeights();
   renderWeightEditor();
   refreshAll();
 }
@@ -1447,24 +1673,35 @@ function resetAll() {
   document.querySelectorAll('#page-profilo .chip').forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
   document.querySelectorAll('input[type=number]').forEach(i=>i.value='');
   setContact({name:'',comune:'',phone:'',email:'',notes:''});
-  markUnsaved();
+  markUnsaved(true);
   refreshAll();
 }
 
 function resetObjezioni() {
   Object.keys(objState).forEach(k=>delete objState[k]);
   document.querySelectorAll('[data-penalty]').forEach(c=>c.classList.remove('sel-pos','sel-neg','sel-neu','sel-warn'));
-  markUnsaved();
+  markUnsaved(true);
   updateObjProgress();
   refreshAll();
 }
 
 // init
+loadWeights();
 refreshAll();
 updateObjProgress();
 updateLeadStatus();
 renderArchive();
 fillCompareSelects();
+if (libraryUnreadable) toast('⚠ Archivio non leggibile: una copia dei dati è stata conservata a parte. Importa un backup per ripartire.');
+
+// Chiede al browser di non cancellare questi dati e salva quando si lascia la pagina
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch {}
+document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='hidden') flushAutosave(); });
+window.addEventListener('pagehide', flushAutosave);
+window.addEventListener('beforeunload', e=>{
+  flushAutosave();
+  if (dirty && hasContent()) { e.preventDefault(); e.returnValue = ''; }
+});
 </script>
 </body>
 </html>

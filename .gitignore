@@ -1,0 +1,4 @@
+lead-backup*.json
+*.csv
+.env
+.DS_Store
