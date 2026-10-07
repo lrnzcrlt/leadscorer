@@ -202,6 +202,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 #update-bar{display:none;position:fixed;left:12px;right:12px;bottom:12px;z-index:300;background:var(--text);color:var(--bg);border-radius:var(--r-lg);padding:.7rem .9rem;align-items:center;gap:10px;justify-content:space-between;font-size:14px;box-shadow:0 4px 18px rgba(0,0,0,.3)}
 #update-bar.show{display:flex}
 #update-bar button{background:var(--green);color:#fff;border:none;border-radius:var(--r-md);padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer}
+/* RICHIESTA */
+.crm-field textarea{width:100%;padding:8px 10px;font-size:14px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);outline:none;resize:vertical;font-family:inherit}
+.feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+@media(max-width:600px){.feat-grid{grid-template-columns:1fr}}
+.req-sum{font-size:13px;color:var(--text2);margin-top:.6rem;white-space:pre-line;line-height:1.55}
 /* CRM */
 .outcome-box{margin-bottom:.8rem}
 .outcome-box .row{display:flex;gap:8px;flex-wrap:wrap}
@@ -322,6 +327,30 @@ a.btn.disabled{opacity:.4;pointer-events:none}
       <a class="btn disabled" id="mail-link" href="#">✉ Email</a>
     </div>
     <div class="lead-status" id="lead-status">Nuovo lead — non ancora salvato</div>
+  </div>
+
+  <div class="crm-card" id="req-card">
+    <h3>📝 Richiesta del cliente</h3>
+    <div class="crm-field"><label>Testo della richiesta (incolla il messaggio ricevuto dal sito)</label>
+      <textarea id="req-text" rows="4" maxlength="3000" placeholder="es. Vorrei una piscina 20x8, colore azzurro, profondità variabile, ingresso con gradini, illuminazione…" oninput="onReqField()"></textarea>
+      <div class="quick-days">
+        <button type="button" onclick="parseRequest()">✨ Compila i campi dal testo</button>
+        <button type="button" onclick="copyRequestSummary()">📋 Copia riepilogo</button>
+      </div></div>
+    <div class="crm-grid" style="margin-top:.8rem">
+      <div class="crm-field"><label>Lunghezza (m)</label><input type="number" id="req-len" min="0" max="100" step="0.5" inputmode="decimal" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Larghezza (m)</label><input type="number" id="req-wid" min="0" max="100" step="0.5" inputmode="decimal" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Forma</label><select id="req-shape" onchange="onReqField()"></select></div>
+      <div class="crm-field"><label>Colore</label><input type="text" id="req-color" maxlength="60" placeholder="es. azzurro" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Profondità</label><select id="req-depthtype" onchange="onReqField()"></select></div>
+      <div class="crm-field"><label>Ingresso in acqua</label><select id="req-entry" onchange="onReqField()"></select></div>
+      <div class="crm-field"><label>Profondità minima (m)</label><input type="number" id="req-dmin" min="0" max="10" step="0.1" inputmode="decimal" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Profondità massima (m)</label><input type="number" id="req-dmax" min="0" max="10" step="0.1" inputmode="decimal" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Budget dichiarato (€)</label><input type="number" id="req-budget" min="0" step="500" inputmode="numeric" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Tempi desiderati</label><select id="req-timing" onchange="onReqField()"></select></div>
+      <div class="crm-field full"><label>Accessori e complementi</label><div class="feat-grid" id="req-feats"></div></div>
+    </div>
+    <div class="req-sum" id="req-summary"></div>
   </div>
 
   <div class="crm-card" id="crm-card">
@@ -1283,7 +1312,7 @@ function renderArchive() {
     if (tyF && cleanCrm(l.crm).clientType !== tyF) return false;
     if (!q) return true;
     const c = l.contact || {};
-    return [c.name,c.comune,c.phone,c.email,c.notes].join(' ').toLowerCase().includes(q);
+    return [c.name,c.comune,c.phone,c.email,c.notes,cleanCrm(l.crm).request.text].join(' ').toLowerCase().includes(q);
   });
   const count = document.getElementById('archive-count');
   if (count) count.textContent = loadLibrary().length+' lead salvati';
@@ -2033,7 +2062,7 @@ let crm = defaultCrm();
 const chkOpen = {};   // quali checklist sono aperte: resta così anche quando la scheda si ridisegna
 
 function defaultCrm() {
-  return { stage:'nuovo', clientType:'privato', nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
+  return { stage:'nuovo', clientType:'privato', request:defaultReq(), nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
 }
 function cleanCrm(raw) {
   const c = defaultCrm();
@@ -2043,6 +2072,7 @@ function cleanCrm(raw) {
   if (CLIENT_TYPES.some(x=>x[0]===raw.clientType)) c.clientType = raw.clientType;
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw.nextDate || '')) c.nextDate = raw.nextDate;
   c.nextAction = str(raw.nextAction, 200);
+  c.request = cleanReq(raw.request);
   if (SOURCES.some(x=>x[0]===raw.source)) c.source = raw.source;
   if (LOSS_REASONS.some(x=>x[0]===raw.closeReason) || WIN_REASONS.some(x=>x[0]===raw.closeReason)) c.closeReason = raw.closeReason;
   if (raw.closeValue !== null && raw.closeValue !== '' && raw.closeValue !== undefined) {
@@ -2091,6 +2121,7 @@ function renderCrmForm() {
   st.innerHTML = optionsHtml(STAGES, crm.stage);
   document.getElementById('crm-source').innerHTML = optionsHtml(SOURCES, crm.source);
   document.getElementById('crm-type').innerHTML = optionsHtml(CLIENT_TYPES, crm.clientType);
+  renderRequestForm();
   document.getElementById('crm-next-action').value = crm.nextAction;
   document.getElementById('crm-next-date').value = crm.nextDate;
   const closed = isClosed(crm);
@@ -2204,6 +2235,136 @@ function fillStageFilter() {
 function refreshCrmViews() {
   if (document.getElementById('page-oggi')?.classList.contains('active')) renderOggi();
   if (document.getElementById('page-dash')?.classList.contains('active')) renderDash();
+}
+
+// ── Richiesta del cliente ──
+const SHAPES = [['','—'],['rettangolare','Rettangolare'],['L','Ad L'],['libera','Forma libera'],['altro','Altro']];
+const DEPTHS = [['','—'],['costante','Costante'],['variabile','Variabile']];
+const ENTRIES = [['','—'],['gradini','Gradini'],['scala','Scala'],['rampa','Rampa / spiaggia'],['altro','Altro']];
+const TIMINGS = [['','—'],['subito','Subito / al più presto'],['3mesi','Entro 3 mesi'],['stagione','Per la prossima stagione'],['nonso','Non definito']];
+const FEATURES = [['luci','Illuminazione LED'],['riscald','Riscaldamento / pompa di calore'],['copertura','Copertura'],['idro','Idromassaggio / cascata'],['controc','Nuoto controcorrente'],['domotica','Domotica'],['sale','Trattamento al sale'],['sfioro','Bordo a sfioro']];
+function defaultReq() { return { text:'', len:null, wid:null, shape:'', color:'', depthType:'', dmin:null, dmax:null, entry:'', timing:'', budget:null, feats:{} }; }
+function cleanReq(raw) {
+  const r = defaultReq();
+  if (!raw || typeof raw !== 'object') return r;
+  const num = (v,max)=>{ if (v===null || v==='' || v===undefined) return null; const n = Number(v); return (isFinite(n) && n>=0 && n<=max) ? n : null; };
+  const inList = (list, v)=> list.some(x=>x[0]===v) ? v : '';
+  r.text = typeof raw.text==='string' ? raw.text.slice(0,3000) : '';
+  r.len = num(raw.len,100); r.wid = num(raw.wid,100); r.dmin = num(raw.dmin,10); r.dmax = num(raw.dmax,10); r.budget = num(raw.budget,10000000);
+  r.shape = inList(SHAPES, raw.shape); r.depthType = inList(DEPTHS, raw.depthType); r.entry = inList(ENTRIES, raw.entry); r.timing = inList(TIMINGS, raw.timing);
+  r.color = typeof raw.color==='string' ? raw.color.slice(0,60) : '';
+  FEATURES.forEach(([k])=>{ if (raw.feats && raw.feats[k] === true) r.feats[k] = true; });
+  return r;
+}
+function fmtNum(n) { return String(n).replace('.',','); }
+function renderRequestForm() {
+  const r = crm.request;
+  const set = (id,v)=>{ const el = document.getElementById(id); if (el) el.value = (v===null || v===undefined) ? '' : v; };
+  if (!document.getElementById('req-text')) return;
+  set('req-text', r.text); set('req-len', r.len); set('req-wid', r.wid); set('req-color', r.color); set('req-dmin', r.dmin); set('req-dmax', r.dmax); set('req-budget', r.budget);
+  document.getElementById('req-shape').innerHTML = optionsHtml(SHAPES, r.shape);
+  document.getElementById('req-depthtype').innerHTML = optionsHtml(DEPTHS, r.depthType);
+  document.getElementById('req-entry').innerHTML = optionsHtml(ENTRIES, r.entry);
+  document.getElementById('req-timing').innerHTML = optionsHtml(TIMINGS, r.timing);
+  document.getElementById('req-feats').innerHTML = FEATURES.map(([k,l])=>`<label class="chk"><input type="checkbox" ${r.feats[k]?'checked':''} onchange="onReqField()" data-feat="${k}"><span>${esc(l)}</span></label>`).join('');
+  updateReqSummary();
+}
+function onReqField() {
+  const r = crm.request;
+  const num = id=>{ const v = document.getElementById(id).value; return (v==='' || !isFinite(Number(v)) || Number(v)<0) ? null : Number(v); };
+  r.text = document.getElementById('req-text').value.slice(0,3000);
+  r.len = num('req-len'); r.wid = num('req-wid'); r.dmin = num('req-dmin'); r.dmax = num('req-dmax'); r.budget = num('req-budget');
+  r.shape = document.getElementById('req-shape').value; r.depthType = document.getElementById('req-depthtype').value;
+  r.entry = document.getElementById('req-entry').value; r.timing = document.getElementById('req-timing').value;
+  r.color = document.getElementById('req-color').value.slice(0,60);
+  r.feats = {};
+  document.querySelectorAll('#req-feats input[data-feat]').forEach(i=>{ if (i.checked) r.feats[i.dataset.feat] = true; });
+  updateReqSummary();
+  markUnsaved();
+}
+function requestSummaryText() {
+  const r = crm.request, c = contactFields();
+  const L = [];
+  L.push('RICHIESTA DI PREVENTIVO' + (c.name ? ' — ' + c.name : '') + (c.comune ? ' (' + c.comune + ')' : ''));
+  if (r.len && r.wid) L.push('Dimensioni: ' + fmtNum(r.len) + ' × ' + fmtNum(r.wid) + ' m (circa ' + Math.round(r.len*r.wid) + ' m²)');
+  else if (r.len || r.wid) L.push('Dimensioni: ' + fmtNum(r.len || r.wid) + ' m (un solo lato indicato)');
+  const lab = (list,v)=> (list.find(x=>x[0]===v)||[0,''])[1];
+  if (r.shape) L.push('Forma: ' + lab(SHAPES, r.shape));
+  if (r.color) L.push('Colore: ' + r.color);
+  if (r.depthType || r.dmin != null || r.dmax != null) {
+    let d = 'Profondità: ' + (r.depthType ? lab(DEPTHS, r.depthType).toLowerCase() : '');
+    if (r.dmin != null && r.dmax != null && r.dmin !== r.dmax) d += ' da ' + fmtNum(r.dmin) + ' a ' + fmtNum(r.dmax) + ' m';
+    else if (r.dmax != null || r.dmin != null) d += ' ' + fmtNum(r.dmax != null ? r.dmax : r.dmin) + ' m';
+    L.push(d.trim());
+  }
+  if (r.entry) L.push('Ingresso: ' + lab(ENTRIES, r.entry).toLowerCase());
+  const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
+  if (feats.length) L.push('Accessori: ' + feats.join(', '));
+  if (r.budget != null) L.push('Budget dichiarato: € ' + r.budget.toLocaleString('it-IT'));
+  if (r.timing) L.push('Tempi: ' + lab(TIMINGS, r.timing).toLowerCase());
+  return L.length > 1 ? L.join('\n') : '';
+}
+function updateReqSummary() {
+  const el = document.getElementById('req-summary');
+  if (!el) return;
+  const t = requestSummaryText();
+  el.textContent = t ? t : '';
+}
+function copyRequestSummary() {
+  let t = requestSummaryText();
+  if (!t) { toast('Compila prima qualche campo della richiesta'); return; }
+  if (crm.request.text) t += '\n\nMessaggio originale:\n' + crm.request.text;
+  const done = ()=>toast('Riepilogo copiato');
+  const fallback = ()=>{ const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch { toast('Copia non riuscita: seleziona il testo a mano'); } ta.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+}
+
+// Legge il testo libero e propone i campi: compila SOLO quelli ancora vuoti
+function extractRequest(text) {
+  const T = String(text||'').toLowerCase();
+  const out = { feats:{} };
+  const toN = x=>parseFloat(String(x).replace(',','.'));
+  const dm = T.match(/(\d{1,2}(?:[.,]\d+)?)\s*(?:m|mt|metri)?\s*(?:x|×|\*)\s*(\d{1,2}(?:[.,]\d+)?)/);
+  if (dm) { const a = toN(dm[1]), b = toN(dm[2]); if (a>=1.5 && a<=50 && b>=1.5 && b<=50) { out.len = Math.max(a,b); out.wid = Math.min(a,b); } }
+  const colors = ['azzurro','celeste','turchese','blu','bianco','grigio','sabbia','verde','nero','antracite'];
+  const col = colors.find(c=>new RegExp('\\b'+c+'\\b').test(T)); if (col) out.color = col.charAt(0).toUpperCase()+col.slice(1);
+  if (/profondit[àa]?\s+variabile|fond(?:o|ale)\s+variabile|\bvariabile\b/.test(T)) out.depthType = 'variabile';
+  else if (/profondit[àa]?\s+(?:costante|unica|uniforme)|fondo\s+piatto/.test(T)) out.depthType = 'costante';
+  const pi = T.indexOf('profond');
+  if (pi >= 0) {
+    const sub = T.slice(pi, pi+90);
+    const rg = sub.match(/(\d(?:[.,]\d+)?)\s*(?:m|metri|mt)?\s*(?:-|–|a|e|fino a)\s*(\d(?:[.,]\d+)?)\s*(?:m|metri|mt)\b/);
+    if (rg) { const a = toN(rg[1]), b = toN(rg[2]); if (a>=0.5 && a<=4 && b>=0.5 && b<=4) { out.dmin = Math.min(a,b); out.dmax = Math.max(a,b); if (!out.depthType) out.depthType = 'variabile'; } }
+    else { const one = sub.match(/(\d(?:[.,]\d+)?)\s*(?:m|metri|mt)\b/); if (one) { const a = toN(one[1]); if (a>=0.5 && a<=4) { out.dmin = a; out.dmax = a; if (!out.depthType) out.depthType = 'costante'; } } }
+  }
+  if (/gradin|scalinat/.test(T)) out.entry = 'gradini'; else if (/\bscala\b/.test(T)) out.entry = 'scala'; else if (/rampa|spiaggia|ingresso\s+dolce/.test(T)) out.entry = 'rampa';
+  if (/rettangolar/.test(T)) out.shape = 'rettangolare'; else if (/forma\s+a\s+l\b|\bad\s+l\b/.test(T)) out.shape = 'L'; else if (/forma\s+libera|fagiolo|ovale|curva/.test(T)) out.shape = 'libera';
+  const F = { luci:/illuminazion|\bled\b|\bluci\b|faretti/, riscald:/riscaldament|pompa di calore/, copertura:/copertur|\btelo\b/, idro:/idromassagg|cascata|jacuzzi|getti/, controc:/controcorrente/, domotica:/domotic|automazion/, sale:/\bsale\b|elettrolisi/, sfioro:/sfioro|infinity/ };
+  Object.entries(F).forEach(([k,re])=>{ if (re.test(T)) out.feats[k] = true; });
+  if (/subito|quanto prima|al pi[uù] presto|urgent/.test(T)) out.timing = 'subito';
+  else { const mm = T.match(/(\d{1,2})\s*mesi/); if (mm && Number(mm[1]) <= 3) out.timing = '3mesi'; else if (/primavera|estate|stagione|maggio|giugno|luglio/.test(T)) out.timing = 'stagione'; }
+  const re = /(?:budget|massimo|spesa|disponibil\w*|circa|intorno a|fino a)[^\d]{0,25}(\d{1,3}(?:[.\s]\d{3})+|\d+(?:[.,]\d+)?)\s*(k|mila|€|euro)?/g;
+  let m;
+  while ((m = re.exec(T))) {
+    let v = toN(m[1].replace(/[.\s](?=\d{3}\b)/g,''));
+    if (m[2]==='k' || m[2]==='mila') v *= 1000;
+    else if (v < 1000) continue;
+    if (v >= 5000 && v <= 2000000) { out.budget = Math.round(v); break; }
+  }
+  if (out.budget == null) { const b2 = T.match(/(\d{1,3}(?:\.\d{3})+)\s*(?:€|euro)/); if (b2) { const v = toN(b2[1].replace(/\./g,'')); if (v>=5000 && v<=2000000) out.budget = v; } }
+  return out;
+}
+function parseRequest() {
+  const r = crm.request;
+  const src = document.getElementById('req-text').value;
+  if (!src.trim()) { toast('Incolla prima il testo della richiesta'); return; }
+  const x = extractRequest(src);
+  let n = 0;
+  const fill = (k)=>{ if (x[k] !== undefined && (r[k] === null || r[k] === '' )) { r[k] = x[k]; n++; } };
+  ['len','wid','shape','color','depthType','dmin','dmax','entry','timing','budget'].forEach(fill);
+  Object.keys(x.feats).forEach(k=>{ if (!r.feats[k]) { r.feats[k] = true; n++; } });
+  renderRequestForm();
+  if (n) { markUnsaved(); toast('Compilati '+n+' campi: controllali'); } else toast('Niente di nuovo da compilare');
 }
 
 // ── Azioni suggerite ──
@@ -2363,7 +2524,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-07-1';
+const BUILD = '2026-10-07-2';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
