@@ -216,6 +216,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 12px;margin-top:.6rem}
 .price-grid label{font-size:12px;color:var(--text2);display:block;margin-bottom:3px}
 .price-grid input{width:100%}
+details.fold>summary{list-style:none;cursor:pointer}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary h3{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;margin:0}
+details.fold>summary h3::after{content:'▾';margin-left:auto;color:var(--text3);transition:transform .15s}
+details.fold:not([open])>summary h3::after{transform:rotate(-90deg)}
+.fold-sub{order:3;flex-basis:100%;font-size:12px;font-weight:400;color:var(--text3)}
+.sub-h{font-size:13px;font-weight:600;margin:1rem 0 .3rem}
+.dt-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px;align-items:center;border-bottom:.5px solid var(--border);padding:2px 0}
+.dt-row .chk{padding:6px 0}
+.dt-row input[type=text]{width:100%;padding:6px 9px;font-size:13px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text)}
+@media(max-width:600px){.dt-row{grid-template-columns:1fr}.dt-row input[type=text]{margin-bottom:6px}}
+.photo-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:.8rem}
+.photo-bar select{padding:7px 10px;font-size:14px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text)}
+.photo-info{font-size:13px;color:var(--text2);margin-top:.5rem}
+.photo-info:empty{display:none}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px;margin-top:.7rem}
+.photo-th{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--bg2,#eef1f4);cursor:pointer;border:0;padding:0}
+.photo-th img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-th span{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:3px 6px;text-align:left}
+.photo-view{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;flex-direction:column;z-index:1000}
+.photo-view.open{display:flex}
+.photo-view img{flex:1;min-height:0;object-fit:contain;width:100%}
+.pv-bar{display:flex;gap:8px;align-items:center;padding:10px 14px;color:#fff;font-size:14px}
+.pv-bar span{flex:1}
+.pv-bar button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer}
 .req-sum{font-size:13px;color:var(--text2);margin-top:.6rem;white-space:pre-line;line-height:1.55}
 /* CRM */
 .outcome-box{margin-bottom:.8rem}
@@ -370,6 +395,53 @@ a.btn.disabled{opacity:.4;pointer-events:none}
     <div class="req-sum" id="req-summary"></div>
     <div class="budget-check" id="budget-check"></div>
   </div>
+
+  <details class="crm-card fold" id="tech-card">
+    <summary><h3>🔧 Locale tecnico <span class="fold-sub" id="tech-sub"></span></h3></summary>
+    <div class="crm-grid" style="margin-top:.8rem">
+      <div class="crm-field full"><label>Tipo di locale tecnico</label><select id="tech-type" onchange="onTechField()"></select></div>
+      <div class="crm-field"><label>Distanza dalla vasca (m)</label><input type="number" id="tech-dist" min="0" max="200" step="0.5" inputmode="decimal" oninput="onTechField()"/></div>
+      <div class="crm-field"><label>Spazio disponibile</label><input type="text" id="tech-size" maxlength="80" placeholder="es. 2 × 1,5 m" oninput="onTechField()"/></div>
+      <div class="crm-field"><label>Corrente elettrica</label><select id="tech-power" onchange="onTechField()"></select></div>
+      <div class="crm-field"><label>Distanza dal quadro elettrico (m)</label><input type="number" id="tech-pdist" min="0" max="500" step="1" inputmode="decimal" oninput="onTechField()"/></div>
+      <div class="crm-field"><label>Allaccio acqua</label><select id="tech-water" onchange="onTechField()"></select></div>
+      <div class="crm-field"><label>Scarico</label><select id="tech-drain" onchange="onTechField()"></select></div>
+      <div class="crm-field full"><label>Accesso per la manutenzione</label><select id="tech-access" onchange="onTechField()"></select></div>
+      <div class="crm-field full"><label>Note (rumore, vicini, pendenze, vincoli…)</label><textarea id="tech-notes" rows="2" maxlength="1000" oninput="onTechField()"></textarea></div>
+    </div>
+  </details>
+
+  <details class="crm-card fold" id="ditta-card">
+    <summary><h3>🏗 Ditta che esegue i lavori <span class="fold-sub" id="ditta-sub"></span></h3></summary>
+    <div class="crm-grid" style="margin-top:.8rem">
+      <div class="crm-field"><label>Ditta</label><input type="text" id="ditta-name" maxlength="120" placeholder="Nome della ditta" oninput="onDittaField()"/></div>
+      <div class="crm-field"><label>Referente</label><input type="text" id="ditta-ref" maxlength="120" placeholder="Nome e cognome" oninput="onDittaField()"/></div>
+      <div class="crm-field"><label>Telefono</label><input type="tel" id="ditta-phone" maxlength="60" placeholder="+39 …" oninput="onDittaField()"/></div>
+      <div class="crm-field"><label>Email</label><input type="email" id="ditta-email" maxlength="160" oninput="onDittaField()"/></div>
+      <div class="crm-field"><label>Inizio lavori previsto</label><input type="date" id="ditta-start" onchange="onDittaField()"/></div>
+      <div class="crm-field"><label>Fine lavori prevista</label><input type="date" id="ditta-end" onchange="onDittaField()"/></div>
+    </div>
+    <div class="sub-h">📤 Da comunicare alla ditta</div>
+    <div id="ditta-give"></div>
+    <div class="sub-h">📥 Da ricevere dalla ditta</div>
+    <div id="ditta-get"></div>
+    <div class="crm-field" style="margin-top:.8rem"><label>Note sulla ditta</label><textarea id="ditta-notes" rows="2" maxlength="1500" oninput="onDittaField()"></textarea></div>
+    <div class="quick-days" style="margin-top:.6rem">
+      <button type="button" onclick="copyDittaSheet()">📋 Copia scheda per la ditta</button>
+      <a class="btn disabled" id="ditta-call" href="#">📞 Chiama la ditta</a>
+    </div>
+  </details>
+
+  <details class="crm-card fold" id="photo-card">
+    <summary><h3>📷 Foto del sopralluogo <span class="fold-sub" id="photo-sub"></span></h3></summary>
+    <div class="photo-bar">
+      <select id="photo-cat"></select>
+      <button type="button" class="btn" onclick="pickPhotos()">📷 Aggiungi foto</button>
+      <input type="file" id="photo-input" accept="image/*" multiple hidden onchange="onPhotoFiles(this)"/>
+    </div>
+    <div class="photo-info" id="photo-info"></div>
+    <div class="photo-grid" id="photo-grid"></div>
+  </details>
 
   <div class="crm-card" id="crm-card">
     <h3>📌 Pipeline e prossima azione</h3>
@@ -969,6 +1041,11 @@ a.btn.disabled{opacity:.4;pointer-events:none}
   </div>
 </div>
 
+<div class="photo-view" id="photo-view">
+  <img id="photo-view-img" alt="Foto del sopralluogo"/>
+  <div class="pv-bar"><span id="photo-view-cap"></span><button type="button" onclick="deletePhoto()">🗑 Elimina</button><button type="button" onclick="closePhoto()">✕ Chiudi</button></div>
+</div>
+
 <script src="firebase-config.js"></script>
 <script>
 // ══════════════════════════════════════════
@@ -1287,6 +1364,7 @@ function clearFormKeepId(keepId) {
   setContact({name:'',comune:'',phone:'',email:'',notes:''});
   crm = defaultCrm(); renderCrmForm();
   if (!keepId) currentLeadId = null;
+  loadPhotos();
   dirty = false;
   autoBlocked = false;
   refreshAll();
@@ -1995,6 +2073,14 @@ ${'─'.repeat(46)}
 NOTE COMMERCIALE
 ${c.notes||'  (nessuna)'}
 ${'─'.repeat(46)}
+LOCALE TECNICO
+${techSummaryLines().map(x=>'  '+x).join('\n')||'  (non compilato)'}
+${'─'.repeat(46)}
+DITTA LAVORI
+  ${crm.ditta.name||'—'}${crm.ditta.ref?' · '+crm.ditta.ref:''}${crm.ditta.phone?' · '+crm.ditta.phone:''}
+  Dati comunicati: ${DITTA_GIVE.filter(([id])=>crm.ditta.give[id]?.d).length}/${DITTA_GIVE.length}  |  Ricevuti: ${DITTA_GET.filter(([id])=>crm.ditta.get[id]?.d).length}/${DITTA_GET.length}
+  Foto sopralluogo: ${photos.length}
+${'─'.repeat(46)}
 VARIABILI PROFILO
 ${varsStr||'  (nessuna inserita)'}${bfx.s!=null?'\n  • Budget vs progetto: '+bfx.verdict+' (score:'+bfx.s+', w:'+weights.budget.toFixed(1)+')':''}
 ${'─'.repeat(46)}
@@ -2097,13 +2183,14 @@ function startSync() {
   if (!fbDb || !fbUser) return;
   stopListener();
   setSyncState('online');
+  loadPhotos(true);
   syncUnsub = fbDb.collection('leads').onSnapshot(
     snap => applyRemote(snap.docs.map(d=>({ id:d.id, data:d.data() }))),
     err => setSyncState('error', 'Errore di sincronizzazione'+(err && err.code ? ' ('+err.code+')' : '')+'. I dati locali sono al sicuro.')
   );
 }
 function stopListener() { if (syncUnsub) { try { syncUnsub(); } catch {} syncUnsub = null; } remoteMeta = new Map(); }
-function stopSync() { stopListener(); lastSyncAt = null; setSyncState('off'); }
+function stopSync() { stopListener(); lastSyncAt = null; setSyncState('off'); loadPhotos(true); }
 function syncManual() { startSync(); }
 function syncReconcile() { if (fbUser) startSync(); }
 
@@ -2166,6 +2253,7 @@ function syncDelete(id) {
   tombs[id] = Date.now();
   saveTombs(tombs);
   pushDoc(id, { id, deleted:true, savedAt:tombs[id] });   // nel cloud resta solo l'id, nessun dato personale
+  deleteLeadPhotos(id);
 }
 
 function syncLogin(ev) {
@@ -2218,11 +2306,66 @@ const CHECKLISTS = {
     ['garanzia','Spiegati garanzia, tempi e finanziamento'],
     ['followup','Fissato il follow-up con data']] }
 };
+// ── Locale tecnico ──
+const TECH_TYPES = [['','—'],['interrato','Interrato (pozzetto / vano interrato)'],['casetta','Casetta esterna'],['esistente','Locale esistente (garage, cantina…)'],['bordo','Integrato nella vasca / sotto il bordo'],['dadefinire','Da definire']];
+const TECH_AVAIL = [['','—'],['presente','Presente vicino'],['daportare','Da portare'],['verificare','Da verificare']];
+const TECH_DRAIN = [['','—'],['fognatura','Fognatura'],['dispersione','Pozzo perdente / dispersione'],['verificare','Da verificare']];
+const TECH_ACCESS = [['','—'],['comodo','Comodo'],['difficile','Difficile / stretto'],['verificare','Da verificare']];
+function defaultTech() { return { type:'', dist:null, size:'', power:'', pdist:null, water:'', drain:'', access:'', notes:'' }; }
+function cleanTech(raw) {
+  const t = defaultTech();
+  if (!raw || typeof raw!=='object') return t;
+  const str = (v,n)=> typeof v==='string' ? v.slice(0,n) : '';
+  const inL = (l,v)=> l.some(x=>x[0]===v) ? v : '';
+  const num = (v,max)=>{ if (v===null || v===undefined || v==='') return null; const n = Number(v); return isFinite(n) && n>=0 && n<=max ? n : null; };
+  t.type = inL(TECH_TYPES, raw.type); t.power = inL(TECH_AVAIL, raw.power); t.water = inL(TECH_AVAIL, raw.water);
+  t.drain = inL(TECH_DRAIN, raw.drain); t.access = inL(TECH_ACCESS, raw.access);
+  t.dist = num(raw.dist,200); t.pdist = num(raw.pdist,500); t.size = str(raw.size,80); t.notes = str(raw.notes,1000);
+  return t;
+}
+
+// ── Ditta che esegue i lavori ──
+const DITTA_GIVE = [
+  ['dim','Dimensioni, forma e profondità della vasca','es. 8×4 m, prof. 1,2–1,5 m'],
+  ['pos','Posizione e quote (distanze da casa e confini)','es. 3 m dalla casa, 5 m dal confine'],
+  ['accesso','Accesso dei mezzi al cantiere','es. cancello largo 3 m, serve gru?'],
+  ['terreno','Terreno, falda, pendenze','es. argilloso, falda alta'],
+  ['sottoservizi','Tubi, cavi, fosse settiche nell\'area di scavo',''],
+  ['terra','Destinazione della terra di scavo','es. da smaltire / resta in giardino'],
+  ['locale','Locale tecnico e allacci (corrente, acqua, scarico)',''],
+  ['permessi','Stato dei permessi (CILA / SCIA / PdC)',''],
+  ['periodo','Periodo preferito dal cliente','es. lavori entro aprile'],
+  ['contatto','Contatto del cliente per il cantiere','']
+];
+const DITTA_GET = [
+  ['prev','Preventivo delle opere (scavo, getto, smaltimento)','es. € 12.000'],
+  ['inizio','Conferma data di inizio lavori',''],
+  ['durata','Durata stimata del cantiere','es. 6 settimane'],
+  ['capo','Capocantiere e numero di telefono',''],
+  ['mezzi','Mezzi necessari (escavatore, gru, camion)',''],
+  ['doc','Documenti: DURC, assicurazione, POS',''],
+  ['avanz','Aggiornamenti sullo stato dei lavori',''],
+  ['fine','Data di collaudo / consegna','']
+];
+function defaultDitta() { return { name:'', ref:'', phone:'', email:'', start:'', end:'', give:{}, get:{}, notes:'' }; }
+function cleanDitta(raw) {
+  const d = defaultDitta();
+  if (!raw || typeof raw!=='object') return d;
+  const str = (v,n)=> typeof v==='string' ? v.slice(0,n) : '';
+  d.name = str(raw.name,120); d.ref = str(raw.ref,120); d.phone = str(raw.phone,60); d.email = str(raw.email,160); d.notes = str(raw.notes,1500);
+  ['start','end'].forEach(k=>{ if (/^\d{4}-\d{2}-\d{2}$/.test(raw[k]||'')) d[k] = raw[k]; });
+  [['give',DITTA_GIVE],['get',DITTA_GET]].forEach(([k,list])=>{
+    const src = raw[k] && typeof raw[k]==='object' ? raw[k] : {};
+    list.forEach(([id])=>{ const it = src[id]; if (it && typeof it==='object') { const o = { d: it.d===true, v: str(it.v,200) }; if (o.d || o.v) d[k][id] = o; } });
+  });
+  return d;
+}
+
 let crm = defaultCrm();
 const chkOpen = {};   // quali checklist sono aperte: resta così anche quando la scheda si ridisegna
 
 function defaultCrm() {
-  return { stage:'nuovo', clientType:'privato', request:defaultReq(), nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
+  return { stage:'nuovo', clientType:'privato', request:defaultReq(), tech:defaultTech(), ditta:defaultDitta(), nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
 }
 function cleanCrm(raw) {
   const c = defaultCrm();
@@ -2233,6 +2376,8 @@ function cleanCrm(raw) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw.nextDate || '')) c.nextDate = raw.nextDate;
   c.nextAction = str(raw.nextAction, 200);
   c.request = cleanReq(raw.request);
+  c.tech = cleanTech(raw.tech);
+  c.ditta = cleanDitta(raw.ditta);
   if (SOURCES.some(x=>x[0]===raw.source)) c.source = raw.source;
   if (LOSS_REASONS.some(x=>x[0]===raw.closeReason) || WIN_REASONS.some(x=>x[0]===raw.closeReason)) c.closeReason = raw.closeReason;
   if (raw.closeValue !== null && raw.closeValue !== '' && raw.closeValue !== undefined) {
@@ -2285,6 +2430,9 @@ function renderCrmForm() {
   document.getElementById('crm-source').innerHTML = optionsHtml(SOURCES, crm.source);
   document.getElementById('crm-type').innerHTML = optionsHtml(CLIENT_TYPES, crm.clientType);
   renderRequestForm();
+  renderTechForm();
+  renderDittaForm();
+  loadPhotos();
   document.getElementById('crm-next-action').value = crm.nextAction;
   document.getElementById('crm-next-date').value = crm.nextDate;
   const closed = isClosed(crm);
@@ -2303,6 +2451,203 @@ function renderCrmForm() {
       g.items.map(([id,txt])=>`<label class="chk"><input type="checkbox" ${crm.checklist[k][id]?'checked':''} onchange="toggleCheck('${k}','${id}',this.checked)"><span>${esc(txt)}</span></label>`).join('')+`</details>`;
   }).join('');
 }
+// ── Locale tecnico: form ──
+function renderTechForm() {
+  if (!document.getElementById('tech-type')) return;
+  const t = crm.tech;
+  document.getElementById('tech-type').innerHTML = optionsHtml(TECH_TYPES, t.type);
+  document.getElementById('tech-power').innerHTML = optionsHtml(TECH_AVAIL, t.power);
+  document.getElementById('tech-water').innerHTML = optionsHtml(TECH_AVAIL, t.water);
+  document.getElementById('tech-drain').innerHTML = optionsHtml(TECH_DRAIN, t.drain);
+  document.getElementById('tech-access').innerHTML = optionsHtml(TECH_ACCESS, t.access);
+  document.getElementById('tech-dist').value = t.dist ?? '';
+  document.getElementById('tech-pdist').value = t.pdist ?? '';
+  document.getElementById('tech-size').value = t.size;
+  document.getElementById('tech-notes').value = t.notes;
+  updateTechSub();
+}
+function onTechField() {
+  const t = crm.tech, g = id=>document.getElementById(id).value;
+  const num = id=>{ const v = g(id); return (v==='' || !isFinite(Number(v)) || Number(v)<0) ? null : Number(v); };
+  t.type = g('tech-type'); t.power = g('tech-power'); t.water = g('tech-water'); t.drain = g('tech-drain'); t.access = g('tech-access');
+  t.dist = num('tech-dist'); t.pdist = num('tech-pdist'); t.size = g('tech-size').slice(0,80); t.notes = g('tech-notes').slice(0,1000);
+  updateTechSub();
+  markUnsaved();
+}
+function labOf(list, v) { return (list.find(x=>x[0]===v) || [0,''])[1]; }
+function updateTechSub() {
+  const el = document.getElementById('tech-sub'); if (!el) return;
+  const t = crm.tech;
+  el.textContent = t.type ? '· ' + labOf(TECH_TYPES, t.type).replace(/ \(.*\)/,'') + (t.dist!=null ? ', ' + fmtNum(t.dist) + ' m dalla vasca' : '') : '';
+}
+function techSummaryLines() {
+  const t = crm.tech, L = [];
+  if (t.type) L.push('Locale tecnico: ' + labOf(TECH_TYPES, t.type).toLowerCase() + (t.dist!=null ? ', a ' + fmtNum(t.dist) + ' m dalla vasca' : '') + (t.size ? ', spazio ' + t.size : ''));
+  const av = [];
+  if (t.power) av.push('corrente ' + labOf(TECH_AVAIL, t.power).toLowerCase() + (t.pdist!=null ? ' (quadro a ' + fmtNum(t.pdist) + ' m)' : ''));
+  if (t.water) av.push('acqua ' + labOf(TECH_AVAIL, t.water).toLowerCase());
+  if (t.drain) av.push('scarico: ' + labOf(TECH_DRAIN, t.drain).toLowerCase());
+  if (t.access) av.push('accesso manutenzione ' + labOf(TECH_ACCESS, t.access).toLowerCase());
+  if (av.length) L.push('Allacci: ' + av.join(', '));
+  if (t.notes) L.push('Note locale tecnico: ' + t.notes);
+  return L;
+}
+
+// ── Ditta: form ──
+function dittaRows(k, list) {
+  const src = crm.ditta[k];
+  return list.map(([id, label, ph])=>{
+    const it = src[id] || { d:false, v:'' };
+    return `<div class="dt-row"><label class="chk"><input type="checkbox" data-dk="${k}" data-did="${id}" ${it.d?'checked':''} onchange="onDittaField()"><span>${esc(label)}</span></label>`+
+      `<input type="text" maxlength="200" data-dk="${k}" data-did="${id}" placeholder="${esc(ph || 'dettagli')}" value="${esc(it.v)}" oninput="onDittaField()"/></div>`;
+  }).join('');
+}
+function renderDittaForm() {
+  if (!document.getElementById('ditta-name')) return;
+  const d = crm.ditta;
+  ['name','ref','phone','email','start','end','notes'].forEach(k=>{ document.getElementById('ditta-'+k).value = d[k] || ''; });
+  document.getElementById('ditta-give').innerHTML = dittaRows('give', DITTA_GIVE);
+  document.getElementById('ditta-get').innerHTML = dittaRows('get', DITTA_GET);
+  updateDittaSub();
+}
+function onDittaField() {
+  const d = crm.ditta, g = id=>document.getElementById(id).value;
+  d.name = g('ditta-name').slice(0,120); d.ref = g('ditta-ref').slice(0,120); d.phone = g('ditta-phone').slice(0,60);
+  d.email = g('ditta-email').slice(0,160); d.start = g('ditta-start'); d.end = g('ditta-end'); d.notes = g('ditta-notes').slice(0,1500);
+  d.give = {}; d.get = {};
+  document.querySelectorAll('#ditta-card .dt-row').forEach(row=>{
+    const cb = row.querySelector('input[type=checkbox]'), tx = row.querySelector('input[type=text]');
+    const o = { d: cb.checked, v: tx.value.slice(0,200) };
+    if (o.d || o.v) d[cb.dataset.dk][cb.dataset.did] = o;
+  });
+  updateDittaSub();
+  markUnsaved();
+}
+function updateDittaSub() {
+  const d = crm.ditta, el = document.getElementById('ditta-sub'); if (!el) return;
+  const nG = DITTA_GIVE.filter(([id])=>d.give[id]?.d).length, nR = DITTA_GET.filter(([id])=>d.get[id]?.d).length;
+  el.textContent = (d.name ? '· ' + d.name + ' ' : '') + '· dati ' + nG + '/' + DITTA_GIVE.length + ' · ricevuti ' + nR + '/' + DITTA_GET.length;
+  const call = document.getElementById('ditta-call'), t = telHref(d.phone);
+  if (call) { call.href = t || '#'; call.classList.toggle('disabled', !t); }
+}
+function dittaSheetText() {
+  const c = contactFields(), r = crm.request, d = crm.ditta, L = [];
+  L.push('SCHEDA LAVORI — ' + (c.name || 'Cliente') + (c.comune ? ' (' + c.comune + ')' : ''));
+  if (c.address || c.comune) L.push('Indirizzo cantiere: ' + [c.address, c.comune].filter(Boolean).join(', '));
+  if (d.give.contatto?.d || d.give.contatto?.v) L.push('Contatto cliente: ' + (d.give.contatto.v || [c.name, c.phone].filter(Boolean).join(' ')));
+  if (r.len && r.wid) L.push('Vasca: ' + fmtNum(r.len) + ' × ' + fmtNum(r.wid) + ' m' + (r.shape ? ', ' + labOf(SHAPES, r.shape).toLowerCase() : '') +
+    (r.dmin!=null || r.dmax!=null ? ', profondità ' + (r.dmin!=null && r.dmax!=null && r.dmin!==r.dmax ? fmtNum(r.dmin)+'–'+fmtNum(r.dmax) : fmtNum(r.dmax ?? r.dmin)) + ' m' : ''));
+  const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
+  if (feats.length) L.push('Accessori: ' + feats.join(', '));
+  techSummaryLines().forEach(x=>L.push(x));
+  const give = DITTA_GIVE.filter(([id])=>id!=='contatto' && d.give[id]?.v).map(([id,label])=>'• ' + label + ': ' + d.give[id].v);
+  if (give.length) { L.push(''); L.push('Dettagli cantiere:'); give.forEach(x=>L.push(x)); }
+  const ask = DITTA_GET.filter(([id])=>!d.get[id]?.d).map(([,label])=>'• ' + label);
+  if (ask.length) { L.push(''); L.push('Ci servirebbe da voi:'); ask.forEach(x=>L.push(x)); }
+  return L.join('\n');
+}
+function copyDittaSheet() {
+  const t = dittaSheetText();
+  const done = ()=>toast('Scheda per la ditta copiata');
+  const fallback = ()=>{ const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch { toast('Copia non riuscita'); } ta.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+}
+
+// ── Foto del sopralluogo (salvate nel database condiviso, compresse) ──
+const PHOTO_CATS = [['giardino','Giardino / area vasca'],['accesso','Accesso cantiere'],['locale','Locale tecnico'],['impianti','Quadro elettrico / allacci'],['altro','Altro']];
+const PHOTO_RE = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/;
+let photoLeadId = undefined, photos = [], photoMsg = '', photoBusy = '', photoViewIdx = -1;
+function photoReady() { return syncEnabled() && !!fbDb && !!fbUser; }
+function loadPhotos(force) {
+  const id = currentLeadId || null;
+  if (!force && id === photoLeadId) { renderPhotos(); return; }
+  photoLeadId = id; photos = []; photoMsg = '';
+  if (!id || !photoReady()) { renderPhotos(); return; }
+  photoBusy = 'Caricamento foto…'; renderPhotos();
+  fbDb.collection('photos').where('leadId','==',id).get().then(snap=>{
+    if (photoLeadId !== id) return;
+    photos = snap.docs.map(d=>d.data()).filter(p=>p && typeof p.data==='string' && PHOTO_RE.test(p.data)).sort((a,b)=>(a.savedAt||0)-(b.savedAt||0));
+    photoBusy = ''; renderPhotos();
+  }).catch(err=>{ if (photoLeadId !== id) return; photoBusy = ''; photoMsg = 'Foto non caricate' + (err && err.code ? ' (' + err.code + ')' : '') + '.'; renderPhotos(); });
+}
+function renderPhotos() {
+  const grid = document.getElementById('photo-grid'); if (!grid) return;
+  const cat = document.getElementById('photo-cat');
+  if (!cat.options.length) cat.innerHTML = optionsHtml(PHOTO_CATS, 'giardino');
+  let info = photoBusy || photoMsg;
+  if (!info && !syncEnabled()) info = 'Le foto si salvano nel database condiviso: apri il sito per usarle.';
+  else if (!info && !fbUser) info = 'Per salvare e vedere le foto accedi alla sincronizzazione in Archivio.';
+  else if (!info && !photos.length) info = 'Nessuna foto. Scegli la categoria e tocca "Aggiungi foto": dal telefono puoi scattarle direttamente.';
+  document.getElementById('photo-info').textContent = info;
+  document.getElementById('photo-sub').textContent = photos.length ? '· ' + photos.length + (photos.length===1 ? ' foto' : ' foto') : '';
+  grid.innerHTML = photos.map((p,i)=>`<button type="button" class="photo-th" onclick="openPhoto(${i})"><img alt=""/><span>${esc(labOf(PHOTO_CATS, p.cat) || 'Foto')}</span></button>`).join('');
+  grid.querySelectorAll('img').forEach((im,i)=>{ im.src = photos[i].data; });
+}
+function pickPhotos() {
+  if (!photoReady()) { toast('Accedi alla sincronizzazione in Archivio per salvare le foto'); return; }
+  if (!currentLeadId) { if (!saveCurrentLead()) return; photoLeadId = currentLeadId; }
+  document.getElementById('photo-input').click();
+}
+function loadImg(src) { return new Promise((res, rej)=>{ const im = new Image(); im.onload = ()=>res(im); im.onerror = rej; im.src = src; }); }
+async function compressPhoto(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const im = await loadImg(url);
+    let max = 1600, q = 0.75, data = '', w = 0, h = 0;
+    for (let i = 0; i < 8; i++) {
+      const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+      w = Math.round(im.naturalWidth * k); h = Math.round(im.naturalHeight * k);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(im, 0, 0, w, h);
+      data = cv.toDataURL('image/jpeg', q);
+      if (data.length < 900000) break;
+      if (q > 0.5) q -= 0.1; else max = Math.round(max * 0.8);
+    }
+    return { data, w, h };
+  } finally { URL.revokeObjectURL(url); }
+}
+async function onPhotoFiles(input) {
+  const files = [...(input.files || [])].filter(f=>/^image\//.test(f.type) || /\.(jpe?g|png|heic|heif|webp)$/i.test(f.name));
+  input.value = '';
+  if (!files.length) return;
+  const leadId = currentLeadId, cat = document.getElementById('photo-cat').value;
+  let ok = 0, fail = 0;
+  for (let i = 0; i < files.length; i++) {
+    photoBusy = 'Salvataggio foto ' + (i+1) + ' di ' + files.length + '…'; renderPhotos();
+    try {
+      const c = await compressPhoto(files[i]);
+      if (!PHOTO_RE.test(c.data)) throw new Error('formato');
+      const doc = { id: uid(), leadId, savedAt: Date.now(), cat, w: c.w, h: c.h, data: c.data };
+      await fbDb.collection('photos').doc(doc.id).set(doc);
+      if (photoLeadId === leadId) photos.push(doc);
+      ok++;
+    } catch (e) { fail++; }
+  }
+  photoBusy = '';
+  photoMsg = fail ? '⚠ ' + fail + ' foto non salvate: controlla la connessione e riprova.' : '';
+  renderPhotos();
+  if (ok) { toast(ok + (ok===1 ? ' foto salvata' : ' foto salvate')); pushLog(crm, 'nota', ok + ' foto del sopralluogo aggiunte (' + labOf(PHOTO_CATS, cat).toLowerCase() + ')'); renderCrmForm(); markUnsaved(); }
+}
+function openPhoto(i) {
+  const p = photos[i]; if (!p) return;
+  photoViewIdx = i;
+  document.getElementById('photo-view-img').src = p.data;
+  document.getElementById('photo-view-cap').textContent = (labOf(PHOTO_CATS, p.cat) || 'Foto') + ' · ' + fmtDT(p.savedAt);
+  document.getElementById('photo-view').classList.add('open');
+}
+function closePhoto() { document.getElementById('photo-view').classList.remove('open'); document.getElementById('photo-view-img').removeAttribute('src'); photoViewIdx = -1; }
+function deletePhoto() {
+  const p = photos[photoViewIdx]; if (!p) return;
+  if (!confirm('Eliminare questa foto? Sparirà da tutti i dispositivi.')) return;
+  fbDb.collection('photos').doc(p.id).delete().then(()=>{
+    photos = photos.filter(x=>x.id !== p.id); closePhoto(); renderPhotos(); toast('Foto eliminata');
+  }).catch(err=>toast('Eliminazione non riuscita' + (err && err.code ? ' (' + err.code + ')' : '')));
+}
+function deleteLeadPhotos(id) {
+  if (!photoReady()) return;
+  fbDb.collection('photos').where('leadId','==',id).get().then(s=>s.docs.forEach(d=>d.ref.delete().catch(()=>{}))).catch(()=>{});
+}
+
 function pushLog(c, type, text) { c.log.push({ t:Date.now(), type, text:String(text).slice(0,300) }); if (c.log.length>200) c.log = c.log.slice(-200); }
 
 function onCrmField() {
@@ -2702,7 +3047,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-14-1';
+const BUILD = '2026-10-14-2';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();

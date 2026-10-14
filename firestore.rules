@@ -14,5 +14,15 @@ service cloud.firestore {
         && request.resource.data.keys().size() < 20;
       allow delete: if false;   // le cancellazioni sono "tombstone" (solo l'id), mai hard delete
     }
+    // Foto del sopralluogo: una foto compressa per documento (max ~1 MB), legata a un lead
+    match /photos/{photoId} {
+      allow read, delete: if autorizzato();
+      allow create: if autorizzato()
+        && request.resource.data.id == photoId
+        && request.resource.data.leadId is string
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 1000000;
+      allow update: if false;
+    }
   }
 }
