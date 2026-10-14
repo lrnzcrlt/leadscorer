@@ -206,6 +206,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .crm-field textarea{width:100%;padding:8px 10px;font-size:14px;border:.5px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);outline:none;resize:vertical;font-family:inherit}
 .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
 @media(max-width:600px){.feat-grid{grid-template-columns:1fr}}
+.budget-check{margin-top:.7rem;padding:.65rem .8rem;border-radius:10px;background:var(--bg2,#f4f6f8);font-size:13px;line-height:1.55}
+.budget-check:empty{display:none}
+.budget-check .bc-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.budget-check .bc-v{font-weight:600}
+.bc-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;margin-top:4px}
+.bc-ok{background:#e3f4e8;color:#1d6b36}.bc-warn{background:#fff1d6;color:#8a5a00}.bc-bad{background:#fde4e2;color:#a3261b}.bc-neu{background:#e8ecf1;color:#46505c}
+.bc-tip{margin-top:6px;color:var(--text2)}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 12px;margin-top:.6rem}
+.price-grid label{font-size:12px;color:var(--text2);display:block;margin-bottom:3px}
+.price-grid input{width:100%}
 .req-sum{font-size:13px;color:var(--text2);margin-top:.6rem;white-space:pre-line;line-height:1.55}
 /* CRM */
 .outcome-box{margin-bottom:.8rem}
@@ -308,6 +318,10 @@ a.btn.disabled{opacity:.4;pointer-events:none}
         <label>Comune</label>
         <input type="text" id="clientComune" placeholder="es. Padova" oninput="markUnsaved()"/>
       </div>
+      <div class="contact-field full">
+        <label>Indirizzo (via e numero civico)</label>
+        <input type="text" id="clientAddress" placeholder="es. Via Roma 12" maxlength="200" autocomplete="off" oninput="markUnsaved()"/>
+      </div>
       <div class="contact-field">
         <label>Telefono</label>
         <input type="tel" id="clientPhone" placeholder="+39 …" oninput="markUnsaved()"/>
@@ -324,6 +338,8 @@ a.btn.disabled{opacity:.4;pointer-events:none}
     <div class="contact-actions">
       <a class="btn disabled" id="call-link" href="#">📞 Chiama</a>
       <a class="btn disabled" id="map-link" href="#" target="_blank" rel="noopener">📍 Mappa</a>
+      <a class="btn disabled" id="route-link" href="#" target="_blank" rel="noopener">🧭 Percorso</a>
+      <a class="btn disabled" id="sat-link" href="#" target="_blank" rel="noopener" title="Vista satellite su Google Earth: utile per misurare il giardino prima del sopralluogo">🛰 Satellite</a>
       <a class="btn disabled" id="mail-link" href="#">✉ Email</a>
     </div>
     <div class="lead-status" id="lead-status">Nuovo lead — non ancora salvato</div>
@@ -346,11 +362,13 @@ a.btn.disabled{opacity:.4;pointer-events:none}
       <div class="crm-field"><label>Ingresso in acqua</label><select id="req-entry" onchange="onReqField()"></select></div>
       <div class="crm-field"><label>Profondità minima (m)</label><input type="number" id="req-dmin" min="0" max="10" step="0.1" inputmode="decimal" oninput="onReqField()"/></div>
       <div class="crm-field"><label>Profondità massima (m)</label><input type="number" id="req-dmax" min="0" max="10" step="0.1" inputmode="decimal" oninput="onReqField()"/></div>
-      <div class="crm-field"><label>Budget dichiarato (€)</label><input type="number" id="req-budget" min="0" step="500" inputmode="numeric" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Budget del cliente (€)</label><input type="number" id="req-budget" min="0" step="500" inputmode="numeric" placeholder="es. 35000" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Che budget è?</label><select id="req-btype" onchange="onReqField()"></select></div>
       <div class="crm-field"><label>Tempi desiderati</label><select id="req-timing" onchange="onReqField()"></select></div>
       <div class="crm-field full"><label>Accessori e complementi</label><div class="feat-grid" id="req-feats"></div></div>
     </div>
     <div class="req-sum" id="req-summary"></div>
+    <div class="budget-check" id="budget-check"></div>
   </div>
 
   <div class="crm-card" id="crm-card">
@@ -853,9 +871,21 @@ a.btn.disabled{opacity:.4;pointer-events:none}
     <h3>🌍 Gruppo C — Contesto e segnali</h3>
     <div class="weight-grid" id="wg-c"></div>
   </div>
+  <div class="weight-editor">
+    <h3>💶 Budget e listino indicativo</h3>
+    <div class="weight-grid" id="wg-budget"></div>
+    <div class="note" style="margin-top:.5rem">Il costo indicativo di una piscina = costi fissi + €/m² × superficie della vasca, più gli accessori scelti. Valori iniziali da medie di mercato italiane: <b>sostituiscili con il listino reale di Piscine San Lorenzo</b> appena lo avete, così la verifica del budget diventa precisa.</div>
+    <div class="price-grid">
+      <div><label>Costi fissi minimi (€)</label><input type="number" id="price-fixLo" min="0" step="500" oninput="updatePrice()"/></div>
+      <div><label>Costi fissi massimi (€)</label><input type="number" id="price-fixHi" min="0" step="500" oninput="updatePrice()"/></div>
+      <div><label>€/m² vasca – minimo</label><input type="number" id="price-sqmLo" min="0" step="50" oninput="updatePrice()"/></div>
+      <div><label>€/m² vasca – massimo</label><input type="number" id="price-sqmHi" min="0" step="50" oninput="updatePrice()"/></div>
+    </div>
+  </div>
 
   <div class="bottom-bar">
     <button class="btn" onclick="resetWeights()">↺ Ripristina pesi default</button>
+    <button class="btn" onclick="resetPrice()">↺ Ripristina listino</button>
   </div>
 </div>
 
@@ -947,8 +977,19 @@ a.btn.disabled{opacity:.4;pointer-events:none}
 const DEFAULT_WEIGHTS = {
   tipo:3.0, giardino:2.5, prop:2.5, auto:2.0, immobile:2.0,
   figli:2.0, prof:1.8, vacanza:1.6, seconda:1.5, giardinoCurato:1.5, social:1.4, sport:1.0,
-  interesse:2.2, vicini:1.3, arch:1.5, mare:1.0, zona:0.8
+  interesse:2.2, vicini:1.3, arch:1.5, mare:1.0, zona:0.8,
+  budget:3.0
 };
+
+// ── Listino indicativo per la verifica del budget (modificabile in ⚙ Pesi) ──
+// Taratura iniziale sulle fasce di mercato italiane per dimensione (3×6: 10–28k, 4×8: 16–40k, 5×10: 25–60k, 6×12: 30–80k):
+// costo ≈ fissi + €/m² × superficie. Da sostituire con il listino reale.
+const DEFAULT_PRICE = { fixLo:4000, fixHi:8000, sqmLo:400, sqmHi:1000 };
+const PRICE_KEY = 'psl_price_v1';
+let price = {...DEFAULT_PRICE};
+// Accessori: [min, max] in €. Luci, riscaldamento e copertura da medie di mercato; gli altri sono stime da tarare.
+const FEAT_COST = { luci:[1000,3000], riscald:[1000,8000], copertura:[1000,10000], idro:[2000,6000], controc:[3000,8000], domotica:[1000,3000], sale:[1000,3000] };
+const SFIORO_MULT = [1.2, 1.4];   // il bordo a sfioro aumenta il costo della vasca del 20–40%
 
 const GROUPS = {
   a: ['tipo','giardino','prop','auto','immobile'],
@@ -961,7 +1002,8 @@ const VAR_LABELS = {
   immobile:'Valore immobile', figli:'Figli', prof:'Professione', vacanza:'Vacanza estiva',
   seconda:'Seconda casa', giardinoCurato:'Giardino curato', social:'Socialità',
   sport:'Sport / attività', interesse:'Canale interesse', vicini:'Vicini con piscina',
-  arch:'Architetto', mare:'Distanza mare', zona:'Zona'
+  arch:'Architetto', mare:'Distanza mare', zona:'Zona',
+  budget:'Budget vs progetto'
 };
 
 const OBJ_LABELS = {
@@ -1049,6 +1091,7 @@ function contactFields() {
   return {
     name: document.getElementById('clientName').value.trim(),
     comune: document.getElementById('clientComune').value.trim(),
+    address: document.getElementById('clientAddress').value.trim(),
     phone: document.getElementById('clientPhone').value.trim(),
     email: document.getElementById('clientEmail').value.trim(),
     notes: document.getElementById('clientNotes').value.trim()
@@ -1058,6 +1101,7 @@ function contactFields() {
 function setContact(c) {
   document.getElementById('clientName').value = c.name || '';
   document.getElementById('clientComune').value = c.comune || '';
+  document.getElementById('clientAddress').value = c.address || '';
   document.getElementById('clientPhone').value = c.phone || '';
   document.getElementById('clientEmail').value = c.email || '';
   document.getElementById('clientNotes').value = c.notes || '';
@@ -1078,14 +1122,16 @@ function fieldDisplay(f) {
 }
 
 function scoreLeadData(lead) {
-  const keys = Object.keys(lead.profile || {});
-  if (!keys.length) return null;
+  const keys = Object.keys(lead.profile || {}).filter(f=>f!=='budget');
+  const bf = budgetFit(cleanCrm(lead.crm).request);
+  if (!keys.length && bf.s==null) return null;
   let ws=0, tw=0;
   keys.forEach(f=>{
     const w = weights[f] || 1;
     ws += lead.profile[f].s * w;
     tw += w;
   });
+  if (bf.s!=null) { const w = weights.budget || 1; ws += bf.s*w; tw += w; }
   const raw = Math.round(ws/tw);
   const penalty = Object.values(lead.objections || {}).reduce((a,o)=>a+(o.penalty||0),0);
   const adj = Math.max(0, raw-penalty);
@@ -1094,13 +1140,108 @@ function scoreLeadData(lead) {
 }
 
 function budgetFromLead(lead) {
-  const votes = Object.values(lead.budgetVotes || {});
+  return budgetTier(Object.values(lead.budgetVotes || {}), cleanCrm(lead.crm).request);
+}
+
+// Fascia di budget: se il cliente ha dato una cifra usa quella, altrimenti la stima dal profilo
+function budgetTier(votes, req) {
+  if (req && req.budget > 0) {
+    const B = req.budget;
+    const label = B >= 55000 ? 'Premium' : B >= 30000 ? 'Mid' : 'Entry';
+    return { label, range: (req.btype==='stimato' ? 'Stimato ' : 'Dichiarato ') + eurFmt(B), declared:true };
+  }
   if (!votes.length) return null;
   const cnt={premium:0,mid:0,entry:0};
   votes.forEach(v=>cnt[v]++);
-  if(cnt.premium>=cnt.mid&&cnt.premium>=cnt.entry) return {label:'Premium',range:'€55.000 +'};
-  if(cnt.mid>=cnt.entry) return {label:'Mid',range:'€30.000 – €55.000'};
-  return {label:'Entry',range:'€15.000 – €30.000'};
+  if(cnt.premium>=cnt.mid&&cnt.premium>=cnt.entry) return {label:'Premium',range:'€55.000 + (stima dal profilo)'};
+  if(cnt.mid>=cnt.entry) return {label:'Mid',range:'€30.000 – €55.000 (stima dal profilo)'};
+  return {label:'Entry',range:'€15.000 – €30.000 (stima dal profilo)'};
+}
+function eurFmt(n) { return '€ ' + Math.round(n).toLocaleString('it-IT'); }
+
+// Costo indicativo del progetto richiesto (dimensioni + accessori), con il listino in ⚙ Pesi
+function estimateCost(r) {
+  if (!r || !(r.len > 0 && r.wid > 0)) return null;
+  const area = r.len * r.wid;
+  let lo = price.fixLo + price.sqmLo * area, hi = price.fixHi + price.sqmHi * area;
+  if (r.feats && r.feats.sfioro) { lo *= SFIORO_MULT[0]; hi *= SFIORO_MULT[1]; }
+  Object.keys(FEAT_COST).forEach(k=>{ if (r.feats && r.feats[k]) { lo += FEAT_COST[k][0]; hi += FEAT_COST[k][1]; } });
+  const r500 = x=>Math.round(x/500)*500;
+  lo = r500(lo); hi = r500(hi);
+  return { lo, hi, mid: r500((lo+hi)/2), area: Math.round(area) };
+}
+
+// Budget del cliente confrontato con il costo: produce lo score della variabile "budget" (0–100)
+function budgetFit(r) {
+  const cost = estimateCost(r);
+  const B = r && r.budget > 0 ? r.budget : null;
+  if (B == null) return { s:null, cost, declared:null, cls:'neu', verdict:'' };
+  let s, verdict, cls, ratio = null;
+  if (cost) {
+    ratio = B / cost.mid;
+    if (B >= cost.hi)            { s=100; cls='ok';   verdict='Copre anche la versione più completa'; }
+    else if (B >= cost.mid)      { s=85;  cls='ok';   verdict='In linea con il progetto richiesto'; }
+    else if (B >= cost.lo)       { s=60;  cls='warn'; verdict='Al limite: puntare sulla versione base'; }
+    else if (B >= cost.lo*0.75)  { s=35;  cls='bad';  verdict='Sotto il costo: riposizionare dimensioni o accessori'; }
+    else                         { s=15;  cls='bad';  verdict='Molto sotto il costo del progetto richiesto'; }
+  } else {
+    cls = 'neu'; verdict = 'Inserisci lunghezza e larghezza per confrontarlo con il costo';
+    s = B >= 55000 ? 95 : B >= 40000 ? 85 : B >= 30000 ? 72 : B >= 20000 ? 50 : B >= 15000 ? 30 : 12;
+  }
+  if (r.btype === 'tetto' && cls === 'warn') s -= 10;           // tetto rigido al limite = più rischio
+  if (r.btype === 'stimato') s = Math.round(50 + (s-50)*0.6);    // cifra non detta dal cliente: pesa meno
+  return { s, cost, declared:B, ratio, verdict, cls };
+}
+
+// Vasca che sta nel budget (rapporto 2:1, senza accessori): spunto per riposizionare l'offerta
+function fitSize(B) {
+  const fixMid = (price.fixLo + price.fixHi)/2, sqmMid = (price.sqmLo + price.sqmHi)/2;
+  const A = (B - fixMid) / sqmMid;
+  if (!(A >= 12)) return null;
+  const L = Math.floor(Math.sqrt(2*A)*2)/2, W = Math.floor(L/2*2)/2;
+  return { L, W, A: Math.round(L*W) };
+}
+
+function loadPrice() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PRICE_KEY) || 'null');
+    if (raw && typeof raw === 'object') Object.keys(DEFAULT_PRICE).forEach(k=>{ const v = Number(raw[k]); if (isFinite(v) && v >= 0 && v <= 1000000) price[k] = v; });
+  } catch {}
+}
+function savePrice() { try { localStorage.setItem(PRICE_KEY, JSON.stringify(price)); } catch {} }
+function renderPriceEditor() {
+  Object.keys(DEFAULT_PRICE).forEach(k=>{ const el = document.getElementById('price-'+k); if (el) el.value = price[k]; });
+}
+function updatePrice() {
+  Object.keys(DEFAULT_PRICE).forEach(k=>{
+    const el = document.getElementById('price-'+k); if (!el || el.value==='') return;
+    const v = Number(el.value); if (isFinite(v) && v >= 0 && v <= 1000000) price[k] = v;
+  });
+  if (price.fixHi < price.fixLo) price.fixHi = price.fixLo;
+  if (price.sqmHi < price.sqmLo) price.sqmHi = price.sqmLo;
+  savePrice(); refreshAll(); renderArchive();
+}
+function resetPrice() { price = {...DEFAULT_PRICE}; savePrice(); renderPriceEditor(); refreshAll(); renderArchive(); toast('Listino ripristinato'); }
+
+function updateBudgetCheck() {
+  const el = document.getElementById('budget-check');
+  if (!el) return;
+  const r = crm.request, f = budgetFit(r);
+  if (!f.cost && f.declared == null) { el.innerHTML = ''; return; }
+  const h = [];
+  if (f.cost) h.push(`<div class="bc-row"><span>Costo indicativo del progetto (${f.cost.area} m²)</span><span class="bc-v">${eurFmt(f.cost.lo)} – ${eurFmt(f.cost.hi)}</span></div>`);
+  if (f.declared != null) {
+    h.push(`<div class="bc-row"><span>Budget del cliente${r.btype==='stimato'?' (stimato da noi)':r.btype==='tetto'?' (tetto rigido)':''}</span><span class="bc-v">${eurFmt(f.declared)}${f.ratio!=null?' · '+Math.round(f.ratio*100)+'% del costo medio':''}</span></div>`);
+    h.push(`<span class="bc-badge bc-${f.cls}">${esc(f.verdict)}</span>`);
+    if (f.cls === 'bad' || f.cls === 'warn') {
+      const fs = fitSize(f.declared);
+      h.push(`<div class="bc-tip">💡 ${fs ? 'Con questo budget sta una vasca di circa <b>'+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m</b> (≈'+fs.A+' m²) senza accessori. ' : ''}Accessori in un secondo tempo o finanziamento possono chiudere la differenza.</div>`);
+    }
+  } else {
+    h.push(`<div class="bc-tip">Budget non ancora chiesto. In telefonata proponi una forbice: «Per orientarci, pensava più sui ${eurFmt(f.cost.lo)} o sui ${eurFmt(f.cost.hi)}?»</div>`);
+  }
+  h.push(`<div class="bc-tip" style="font-size:12px">Stima su listino indicativo (⚙ Pesi): orientativa, non è un preventivo.</div>`);
+  el.innerHTML = h.join('');
 }
 
 function snapshotLead() {
@@ -1219,7 +1360,7 @@ function saveCurrentLead(opts) {
 // ── Salvataggio automatico ──
 function hasContent() {
   const c = contactFields();
-  return !!(c.name || c.comune || c.phone || c.email || c.notes ||
+  return !!(c.name || c.comune || c.address || c.phone || c.email || c.notes ||
             Object.keys(state).length || Object.keys(objState).length);
 }
 
@@ -1227,7 +1368,7 @@ function canAutosave() {
   if (!dirty || autoBlocked || !hasContent()) return false;
   if (currentLeadId) return true;
   const c = contactFields();           // un lead nuovo parte solo con un riferimento al cliente
-  return !!(c.name || c.comune || c.phone);
+  return !!(c.name || c.comune || c.address || c.phone);
 }
 
 function flushAutosave() {
@@ -1312,7 +1453,7 @@ function renderArchive() {
     if (tyF && cleanCrm(l.crm).clientType !== tyF) return false;
     if (!q) return true;
     const c = l.contact || {};
-    return [c.name,c.comune,c.phone,c.email,c.notes,cleanCrm(l.crm).request.text].join(' ').toLowerCase().includes(q);
+    return [c.name,c.comune,c.address,c.phone,c.email,c.notes,cleanCrm(l.crm).request.text].join(' ').toLowerCase().includes(q);
   });
   const count = document.getElementById('archive-count');
   if (count) count.textContent = loadLibrary().length+' lead salvati';
@@ -1388,7 +1529,7 @@ function sanitizeLead(l) {
   const str = (v,n)=> typeof v==='string' ? v.slice(0,n) : '';
   const id = (typeof l.id==='string' && /^[A-Za-z0-9._-]{1,64}$/.test(l.id)) ? l.id : uid();
   const c = (l.contact && typeof l.contact==='object') ? l.contact : {};
-  const contact = { name:str(c.name,120), comune:str(c.comune,120), phone:str(c.phone,60), email:str(c.email,160), notes:str(c.notes,5000) };
+  const contact = { name:str(c.name,120), comune:str(c.comune,120), address:str(c.address,200), phone:str(c.phone,60), email:str(c.email,160), notes:str(c.notes,5000) };
   const profile = {};
   if (l.profile && typeof l.profile==='object') Object.keys(l.profile).forEach(f=>{
     if (!(f in DEFAULT_WEIGHTS)) return;
@@ -1516,6 +1657,10 @@ function renderCompare() {
   rows.push(`<tr><td>Penalità obiezioni</td><td>${sa?'−'+sa.penalty:'—'}</td><td>${sb?'−'+sb.penalty:'—'}</td><td>${delta(sa?.penalty, sb?.penalty, false)}</td></tr>`);
   rows.push(`<tr><td>Confidenza</td><td>${sa?sa.conf+'%':'—'}</td><td>${sb?sb.conf+'%':'—'}</td><td>${delta(sa?.conf, sb?.conf, true)}</td></tr>`);
   rows.push(`<tr><td>Comune</td><td>${esc(a.contact?.comune||'—')}</td><td>${esc(b.contact?.comune||'—')}</td><td></td></tr>`);
+  rows.push(`<tr><td>Indirizzo</td><td>${esc(a.contact?.address||'—')}</td><td>${esc(b.contact?.address||'—')}</td><td></td></tr>`);
+  const fa = budgetFit(cleanCrm(a.crm).request), fb = budgetFit(cleanCrm(b.crm).request);
+  rows.push(`<tr><td>Budget del cliente</td><td>${fa.declared!=null?eurFmt(fa.declared):'—'}</td><td>${fb.declared!=null?eurFmt(fb.declared):'—'}</td><td>${delta(fa.declared, fb.declared, true)}</td></tr>`);
+  rows.push(`<tr><td>Verifica budget</td><td>${esc(fa.verdict||'—')}</td><td>${esc(fb.verdict||'—')}</td><td>${delta(fa.s, fb.s, true)}</td></tr>`);
   rows.push(`<tr><td>Telefono</td><td>${esc(a.contact?.phone||'—')}</td><td>${esc(b.contact?.phone||'—')}</td><td></td></tr>`);
   rows.push(`<tr><td>Email</td><td>${esc(a.contact?.email||'—')}</td><td>${esc(b.contact?.email||'—')}</td><td></td></tr>`);
   [...GROUPS.a,...GROUPS.b,...GROUPS.c].forEach(f=>{
@@ -1599,9 +1744,11 @@ function updateNum(id, silent) {
 // ══════════════════════════════════════════
 function calcScore() {
   const keys = Object.keys(state);
-  if(!keys.length) return null;
+  const bf = budgetFit(crm.request);
+  if(!keys.length && bf.s==null) return null;
   let ws=0, tw=0;
   keys.forEach(f=>{const w=weights[f]||1;ws+=state[f]*w;tw+=w;});
+  if (bf.s!=null) { const w=weights.budget||1; ws+=bf.s*w; tw+=w; }
   const raw = Math.round(ws/tw);
   const penalty = Object.values(objState).reduce((a,b)=>a+b,0);
   const adj = Math.max(0, raw-penalty);
@@ -1610,19 +1757,14 @@ function calcScore() {
 }
 
 function calcBudget() {
-  const votes = Object.values(budgetVotes);
-  if(!votes.length) return null;
-  const cnt={premium:0,mid:0,entry:0};
-  votes.forEach(v=>cnt[v]++);
-  if(cnt.premium>=cnt.mid&&cnt.premium>=cnt.entry) return {label:'Premium',range:'€55.000 +'};
-  if(cnt.mid>=cnt.entry) return {label:'Mid',range:'€30.000 – €55.000'};
-  return {label:'Entry',range:'€15.000 – €30.000'};
+  return budgetTier(Object.values(budgetVotes), crm.request);
 }
 
 // ══════════════════════════════════════════
 // REFRESH UI
 // ══════════════════════════════════════════
 function refreshAll() {
+  updateBudgetCheck();
   const sc = calcScore();
   const bgt = calcBudget();
   const totalVars = Object.values(GROUPS).flat().length;
@@ -1654,7 +1796,8 @@ function refreshAll() {
   else{sl.innerHTML='<span class="dot" style="background:var(--red)"></span>Bassa propensione';sl.style.color='var(--red-dk)';}
 
   document.getElementById('budget-val').textContent = bgt?bgt.label:'—';
-  document.getElementById('budget-range').textContent = bgt?bgt.range:'—';
+  const bfit = budgetFit(crm.request);
+  document.getElementById('budget-range').textContent = bgt ? bgt.range + (bfit.ratio!=null ? ' · '+Math.round(bfit.ratio*100)+'% del costo' : '') : '—';
 
   let pv='—',ps='—';
   if(score>=76){pv='🔴 Urgente';ps='Contattare entro 24h';}
@@ -1718,6 +1861,15 @@ function refreshLeve() {
   if(objState['obj-utilizzo']>=10) leve.push({icon:'📅',name:'Far immaginare l\'estate concretamente',desc:'"Immagini: luglio, 35 gradi, i suoi figli in piscina alle 17:00 mentre lei lavora in giardino." Usa immagini, video di clienti reali. Il problema non è la logica — è la visualizzazione emotiva.',urgency:'media'});
   if(objState['obj-cantiere']>=8) leve.push({icon:'📸',name:'Mostra cantieri veloci e ordinati',desc:'Porta foto/video di cantieri precedenti — prima, durante, dopo. Specifica i tempi medi (6-12 settimane). "Il cantiere è una settimana difficile, poi ha qualcosa che vale 30 anni."',urgency:'media'});
 
+  // Leve basate sul budget
+  const bfL = budgetFit(crm.request);
+  if (bfL.cls==='bad' || bfL.cls==='warn') {
+    const fs = bfL.declared ? fitSize(bfL.declared) : null;
+    leve.push({icon:'📐',name:bfL.cls==='bad'?'Riposizionare l\'offerta sul budget':'Budget al limite: proteggere il margine',desc:(bfL.cls==='bad'?'Il budget ('+eurFmt(bfL.declared)+') è sotto il costo del progetto richiesto ('+eurFmt(bfL.cost.lo)+'–'+eurFmt(bfL.cost.hi)+'). ':'Il budget copre solo la versione base. ')+(fs?'Proponi una vasca di circa '+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m e ':'Proponi ')+'gli accessori in un secondo tempo, oppure un finanziamento che porti la differenza a una rata mensile. Mai scontare prima di aver ridotto il perimetro.',urgency:'alta'});
+  }
+  if (bfL.cost && bfL.declared!=null && bfL.declared>=bfL.cost.hi) leve.push({icon:'✨',name:'Budget capiente: proporre gli upgrade',desc:'Il budget supera anche la versione più completa stimata. Presenta subito il pacchetto premium (copertura automatica, pompa di calore, illuminazione, zona solarium): alza il valore del contratto senza allungare la trattativa.',urgency:'media'});
+  if (bfL.declared==null && sc) leve.push({icon:'💶',name:'Qualificare il budget',desc:'Il budget non è ancora noto ed è la variabile più predittiva. Non chiedere "quanto vuole spendere?": proponi una forbice'+(bfL.cost?' ('+eurFmt(bfL.cost.lo)+' o '+eurFmt(bfL.cost.hi)+')':' (25–35 mila o 40–60 mila)')+' e lascia scegliere. Annota anche se è un tetto rigido o indicativo.',urgency:'media'});
+
   if(!leve.length){con.innerHTML='<div class="no-leve">Aggiungi più informazioni per generare leve strategiche personalizzate.</div>';return;}
 
   const urgOrd = {alta:0,media:1,bassa:2};
@@ -1763,6 +1915,8 @@ function refreshStats() {
       contribs.push({f,w,s,c});if(c>maxContrib)maxContrib=c;
     }
   });
+  const bfS = budgetFit(crm.request);
+  if (bfS.s!=null) { const w=weights.budget||1; const c=parseFloat((w*bfS.s/100).toFixed(2)); contribs.push({f:'budget',w,s:bfS.s,c}); if(c>maxContrib)maxContrib=c; }
   tbody.innerHTML=`<tr><th>Variabile</th><th>Peso (W)</th><th>Score raw</th><th>Contributo</th><th>Barra</th></tr>`+
     (contribs.length?contribs.map(x=>{
       const barW=maxContrib>0?Math.round((x.c/maxContrib)*120):0;
@@ -1782,9 +1936,12 @@ function refreshStats() {
 // EDITOR PESI
 // ══════════════════════════════════════════
 function renderWeightEditor() {
-  ['a','b','c'].forEach(g=>{
+  const groups = {...GROUPS, budget:['budget']};
+  renderPriceEditor();
+  ['a','b','c','budget'].forEach(g=>{
     const el=document.getElementById('wg-'+g);
-    el.innerHTML=GROUPS[g].map(f=>`
+    if (!el) return;
+    el.innerHTML=groups[g].map(f=>`
       <div class="var-name">${VAR_LABELS[f]||f}</div>
       <input type="range" min="0.2" max="5" step="0.1" value="${weights[f]}" oninput="updateWeight('${f}',this.value)" id="range-${f}"/>
       <div class="w-val" id="wval-${f}">${weights[f].toFixed(1)}</div>
@@ -1819,24 +1976,27 @@ function openExport() {
   const varsStr=allVars.filter(f=>state[f]!==undefined).map(f=>`  • ${VAR_LABELS[f]}: ${fieldDisplay(f)} (score:${state[f]}, w:${weights[f].toFixed(1)})`).join('\n');
   const objStr=Object.keys(objState).filter(f=>objState[f]>0).map(f=>`  • ${OBJ_LABELS[f]}: −${objState[f]}pt`).join('\n')||'  Nessuna rilevante';
   const penTot=Object.values(objState).reduce((a,b)=>a+b,0);
+  const bfx=budgetFit(crm.request);
 
   const txt=`LEAD SCORER v2 — PISCINE SAN LORENZO
 Data: ${date}  |  Cliente: ${name}
-Comune: ${c.comune||'—'}  |  Tel: ${c.phone||'—'}  |  Email: ${c.email||'—'}
+Indirizzo: ${c.address||'—'}, ${c.comune||'—'}
+Tel: ${c.phone||'—'}  |  Email: ${c.email||'—'}
 ${'─'.repeat(46)}
 RISULTATO
   Score profilo grezzo:    ${sc?sc.raw+'/100':'—'}
   Penalità obiezioni:      −${penTot} pt
   Score finale aggiustato: ${sc?sc.adj+'/100':'—'}
   Confidenza:              ${sc?sc.conf+'%':'—'} (${Object.keys(state).length}/17 variabili)
-  Budget stimato:          ${bgt?bgt.label+' — '+bgt.range:'—'}
+  Fascia di budget:        ${bgt?bgt.label+' — '+bgt.range:'—'}
+  Verifica budget:         ${bfx.declared!=null?(bfx.cost?eurFmt(bfx.declared)+' vs costo '+eurFmt(bfx.cost.lo)+'–'+eurFmt(bfx.cost.hi)+' → ':'')+bfx.verdict+' (score '+bfx.s+')':'budget non indicato'}
   Priorità:                ${document.getElementById('priority-val').textContent}
 ${'─'.repeat(46)}
 NOTE COMMERCIALE
 ${c.notes||'  (nessuna)'}
 ${'─'.repeat(46)}
 VARIABILI PROFILO
-${varsStr||'  (nessuna inserita)'}
+${varsStr||'  (nessuna inserita)'}${bfx.s!=null?'\n  • Budget vs progetto: '+bfx.verdict+' (score:'+bfx.s+', w:'+weights.budget.toFixed(1)+')':''}
 ${'─'.repeat(46)}
 OBIEZIONI CON IMPATTO
 ${objStr}
@@ -2109,8 +2269,11 @@ function updateContactLinks() {
   const c = contactFields();
   const t = telHref(c.phone);
   call.href = t || '#'; call.classList.toggle('disabled', !t);
-  const q = [c.comune].filter(Boolean).join(' ');
+  const q = [c.address, c.comune].filter(Boolean).join(', ');
   map.href = q ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q) : '#'; map.classList.toggle('disabled', !q);
+  const route = document.getElementById('route-link'), sat = document.getElementById('sat-link');
+  if (route) { route.href = q ? 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(q) : '#'; route.classList.toggle('disabled', !q); }
+  if (sat) { const ok = !!c.address; sat.href = ok ? 'https://earth.google.com/web/search/'+encodeURIComponent(q) : '#'; sat.classList.toggle('disabled', !ok); }
   const okMail = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(c.email);
   mail.href = okMail ? 'mailto:'+c.email : '#'; mail.classList.toggle('disabled', !okMail);
 }
@@ -2243,7 +2406,8 @@ const DEPTHS = [['','—'],['costante','Costante'],['variabile','Variabile']];
 const ENTRIES = [['','—'],['gradini','Gradini'],['scala','Scala'],['rampa','Rampa / spiaggia'],['altro','Altro']];
 const TIMINGS = [['','—'],['subito','Subito / al più presto'],['3mesi','Entro 3 mesi'],['stagione','Per la prossima stagione'],['nonso','Non definito']];
 const FEATURES = [['luci','Illuminazione LED'],['riscald','Riscaldamento / pompa di calore'],['copertura','Copertura'],['idro','Idromassaggio / cascata'],['controc','Nuoto controcorrente'],['domotica','Domotica'],['sale','Trattamento al sale'],['sfioro','Bordo a sfioro']];
-function defaultReq() { return { text:'', len:null, wid:null, shape:'', color:'', depthType:'', dmin:null, dmax:null, entry:'', timing:'', budget:null, feats:{} }; }
+const BUDGET_TYPES = [['','—'],['indicativo','Indicativo / flessibile'],['tetto','Tetto massimo rigido'],['stimato','Stimato da noi (non detto dal cliente)']];
+function defaultReq() { return { text:'', len:null, wid:null, shape:'', color:'', depthType:'', dmin:null, dmax:null, entry:'', timing:'', budget:null, btype:'', feats:{} }; }
 function cleanReq(raw) {
   const r = defaultReq();
   if (!raw || typeof raw !== 'object') return r;
@@ -2251,7 +2415,7 @@ function cleanReq(raw) {
   const inList = (list, v)=> list.some(x=>x[0]===v) ? v : '';
   r.text = typeof raw.text==='string' ? raw.text.slice(0,3000) : '';
   r.len = num(raw.len,100); r.wid = num(raw.wid,100); r.dmin = num(raw.dmin,10); r.dmax = num(raw.dmax,10); r.budget = num(raw.budget,10000000);
-  r.shape = inList(SHAPES, raw.shape); r.depthType = inList(DEPTHS, raw.depthType); r.entry = inList(ENTRIES, raw.entry); r.timing = inList(TIMINGS, raw.timing);
+  r.shape = inList(SHAPES, raw.shape); r.depthType = inList(DEPTHS, raw.depthType); r.entry = inList(ENTRIES, raw.entry); r.timing = inList(TIMINGS, raw.timing); r.btype = inList(BUDGET_TYPES, raw.btype);
   r.color = typeof raw.color==='string' ? raw.color.slice(0,60) : '';
   FEATURES.forEach(([k])=>{ if (raw.feats && raw.feats[k] === true) r.feats[k] = true; });
   return r;
@@ -2266,6 +2430,7 @@ function renderRequestForm() {
   document.getElementById('req-depthtype').innerHTML = optionsHtml(DEPTHS, r.depthType);
   document.getElementById('req-entry').innerHTML = optionsHtml(ENTRIES, r.entry);
   document.getElementById('req-timing').innerHTML = optionsHtml(TIMINGS, r.timing);
+  document.getElementById('req-btype').innerHTML = optionsHtml(BUDGET_TYPES, r.btype);
   document.getElementById('req-feats').innerHTML = FEATURES.map(([k,l])=>`<label class="chk"><input type="checkbox" ${r.feats[k]?'checked':''} onchange="onReqField()" data-feat="${k}"><span>${esc(l)}</span></label>`).join('');
   updateReqSummary();
 }
@@ -2276,16 +2441,19 @@ function onReqField() {
   r.len = num('req-len'); r.wid = num('req-wid'); r.dmin = num('req-dmin'); r.dmax = num('req-dmax'); r.budget = num('req-budget');
   r.shape = document.getElementById('req-shape').value; r.depthType = document.getElementById('req-depthtype').value;
   r.entry = document.getElementById('req-entry').value; r.timing = document.getElementById('req-timing').value;
+  r.btype = document.getElementById('req-btype').value;
   r.color = document.getElementById('req-color').value.slice(0,60);
   r.feats = {};
   document.querySelectorAll('#req-feats input[data-feat]').forEach(i=>{ if (i.checked) r.feats[i.dataset.feat] = true; });
   updateReqSummary();
+  refreshAll();
   markUnsaved();
 }
 function requestSummaryText() {
   const r = crm.request, c = contactFields();
   const L = [];
   L.push('RICHIESTA DI PREVENTIVO' + (c.name ? ' — ' + c.name : '') + (c.comune ? ' (' + c.comune + ')' : ''));
+  if (c.address) L.push('Indirizzo: ' + c.address + (c.comune ? ', ' + c.comune : ''));
   if (r.len && r.wid) L.push('Dimensioni: ' + fmtNum(r.len) + ' × ' + fmtNum(r.wid) + ' m (circa ' + Math.round(r.len*r.wid) + ' m²)');
   else if (r.len || r.wid) L.push('Dimensioni: ' + fmtNum(r.len || r.wid) + ' m (un solo lato indicato)');
   const lab = (list,v)=> (list.find(x=>x[0]===v)||[0,''])[1];
@@ -2300,9 +2468,9 @@ function requestSummaryText() {
   if (r.entry) L.push('Ingresso: ' + lab(ENTRIES, r.entry).toLowerCase());
   const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
   if (feats.length) L.push('Accessori: ' + feats.join(', '));
-  if (r.budget != null) L.push('Budget dichiarato: € ' + r.budget.toLocaleString('it-IT'));
+  if (r.budget != null) L.push('Budget ' + (r.btype==='stimato' ? 'stimato' : 'dichiarato') + ': € ' + r.budget.toLocaleString('it-IT') + (r.btype==='tetto' ? ' (tetto massimo)' : ''));
   if (r.timing) L.push('Tempi: ' + lab(TIMINGS, r.timing).toLowerCase());
-  return L.length > 1 ? L.join('\n') : '';
+  return (L.length > 1 && !(L.length === 2 && c.address)) ? L.join('\n') : '';
 }
 function updateReqSummary() {
   const el = document.getElementById('req-summary');
@@ -2354,6 +2522,13 @@ function extractRequest(text) {
   if (out.budget == null) { const b2 = T.match(/(\d{1,3}(?:\.\d{3})+)\s*(?:€|euro)/); if (b2) { const v = toN(b2[1].replace(/\./g,'')); if (v>=5000 && v<=2000000) out.budget = v; } }
   return out;
 }
+// Cerca un indirizzo nel testo (es. "via G. Verdi 12", "località Pra 4/b")
+function extractAddress(text) {
+  const m = String(text||'').match(/\b(?:via|viale|v\.le|piazza|p\.zza|piazzale|vicolo|strada|corso|c\.so|largo|localit[àa]|loc\.|contrada|borgo)\s+[A-Za-zÀ-ÿ'’.\s]{2,50}?,?\s*(?:n\.?\s*|n°\s*)?\d{1,4}(?:\s*\/\s*[A-Za-z]|[A-Za-z])?\b/i);
+  if (!m) return '';
+  const a = m[0].replace(/\s+/g,' ').trim();
+  return a.charAt(0).toUpperCase() + a.slice(1);
+}
 function parseRequest() {
   const r = crm.request;
   const src = document.getElementById('req-text').value;
@@ -2363,7 +2538,10 @@ function parseRequest() {
   const fill = (k)=>{ if (x[k] !== undefined && (r[k] === null || r[k] === '' )) { r[k] = x[k]; n++; } };
   ['len','wid','shape','color','depthType','dmin','dmax','entry','timing','budget'].forEach(fill);
   Object.keys(x.feats).forEach(k=>{ if (!r.feats[k]) { r.feats[k] = true; n++; } });
+  const adEl = document.getElementById('clientAddress');
+  if (adEl && !adEl.value.trim()) { const ad = extractAddress(src); if (ad) { adEl.value = ad; updateContactLinks(); n++; } }
   renderRequestForm();
+  refreshAll();
   if (n) { markUnsaved(); toast('Compilati '+n+' campi: controllali'); } else toast('Niente di nuovo da compilare');
 }
 
@@ -2524,7 +2702,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-07-2';
+const BUILD = '2026-10-14-1';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
@@ -2541,6 +2719,7 @@ document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState
 
 // init
 loadWeights();
+loadPrice();
 refreshAll();
 updateObjProgress();
 updateLeadStatus();
