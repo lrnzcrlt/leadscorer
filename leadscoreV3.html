@@ -660,6 +660,93 @@ button,input,select,textarea{font-family:inherit}
 @media(max-width:600px){.btn,.quick-days button,.mini-btn{min-height:42px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 @media print{.nav-bar,body::before{display:none!important}}
+
+/* ═══════════ COLORI PER SITUAZIONE ═══════════
+   Temperatura del lead (dallo score): caldo = agire subito (colori caldi, attivanti),
+   tiepido = da lavorare (ambra, attenzione), freddo = in attesa (toni freddi, calmi).
+   Fase della trattativa: un colore per fase, dal neutro al verde della chiusura. */
+:root{
+  --caldo:#D9481C;--caldo-bg:#FDE9E1;--caldo-deep:#7E260C;--caldo-glow:rgba(255,138,92,.45);
+  --tiepido:#B7791F;--tiepido-bg:#FBF0D9;--tiepido-deep:#6E4A0A;--tiepido-glow:rgba(245,190,90,.40);
+  --freddo:#56788B;--freddo-bg:#E7EEF2;--freddo-deep:#2C4352;--freddo-glow:rgba(150,190,212,.35);
+  --st-nuovo:#64748B;--st-nuovo-bg:#ECEFF3;
+  --st-contattato:#1F7FBF;--st-contattato-bg:#E2F0FA;
+  --st-sopralluogo:#6D5BD0;--st-sopralluogo-bg:#ECE9FB;
+  --st-preventivo:#B7791F;--st-preventivo-bg:#FBF0D9;
+  --st-trattativa:#D9622B;--st-trattativa-bg:#FCE8DD;
+  --st-vinto:#1F9D6B;--st-vinto-bg:#E2F4EB;
+  --st-perso:#A35A55;--st-perso-bg:#F4E7E6;
+}
+@media(prefers-color-scheme:dark){:root{
+  --caldo:#FF7A4D;--caldo-bg:#3D1A0E;--tiepido:#E9B04F;--tiepido-bg:#3A2A0D;--freddo:#8FB2C6;--freddo-bg:#1B2C35;
+  --st-nuovo:#A3B1C2;--st-nuovo-bg:#1E2A33;--st-contattato:#6BB6EA;--st-contattato-bg:#10304A;
+  --st-sopralluogo:#A79BF0;--st-sopralluogo-bg:#241F4D;--st-preventivo:#E9B04F;--st-preventivo-bg:#3A2A0D;
+  --st-trattativa:#FF9A63;--st-trattativa-bg:#3D1E0E;--st-vinto:#3BBF8A;--st-vinto-bg:#0D3225;
+  --st-perso:#D99A95;--st-perso-bg:#3A1C1A;
+}}
+
+/* Pannello score: cambia colore con la temperatura del lead */
+.score-panel{transition:background-color .35s ease}
+.score-panel[data-temp=caldo]{background-color:var(--caldo-deep);background-image:radial-gradient(140% 110% at 100% 0%,var(--caldo-glow),transparent 55%),radial-gradient(120% 120% at 0% 100%,rgba(0,0,0,.18),transparent 60%);box-shadow:0 12px 34px rgba(126,38,12,.32)}
+.score-panel[data-temp=tiepido]{background-color:var(--tiepido-deep);background-image:radial-gradient(140% 110% at 100% 0%,var(--tiepido-glow),transparent 55%),radial-gradient(120% 120% at 0% 100%,rgba(0,0,0,.18),transparent 60%);box-shadow:0 12px 34px rgba(110,74,10,.28)}
+.score-panel[data-temp=freddo]{background-color:var(--freddo-deep);background-image:radial-gradient(140% 110% at 100% 0%,var(--freddo-glow),transparent 55%);box-shadow:0 12px 34px rgba(44,67,82,.28)}
+.score-panel[data-temp] .metric:first-child .metric-lbl::after{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(255,255,255,.16);color:#fff}
+.score-panel[data-temp=caldo] .metric:first-child .metric-lbl::after{content:'🔥 Lead caldo'}
+.score-panel[data-temp=tiepido] .metric:first-child .metric-lbl::after{content:'🌤 Tiepido'}
+.score-panel[data-temp=freddo] .metric:first-child .metric-lbl::after{content:'❄ Freddo'}
+.score-panel[data-temp=caldo] .bar-fill{background:#FFB08F}
+.score-panel[data-temp=tiepido] .bar-fill{background:#F5CF7E}
+.score-panel[data-temp=freddo] .bar-fill{background:#BCD6E4}
+
+/* Fasi della trattativa */
+.stage-badge{border:0}
+.stage-nuovo{background:var(--st-nuovo-bg);color:var(--st-nuovo)}
+.stage-contattato{background:var(--st-contattato-bg);color:var(--st-contattato)}
+.stage-sopralluogo{background:var(--st-sopralluogo-bg);color:var(--st-sopralluogo)}
+.stage-preventivo{background:var(--st-preventivo-bg);color:var(--st-preventivo)}
+.stage-trattativa{background:var(--st-trattativa-bg);color:var(--st-trattativa)}
+.stage-vinto{background:var(--st-vinto);color:#fff}
+.stage-perso{background:var(--st-perso-bg);color:var(--st-perso)}
+.stage-pubblico{background:var(--acqua-bg);color:var(--acqua-dk)}
+
+/* Schede in Archivio e Oggi: striscia della fase + score colorato per temperatura */
+.lead-card,.today-card{position:relative;overflow:hidden}
+.lead-card::before,.today-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--st-nuovo)}
+.lead-card:has(.stage-contattato)::before,.today-card:has(.stage-contattato)::before{background:var(--st-contattato)}
+.lead-card:has(.stage-sopralluogo)::before,.today-card:has(.stage-sopralluogo)::before{background:var(--st-sopralluogo)}
+.lead-card:has(.stage-preventivo)::before,.today-card:has(.stage-preventivo)::before{background:var(--st-preventivo)}
+.lead-card:has(.stage-trattativa)::before,.today-card:has(.stage-trattativa)::before{background:var(--st-trattativa)}
+.lead-card:has(.stage-vinto)::before,.today-card:has(.stage-vinto)::before{background:var(--st-vinto)}
+.lead-card:has(.stage-perso)::before,.today-card:has(.stage-perso)::before{background:var(--st-perso)}
+.lead-card:has(.stage-perso){opacity:.78}
+.lead-card-score,.today-card .tc-score{text-align:center;min-width:64px}
+.lead-card[data-temp] .lead-card-score::after,.today-card[data-temp] .tc-score::after{display:block;font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:0;margin-top:4px}
+.lead-card[data-temp=caldo] .lead-card-score,.today-card[data-temp=caldo] .tc-score{color:var(--caldo)}
+.lead-card[data-temp=tiepido] .lead-card-score,.today-card[data-temp=tiepido] .tc-score{color:var(--tiepido)}
+.lead-card[data-temp=freddo] .lead-card-score,.today-card[data-temp=freddo] .tc-score{color:var(--freddo)}
+.lead-card[data-temp=none] .lead-card-score,.today-card[data-temp=none] .tc-score{color:var(--text3)}
+.lead-card[data-temp=caldo] .lead-card-score::after,.today-card[data-temp=caldo] .tc-score::after{content:'🔥 caldo'}
+.lead-card[data-temp=tiepido] .lead-card-score::after,.today-card[data-temp=tiepido] .tc-score::after{content:'🌤 tiepido'}
+.lead-card[data-temp=freddo] .lead-card-score::after,.today-card[data-temp=freddo] .tc-score::after{content:'❄ freddo'}
+.lead-card[data-temp=none] .lead-card-score::after,.today-card[data-temp=none] .tc-score::after{content:'da valutare';font-weight:600}
+.lead-card[data-temp=caldo],.today-card[data-temp=caldo]{background:linear-gradient(90deg,var(--surf) 70%,var(--caldo-bg))}
+
+/* Lead chiusi: la temperatura non conta più, conta l'esito */
+.lead-card:has(.stage-vinto) .lead-card-score,.today-card:has(.stage-vinto) .tc-score{color:var(--st-vinto)}
+.lead-card:has(.stage-perso) .lead-card-score,.today-card:has(.stage-perso) .tc-score{color:var(--text3)}
+.lead-card:has(.stage-vinto) .lead-card-score::after,.today-card:has(.stage-vinto) .tc-score::after{content:'chiuso ✓'}
+.lead-card:has(.stage-perso) .lead-card-score::after,.today-card:has(.stage-perso) .tc-score::after{content:'chiuso'}
+.lead-card:has(.stage-vinto),.lead-card:has(.stage-perso){background:var(--surf)}
+
+/* Oggi: sezioni con colore della loro urgenza */
+.today-sec.late h3{color:var(--caldo)}
+.today-sec.late .today-card{box-shadow:0 0 0 1.5px var(--caldo),var(--lift)}
+
+/* Esiti e urgenze delle leve con gli stessi codici */
+.urgency-alta{color:var(--caldo)}
+.urgency-media{color:var(--tiepido)}
+.leva-card:has(.urgency-alta) .leva-icon{background:var(--caldo-bg)}
+.leva-card:has(.urgency-media) .leva-icon{background:var(--tiepido-bg)}
 </style>
 </head>
 <body>
@@ -1904,7 +1991,7 @@ function renderArchive() {
     const cc = cleanCrm(l.crm);
     const when = new Date(l.savedAt).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const cur = l.id===currentLeadId ? ' current' : '';
-    return `<div class="lead-card${cur}">
+    return `<div class="lead-card${cur}" data-temp="${tempOf(sc?sc.adj:null)}">
       <div class="lead-card-main">
         <div class="lead-card-name">${esc(c.name || 'Senza nome')}</div>
         <div class="lead-card-meta"><span class="stage-badge stage-${esc(cc.stage)}">${esc(STAGE_LABEL[cc.stage]||'')}</span>${typeTag(cc)} ${esc(c.comune || 'Comune n/d')} · ${esc(c.phone || 'niente tel.')} · ${when}</div>
@@ -2197,9 +2284,11 @@ function calcBudget() {
 // ══════════════════════════════════════════
 // REFRESH UI
 // ══════════════════════════════════════════
+function tempOf(v) { return v==null ? 'none' : v>=70 ? 'caldo' : v>=42 ? 'tiepido' : 'freddo'; }
 function refreshAll() {
   updateBudgetCheck();
   const sc = calcScore();
+  const sp = document.getElementById('score-panel'); if (sp) sp.dataset.temp = tempOf(sc ? sc.adj : null);
   const bgt = calcBudget();
   const totalVars = Object.values(GROUPS).flat().length;
   const filled = Object.keys(state).length;
@@ -3488,7 +3577,7 @@ function renderOggi() {
     const idle = Math.floor((Date.now()-lastTouchTs(l,c))/86400000);
     const stale = idle >= 14 ? `<span class="stale-tag">⏳ fermo da ${idle} gg</span>` : '';
     const when = c.nextDate ? ' · '+(c.nextDate<t ? '<strong style="color:var(--red-dk)">scaduto il '+esc(fmtDate(c.nextDate))+'</strong>' : esc(fmtDate(c.nextDate))) : '';
-    return `<div class="today-card">
+    return `<div class="today-card" data-temp="${tempOf(sc?sc.adj:null)}">
       <div><div class="tc-name">${esc(ct.name || 'Senza nome')}${stale}</div>
         <div class="tc-meta">${stageBadge(c.stage)}${typeTag(c)} ${esc(ct.comune || 'Comune n/d')}${ct.phone ? ' · '+esc(ct.phone) : ''}</div>
         <div class="tc-act">${c.nextAction || c.nextDate ? '➜ '+esc(c.nextAction || 'Prossima azione')+when : (suggestFor(c) ? '<span style="color:var(--amber-dk)">💡 Suggerito: '+esc(suggestFor(c).action)+'</span>' : '<em style="color:var(--amber-dk)">Nessuna prossima azione</em>')}</div></div>
@@ -3567,7 +3656,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-15-4';
+const BUILD = '2026-10-15-5';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
