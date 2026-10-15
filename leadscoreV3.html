@@ -178,6 +178,87 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .info-box{background:var(--blue-bg);border:.5px solid rgba(59,130,246,.25);border-radius:var(--r-md);padding:.75rem 1rem;font-size:12px;color:var(--blue-dk);margin-bottom:.875rem;line-height:1.6}
 
 /* MODAL */
+/* REPORT */
+.rp-ov{display:none;position:fixed;inset:0;z-index:300;background:#e9e8e4;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.rp-ov.open{display:block}
+.rp-bar{position:sticky;top:0;z-index:2;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 16px;background:rgba(233,232,228,.94);backdrop-filter:blur(6px);border-bottom:1px solid rgba(0,0,0,.08)}
+.rp-bar .btn{background:#fff;color:#1a1a18;border-color:rgba(0,0,0,.16)}
+.rp-bar .btn-green{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.rp{--ink:#1a1a18;--ink2:#55554f;--ink3:#8d8d87;--line:#e4e3de;--soft:#f6f5f2;--acc:#0F6E56;
+  max-width:820px;margin:16px auto 40px;background:#fff;color:var(--ink);border-radius:6px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:36px 40px;font-size:13.5px;line-height:1.5}
+@media(max-width:640px){.rp{margin:0;border-radius:0;padding:22px 16px;box-shadow:none}}
+.rp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:18px;flex-wrap:wrap}
+.rp-brand{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.rp-name{font-size:24px;font-weight:700;line-height:1.15;letter-spacing:-.01em}
+.rp-where{color:var(--ink2);margin-top:3px}
+.rp-meta{text-align:right;font-size:12px;color:var(--ink2);line-height:1.7}
+@media(max-width:640px){.rp-meta{text-align:left}.rp-bar{gap:6px;padding:8px 10px}.rp-bar .btn{padding:7px 10px;font-size:13px}}
+.rp-tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.rp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+@media(max-width:640px){.rp-kpis{grid-template-columns:repeat(2,1fr)}}
+.rp-kpi{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.rp-kpi-l{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.rp-kpi-v{font-size:20px;font-weight:700;margin-top:2px;line-height:1.2}
+.rp-kpi-s{font-size:11.5px;color:var(--ink2);margin-top:2px}
+.rp-kpi.hi{border-color:#9fd8c3;background:#effaf5}.rp-kpi.md{border-color:#f0d29a;background:#fdf7ea}.rp-kpi.lo{border-color:#efb3b2;background:#fdf1f1}
+.rp-sec{margin-top:22px}
+.rp-dl>div,.rp-box,.rp-leva,.rp-tbl tr,.rp-chk li,.rp-log div,.rp-quote,.rp-kpis{break-inside:avoid}
+.rp-sec>h2{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--acc);font-weight:700;padding-bottom:5px;border-bottom:1px solid var(--line);margin:0 0 10px;display:flex;justify-content:space-between;gap:10px}
+.rp-sec>h2 small{text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink3);font-size:11.5px}
+.rp-dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px}
+@media(max-width:640px){.rp-dl{grid-template-columns:1fr}}
+.rp-dl>div{display:flex;gap:10px;border-bottom:1px dotted var(--line);padding:3px 0;min-width:0}
+.rp-dl dt{color:var(--ink3);flex:0 0 42%;font-size:12.5px}
+.rp-dl dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
+.rp-dl .wide{grid-column:1/-1}
+.rp-dl .wide dt{flex-basis:21%}
+@media(max-width:640px){.rp-dl .wide dt{flex-basis:42%}}
+.rp-quote{background:var(--soft);border-left:3px solid var(--line);padding:8px 12px;margin-top:10px;color:var(--ink2);font-size:12.5px;white-space:pre-wrap;border-radius:0 6px 6px 0}
+.rp-box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}
+.rp-box.ok{border-color:#9fd8c3;background:#effaf5}.rp-box.warn{border-color:#f0d29a;background:#fdf7ea}.rp-box.bad{border-color:#efb3b2;background:#fdf1f1}
+.rp-box b{font-weight:700}
+.rp-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.rp-tbl th{text-align:left;font-weight:600;color:var(--ink3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:4px 6px;border-bottom:1px solid var(--line)}
+.rp-tbl td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.rp-tbl td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rp-tbl tr.grp td{background:var(--soft);font-weight:600;font-size:11.5px;color:var(--ink2)}
+.rp-bar-in{display:inline-block;height:6px;border-radius:3px;background:#1D9E75;vertical-align:middle}
+.rp-leve{display:grid;gap:8px}
+.rp-leva{display:flex;gap:10px;border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.rp-leva .i{font-size:18px;line-height:1.2}
+.rp-leva b{display:block;margin-bottom:2px}
+.rp-leva p{margin:0;color:var(--ink2);font-size:12.5px}
+.rp-leva .u{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-left:6px}
+.rp-leva .u.alta{color:#A32D2D}.rp-leva .u.media{color:#854F0B}
+.rp-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.rp-cols{grid-template-columns:1fr}}
+.rp-chk{list-style:none;margin:0;padding:0;font-size:12.5px}
+.rp-chk li{display:flex;gap:8px;padding:4px 0;border-bottom:1px dotted var(--line)}
+.rp-chk li .m{flex:0 0 16px;font-weight:700}
+.rp-chk li.y .m{color:#1D9E75}.rp-chk li.n .m{color:var(--ink3)}
+.rp-chk li em{color:var(--ink2);font-style:normal}
+.rp-chk h3{font-size:12px;font-weight:700;margin:0 0 4px}
+.rp-ph-cat{break-after:avoid;font-size:12px;font-weight:600;color:var(--ink2);margin:10px 0 6px}
+.rp-ph{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:640px){.rp-ph{grid-template-columns:repeat(2,1fr)}}
+.rp-ph figure{margin:0;break-inside:avoid}
+.rp-ph img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;display:block;background:var(--soft)}
+.rp-ph figcaption{font-size:10.5px;color:var(--ink3);margin-top:2px}
+.rp-log{font-size:12.5px}
+.rp-log div{display:flex;gap:12px;padding:3px 0;border-bottom:1px dotted var(--line)}
+.rp-log time{flex:0 0 92px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.rp-empty{color:var(--ink3);font-style:italic}
+.rp-foot{margin-top:28px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--ink3);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  body{background:#fff!important}
+  body>*:not(#report-ov){display:none!important}
+  #report-ov{position:static;display:block!important;background:#fff;overflow:visible}
+  .rp-bar{display:none!important}
+  .rp{box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
+  .rp-kpi,.rp-box,.rp-leva{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rp-sec>h2{break-after:avoid}
+}
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
 .modal-ov.open{display:flex}
 .modal{background:var(--surf);border-radius:var(--r-xl);padding:1.5rem;max-width:520px;width:100%;border:.5px solid var(--border);max-height:90vh;overflow-y:auto}
@@ -718,7 +799,7 @@ a.btn.disabled{opacity:.4;pointer-events:none}
     <button class="btn" onclick="newLead()">＋ Nuovo</button>
     <button class="btn" onclick="resetAll()">↺ Reset scheda</button>
     <button class="btn btn-green" onclick="saveCurrentLead()">💾 Salva lead</button>
-    <button class="btn btn-green" onclick="openExport()">↓ Esporta riepilogo</button>
+    <button class="btn btn-green" onclick="openExport()">📄 Report cliente</button>
   </div>
 </div>
 
@@ -1041,6 +1122,15 @@ a.btn.disabled{opacity:.4;pointer-events:none}
   </div>
 </div>
 
+<div class="rp-ov" id="report-ov">
+  <div class="rp-bar">
+    <button class="btn" type="button" onclick="closeReport()">✕ Chiudi</button>
+    <button class="btn" type="button" onclick="copyExport()">⧉ Copia come testo</button>
+    <button class="btn btn-green" type="button" onclick="window.print()">🖨 Stampa / Salva PDF</button>
+  </div>
+  <article class="rp" id="report-doc"></article>
+</div>
+
 <div class="photo-view" id="photo-view">
   <img id="photo-view-img" alt="Foto del sopralluogo"/>
   <div class="pv-bar"><span id="photo-view-cap"></span><button type="button" onclick="deletePhoto()">🗑 Elimina</button><button type="button" onclick="closePhoto()">✕ Chiudi</button></div>
@@ -1311,7 +1401,7 @@ function updateBudgetCheck() {
     h.push(`<div class="bc-row"><span>Budget del cliente${r.btype==='stimato'?' (stimato da noi)':r.btype==='tetto'?' (tetto rigido)':''}</span><span class="bc-v">${eurFmt(f.declared)}${f.ratio!=null?' · '+Math.round(f.ratio*100)+'% del costo medio':''}</span></div>`);
     h.push(`<span class="bc-badge bc-${f.cls}">${esc(f.verdict)}</span>`);
     if (f.cls === 'bad' || f.cls === 'warn') {
-      const fs = fitSize(f.declared);
+      const fs0 = fitSize(f.declared), fs = fs0 && (!f.cost || fs0.A < f.cost.area) ? fs0 : null;
       h.push(`<div class="bc-tip">💡 ${fs ? 'Con questo budget sta una vasca di circa <b>'+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m</b> (≈'+fs.A+' m²) senza accessori. ' : ''}Accessori in un secondo tempo o finanziamento possono chiudere la differenza.</div>`);
     }
   } else {
@@ -1913,9 +2003,8 @@ function updateObjProgress() {
 // ══════════════════════════════════════════
 // LEVE SUGGERITE
 // ══════════════════════════════════════════
-function refreshLeve() {
+function buildLeve() {
   const sc = calcScore();
-  const con = document.getElementById('leve-container');
   const leve = [];
 
   // Leve basate sul profilo
@@ -1942,12 +2031,18 @@ function refreshLeve() {
   // Leve basate sul budget
   const bfL = budgetFit(crm.request);
   if (bfL.cls==='bad' || bfL.cls==='warn') {
-    const fs = bfL.declared ? fitSize(bfL.declared) : null;
+    const fs0 = bfL.declared ? fitSize(bfL.declared) : null, fs = fs0 && (!bfL.cost || fs0.A < bfL.cost.area) ? fs0 : null;
     leve.push({icon:'📐',name:bfL.cls==='bad'?'Riposizionare l\'offerta sul budget':'Budget al limite: proteggere il margine',desc:(bfL.cls==='bad'?'Il budget ('+eurFmt(bfL.declared)+') è sotto il costo del progetto richiesto ('+eurFmt(bfL.cost.lo)+'–'+eurFmt(bfL.cost.hi)+'). ':'Il budget copre solo la versione base. ')+(fs?'Proponi una vasca di circa '+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m e ':'Proponi ')+'gli accessori in un secondo tempo, oppure un finanziamento che porti la differenza a una rata mensile. Mai scontare prima di aver ridotto il perimetro.',urgency:'alta'});
   }
   if (bfL.cost && bfL.declared!=null && bfL.declared>=bfL.cost.hi) leve.push({icon:'✨',name:'Budget capiente: proporre gli upgrade',desc:'Il budget supera anche la versione più completa stimata. Presenta subito il pacchetto premium (copertura automatica, pompa di calore, illuminazione, zona solarium): alza il valore del contratto senza allungare la trattativa.',urgency:'media'});
   if (bfL.declared==null && sc) leve.push({icon:'💶',name:'Qualificare il budget',desc:'Il budget non è ancora noto ed è la variabile più predittiva. Non chiedere "quanto vuole spendere?": proponi una forbice'+(bfL.cost?' ('+eurFmt(bfL.cost.lo)+' o '+eurFmt(bfL.cost.hi)+')':' (25–35 mila o 40–60 mila)')+' e lascia scegliere. Annota anche se è un tetto rigido o indicativo.',urgency:'media'});
 
+  const urgOrd0 = {alta:0,media:1,bassa:2};
+  return leve.sort((a,b)=>urgOrd0[a.urgency]-urgOrd0[b.urgency]);
+}
+function refreshLeve() {
+  const con = document.getElementById('leve-container');
+  const leve = buildLeve();
   if(!leve.length){con.innerHTML='<div class="no-leve">Aggiungi più informazioni per generare leve strategiche personalizzate.</div>';return;}
 
   const urgOrd = {alta:0,media:1,bassa:2};
@@ -2044,7 +2139,7 @@ function resetWeights() {
 // ══════════════════════════════════════════
 // EXPORT
 // ══════════════════════════════════════════
-function openExport() {
+function exportText() {
   const sc=calcScore();const bgt=calcBudget();
   const c=contactFields();
   const name=c.name||'Non specificato';
@@ -2089,16 +2184,175 @@ ${objStr}
 ${'─'.repeat(46)}
 Lead Scorer v2.0 — Piscine San Lorenzo`;
 
-  document.getElementById('export-text').textContent=txt;
-  document.getElementById('modal').classList.add('open');
+  return txt;
+}
+
+function openExport() {
+  exportTextCache = exportText();
+  document.getElementById('report-doc').innerHTML = reportHtml();
+  document.querySelectorAll('#report-doc img[data-pi]').forEach(im=>{ const p = photos[+im.dataset.pi]; if (p) im.src = p.data; });
+  document.getElementById('report-ov').classList.add('open');
+  document.getElementById('report-ov').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  const n = (contactFields().name || 'cliente').replace(/[^\wÀ-ÿ ]+/g,'').trim().replace(/\s+/g,'-');
+  reportPrevTitle = document.title;
+  document.title = 'Report-' + n + '-' + todayISO();   // nome proposto per il PDF
+}
+let exportTextCache = '', reportPrevTitle = '';
+function closeReport() {
+  document.getElementById('report-ov').classList.remove('open');
+  document.body.style.overflow = '';
+  if (reportPrevTitle) document.title = reportPrevTitle;
+}
+document.addEventListener('keydown', e=>{ if (e.key==='Escape' && document.getElementById('report-ov')?.classList.contains('open')) closeReport(); });
+
+function reportHtml() {
+  const c = contactFields(), r = crm.request, d = crm.ditta, t = crm.tech;
+  const sc = calcScore(), bgt = calcBudget(), bf = budgetFit(r);
+  const now = new Date();
+  const E = v => esc(v == null ? '' : String(v));
+  const row = (k, v, wide) => (v === '' || v == null) ? '' : `<div${wide?' class="wide"':''}><dt>${E(k)}</dt><dd>${v}</dd></div>`;
+  const lab = (l,v)=> v ? E(labOf(l,v)) : '';
+  const sec = (title, body, small) => body ? `<section class="rp-sec"><h2><span>${title}</span>${small?`<small>${small}</small>`:''}</h2>${body}</section>` : '';
+  const dl = rows => { const h = rows.join(''); return h ? `<dl class="rp-dl">${h}</dl>` : ''; };
+
+  // Testata
+  const where = [c.address, c.comune].filter(Boolean).join(', ');
+  let h = `<header class="rp-head"><div><div class="rp-brand">Piscine San Lorenzo · Scheda cliente</div>
+    <div class="rp-name">${E(c.name || 'Cliente senza nome')}</div>
+    ${where ? `<div class="rp-where">📍 ${E(where)}</div>` : ''}</div>
+    <div class="rp-meta"><span class="rp-tag">${E(STAGE_LABEL[crm.stage] || '')}</span>${crm.clientType==='pubblico' ? ' <span class="rp-tag">🏛 Pubblico</span>' : ''}<br>
+    Report del ${E(now.toLocaleDateString('it-IT',{day:'2-digit',month:'long',year:'numeric'}))}${crm.createdAt ? '<br>Lead dal ' + E(new Date(crm.createdAt).toLocaleDateString('it-IT')) : ''}</div></header>`;
+
+  // Indicatori
+  const lvl = !sc ? '' : sc.adj >= 70 ? 'hi' : sc.adj >= 42 ? 'md' : 'lo';
+  const lvlTxt = !sc ? 'Nessun dato' : sc.adj >= 70 ? 'Alta propensione' : sc.adj >= 42 ? 'Propensione media' : 'Bassa propensione';
+  const prio = !sc ? ['—','—'] : sc.adj>=76 ? ['🔴 Urgente','Contattare entro 24h'] : sc.adj>=55 ? ['🟡 Normale','Follow-up entro 1 settimana'] : sc.adj>=36 ? ['🔵 Bassa','Tenere in lista warm'] : ['⚪ Sospendi','Non prioritizzare ora'];
+  h += `<div class="rp-kpis">
+    <div class="rp-kpi ${lvl}"><div class="rp-kpi-l">Score</div><div class="rp-kpi-v">${sc ? sc.adj + '<span style="font-size:13px;font-weight:500">/100</span>' : '—'}</div><div class="rp-kpi-s">${lvlTxt}</div></div>
+    <div class="rp-kpi"><div class="rp-kpi-l">Priorità</div><div class="rp-kpi-v" style="font-size:16px">${prio[0]}</div><div class="rp-kpi-s">${prio[1]}</div></div>
+    <div class="rp-kpi ${bf.cls==='ok'?'hi':bf.cls==='warn'?'md':bf.cls==='bad'?'lo':''}"><div class="rp-kpi-l">Budget</div><div class="rp-kpi-v" style="font-size:16px">${bf.declared!=null ? eurFmt(bf.declared) : (bgt ? E(bgt.label) : '—')}</div><div class="rp-kpi-s">${bf.declared!=null ? E(bf.verdict) : (bgt ? 'stima dal profilo' : 'non indicato')}</div></div>
+    <div class="rp-kpi"><div class="rp-kpi-l">Affidabilità</div><div class="rp-kpi-v">${sc ? sc.conf + '%' : '—'}</div><div class="rp-kpi-s">${Object.keys(state).length} di 17 variabili</div></div>
+  </div>`;
+
+  // Contatti e pipeline
+  const tel = c.phone ? `<a href="${E(telHref(c.phone))}">${E(c.phone)}</a>` : '';
+  const mail = c.email ? `<a href="mailto:${E(c.email)}">${E(c.email)}</a>` : '';
+  const next = crm.nextAction ? E(crm.nextAction) + (crm.nextDate ? ' — entro il ' + E(fmtDate(crm.nextDate)) : '') : '';
+  h += sec('Contatti e trattativa', dl([
+    row('Telefono', tel), row('Email', mail), row('Indirizzo', E(where)), row('Fonte', lab(SOURCES, crm.source)),
+    row('Fase', E(STAGE_LABEL[crm.stage]||'')), row('Tipo cliente', E(labOf(CLIENT_TYPES, crm.clientType).replace(/^\S+\s/,''))),
+    row('Prossima azione', next, true),
+    isClosed(crm) ? row(crm.stage==='vinto' ? 'Motivo vittoria' : 'Motivo perdita', lab(crm.stage==='vinto' ? WIN_REASONS : LOSS_REASONS, crm.closeReason), false) : '',
+    crm.stage==='vinto' && crm.closeValue!=null ? row('Valore contratto', eurFmt(crm.closeValue)) : ''
+  ]));
+
+  if (c.notes) h += sec('Note del commerciale', `<div class="rp-quote" style="margin-top:0">${E(c.notes)}</div>`);
+
+  // Richiesta
+  const depth = (r.dmin!=null || r.dmax!=null) ? (r.dmin!=null && r.dmax!=null && r.dmin!==r.dmax ? fmtNum(r.dmin)+' – '+fmtNum(r.dmax)+' m' : fmtNum(r.dmax ?? r.dmin)+' m') : '';
+  const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1]).join(', ');
+  const reqBody = dl([
+    row('Dimensioni', r.len && r.wid ? fmtNum(r.len)+' × '+fmtNum(r.wid)+' m <span style="color:var(--ink3)">('+Math.round(r.len*r.wid)+' m²)</span>' : (r.len||r.wid ? fmtNum(r.len||r.wid)+' m' : '')),
+    row('Forma', lab(SHAPES, r.shape)), row('Profondità', E([r.depthType ? labOf(DEPTHS, r.depthType) : '', depth].filter(Boolean).join(', '))),
+    row('Ingresso', lab(ENTRIES, r.entry)), row('Colore', E(r.color)), row('Tempi', lab(TIMINGS, r.timing)),
+    row('Accessori', E(feats), true)
+  ]) + (r.text ? `<div class="rp-quote">“${E(r.text)}”</div>` : '');
+  h += sec('Richiesta del cliente', reqBody);
+
+  // Budget
+  if (bf.cost || bf.declared != null) {
+    let b = dl([
+      row('Budget del cliente', bf.declared!=null ? eurFmt(bf.declared) + (r.btype ? ' <span style="color:var(--ink3)">('+lab(BUDGET_TYPES, r.btype).toLowerCase()+')</span>' : '') : '<span class="rp-empty">non ancora chiesto</span>'),
+      row('Costo indicativo', bf.cost ? eurFmt(bf.cost.lo)+' – '+eurFmt(bf.cost.hi) : ''),
+      row('Copertura', bf.ratio!=null ? Math.round(bf.ratio*100)+'% del costo medio' : ''),
+      row('Fascia', bgt ? E(bgt.label) : '')
+    ]);
+    if (bf.declared != null) {
+      const fs0 = (bf.cls==='bad' || bf.cls==='warn') ? fitSize(bf.declared) : null; const fs = fs0 && (!bf.cost || fs0.A < bf.cost.area) ? fs0 : null;
+      b += `<div class="rp-box ${bf.cls}"><b>${E(bf.verdict)}</b>${fs ? `<br>Con questo budget sta una vasca di circa ${fmtNum(fs.L)} × ${fmtNum(fs.W)} m (≈${fs.A} m²) senza accessori.` : ''}</div>`;
+    }
+    h += sec('Budget e fattibilità', b, 'stima su listino indicativo, non è un preventivo');
+  }
+
+  // Leve e obiezioni
+  const leve = buildLeve();
+  const objs = Object.keys(objState).filter(f=>objState[f]>0);
+  let lv = '';
+  if (leve.length) lv += `<div class="rp-leve">` + leve.map(l=>`<div class="rp-leva"><div class="i">${l.icon}</div><div><b>${E(l.name)}<span class="u ${l.urgency}">${E(l.urgency)}</span></b><p>${E(l.desc)}</p></div></div>`).join('') + `</div>`;
+  if (objs.length) lv += `<table class="rp-tbl" style="margin-top:12px"><tr><th>Obiezione</th><th>Risposta del cliente</th><th class="n">Impatto</th></tr>` +
+    objs.map(f=>{ const el = selectedChip(f); return `<tr><td>${E(OBJ_LABELS[f])}</td><td>${E(el ? el.textContent.trim() : '')}</td><td class="n">−${objState[f]} pt</td></tr>`; }).join('') + `</table>`;
+  h += sec('Strategia di vendita', lv, leve.length ? leve.length + ' leve, in ordine di urgenza' : '');
+
+  // Profilo
+  const groups = [['a','Proprietà e abitazione'],['b','Famiglia e stile di vita'],['c','Contesto e segnali']];
+  let prow = '', maxC = 0;
+  const all = [...GROUPS.a, ...GROUPS.b, ...GROUPS.c].filter(f=>state[f]!==undefined);
+  all.forEach(f=>{ maxC = Math.max(maxC, (weights[f]||1)*state[f]); });
+  if (bf.s!=null) maxC = Math.max(maxC, (weights.budget||1)*bf.s);
+  const bar = v => `<span class="rp-bar-in" style="width:${maxC ? Math.max(2, Math.round(v/maxC*70)) : 0}px"></span>`;
+  groups.forEach(([g,title])=>{
+    const fs = GROUPS[g].filter(f=>state[f]!==undefined);
+    if (!fs.length) return;
+    prow += `<tr class="grp"><td colspan="4">${title}</td></tr>` + fs.map(f=>`<tr><td>${E(VAR_LABELS[f])}</td><td>${E(fieldDisplay(f))}</td><td class="n">${state[f]}</td><td>${bar((weights[f]||1)*state[f])}</td></tr>`).join('');
+  });
+  if (bf.s!=null) prow += `<tr class="grp"><td colspan="4">Budget</td></tr><tr><td>Budget vs progetto</td><td>${E(bf.verdict)}</td><td class="n">${bf.s}</td><td>${bar((weights.budget||1)*bf.s)}</td></tr>`;
+  const missing = 17 - Object.keys(state).length;
+  h += sec('Profilo del cliente', prow ? `<table class="rp-tbl"><tr><th>Variabile</th><th>Valore</th><th class="n">Score</th><th>Peso nel risultato</th></tr>${prow}</table>` +
+    (sc ? `<div style="font-size:12px;color:var(--ink2);margin-top:6px">Score profilo ${sc.raw}/100 − penalità obiezioni ${sc.penalty} pt = <b>${sc.adj}/100</b>${missing>0 ? ' · ' + missing + ' variabili ancora da raccogliere' : ''}</div>` : '') : '');
+
+  // Locale tecnico
+  h += sec('Locale tecnico', dl([
+    row('Tipo', lab(TECH_TYPES, t.type)), row('Distanza dalla vasca', t.dist!=null ? fmtNum(t.dist)+' m' : ''), row('Spazio', E(t.size)),
+    row('Corrente', t.power ? lab(TECH_AVAIL, t.power) + (t.pdist!=null ? ' · quadro a '+fmtNum(t.pdist)+' m' : '') : ''),
+    row('Acqua', lab(TECH_AVAIL, t.water)), row('Scarico', lab(TECH_DRAIN, t.drain)), row('Accesso manutenzione', lab(TECH_ACCESS, t.access)),
+    row('Note', E(t.notes), true)
+  ]));
+
+  // Ditta
+  const chk = (list, k) => `<ul class="rp-chk">` + list.map(([id,label])=>{ const it = d[k][id] || {}; return `<li class="${it.d?'y':'n'}"><span class="m">${it.d?'✓':'○'}</span><span>${E(label)}${it.v ? ' — <em>'+E(it.v)+'</em>' : ''}</span></li>`; }).join('') + `</ul>`;
+  const dittaUsed = d.name || d.ref || d.phone || Object.keys(d.give).length || Object.keys(d.get).length;
+  if (dittaUsed) {
+    const nG = DITTA_GIVE.filter(([id])=>d.give[id]?.d).length, nR = DITTA_GET.filter(([id])=>d.get[id]?.d).length;
+    h += sec('Ditta che esegue i lavori', dl([
+      row('Ditta', E(d.name)), row('Referente', E(d.ref)), row('Telefono', d.phone ? `<a href="${E(telHref(d.phone))}">${E(d.phone)}</a>` : ''), row('Email', E(d.email)),
+      row('Inizio lavori', d.start ? E(fmtDate(d.start)) : ''), row('Fine lavori', d.end ? E(fmtDate(d.end)) : '')
+    ]) + `<div class="rp-cols" style="margin-top:12px"><div><h3 style="font-size:12px;margin:0 0 4px">📤 Comunicato alla ditta (${nG}/${DITTA_GIVE.length})</h3>${chk(DITTA_GIVE,'give')}</div>
+      <div><h3 style="font-size:12px;margin:0 0 4px">📥 Ricevuto dalla ditta (${nR}/${DITTA_GET.length})</h3>${chk(DITTA_GET,'get')}</div></div>` +
+      (d.notes ? `<div class="rp-quote">${E(d.notes)}</div>` : ''));
+  }
+
+  // Foto
+  if (photos.length) {
+    let ph = '';
+    PHOTO_CATS.forEach(([k,label])=>{
+      const idx = photos.map((p,i)=>[p,i]).filter(([p])=>p.cat===k);
+      if (!idx.length) return;
+      ph += `<div class="rp-ph-cat">${E(label)} · ${idx.length}</div><div class="rp-ph">` + idx.map(([p,i])=>`<figure><img data-pi="${i}" alt="${E(label)}"/><figcaption>${E(fmtDT(p.savedAt))}</figcaption></figure>`).join('') + `</div>`;
+    });
+    h += sec('Foto del sopralluogo', ph, photos.length + ' foto');
+  }
+
+  // Checklist
+  const cl = Object.entries(CHECKLISTS).map(([k,g])=>{
+    const done = g.items.filter(([id])=>crm.checklist[k][id]).length;
+    if (!done) return '';
+    return `<div><h3 style="font-size:12px;margin:0 0 4px">${E(g.title)} (${done}/${g.items.length})</h3><ul class="rp-chk">` + g.items.map(([id,txt])=>`<li class="${crm.checklist[k][id]?'y':'n'}"><span class="m">${crm.checklist[k][id]?'✓':'○'}</span><span>${E(txt)}</span></li>`).join('') + `</ul></div>`;
+  }).filter(Boolean);
+  if (cl.length) h += sec('Checklist', `<div class="rp-cols">${cl.join('')}</div>`);
+
+  // Note e storico
+  if (crm.log.length) h += sec('Storico contatti', `<div class="rp-log">` + crm.log.slice().reverse().slice(0,20).map(e=>`<div><time>${E(fmtDT(e.t))}</time><span>${E(e.text)}</span></div>`).join('') + `</div>`, crm.log.length > 20 ? 'ultimi 20 di ' + crm.log.length : '');
+
+  h += `<footer class="rp-foot"><span>Lead Scorer — Piscine San Lorenzo · documento ad uso interno</span><span>Generato il ${E(now.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}))}</span></footer>`;
+  return h;
 }
 
 function copyExport() {
-  const txt=document.getElementById('export-text').textContent;
-  navigator.clipboard.writeText(txt).then(()=>{
-    const b=event.currentTarget;b.textContent='✓ Copiato!';
-    setTimeout(()=>{b.innerHTML='⧉ Copia testo';},1800);
-  });
+  const txt = exportTextCache || exportText();
+  const done = ()=>toast('Report copiato come testo');
+  const fallback = ()=>{ const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch { toast('Copia non riuscita'); } ta.remove(); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
 }
 
 // ══════════════════════════════════════════
@@ -3047,7 +3301,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-14-2';
+const BUILD = '2026-10-15-1';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
