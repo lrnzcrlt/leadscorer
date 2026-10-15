@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0B3A4A"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <title>Lead Scorer v4 — Piscine San Lorenzo</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -388,6 +392,159 @@ a.btn.disabled{opacity:.4;pointer-events:none}
   .crm-grid{grid-template-columns:1fr}
   .hbar{grid-template-columns:90px 1fr 30px}
 }
+
+/* ═══════════ TEMA "BORDO VASCA" — solo aspetto grafico ═══════════ */
+:root{
+  --font-ui:'Figtree',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --font-head:'Bricolage Grotesque','Figtree',-apple-system,sans-serif;
+  --fondale:#0B3A4A;--fondale-2:#124A5C;--acqua:#0E7C8C;--acqua-dk:#0A6270;--acqua-bg:#E2F2F3;--luce:#8EDCE6;
+  --bg:#EDF0EC;--surf:#FFFFFF;--surf2:#F4F6F3;--surf3:#E2E8E4;
+  --border:rgba(11,58,74,.10);--border2:rgba(11,58,74,.20);
+  --text:#12262E;--text2:#4A5D63;--text3:#7F9095;
+  --green:#1F9D6B;--green-bg:#E3F4EC;--green-dk:#13704C;
+  --amber:#D98E1F;--amber-bg:#FBF0DC;--amber-dk:#875510;
+  --red:#D2483F;--red-bg:#FBE8E6;--red-dk:#9E2E27;
+  --blue:#2F7FC0;--blue-bg:#E6F0F8;--blue-dk:#1C5A8C;
+  --purple:#6E6AC9;--purple-bg:#EDECFA;--purple-dk:#3D3A86;
+  --r-md:10px;--r-lg:14px;--r-xl:18px;
+  --ring:0 0 0 3px rgba(14,124,140,.22);
+}
+@media(prefers-color-scheme:dark){:root{
+  --fondale:#082B37;--fondale-2:#0E3846;--acqua:#2BA3B3;--acqua-dk:#4DB9C7;--acqua-bg:#0F3138;--luce:#8EDCE6;
+  --bg:#0B171B;--surf:#122127;--surf2:#182A31;--surf3:#21363E;
+  --border:rgba(190,225,232,.09);--border2:rgba(190,225,232,.18);
+  --text:#E8F0F1;--text2:#A6B8BC;--text3:#6E8388;
+  --green:#3BBF8A;--green-bg:#0E3326;--green-dk:#8EE0BC;
+  --amber:#E6A445;--amber-bg:#3A2A0E;--amber-dk:#F3CB85;
+  --red:#E5675F;--red-bg:#3D1715;--red-dk:#F4AFA9;
+  --blue:#5AA2DD;--blue-bg:#122E45;--blue-dk:#A9D0F0;
+  --purple:#9893E6;--purple-bg:#22204A;--purple-dk:#C9C6FA;
+  --ring:0 0 0 3px rgba(43,163,179,.35);
+}}
+
+body{font-family:var(--font-ui);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
+button,input,select,textarea{font-family:inherit}
+:focus-visible{outline:2px solid var(--acqua);outline-offset:2px}
+
+/* Barra di navigazione */
+.nav-bar{background:var(--surf);border-bottom:1px solid var(--border);padding:0 1rem;box-shadow:0 1px 0 rgba(11,58,74,.03)}
+.nav-logo{font-family:var(--font-head);font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--fondale);margin-right:1.25rem}
+@media(prefers-color-scheme:dark){.nav-logo{color:var(--text)}}
+.nav-logo span{color:var(--acqua)}
+.nav-tabs{scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.tab-btn{font-size:13.5px;font-weight:500;color:var(--text2);padding:1rem .85rem;border-bottom:3px solid transparent;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--acqua);font-weight:650}
+
+/* Pagine */
+.page{padding:1.25rem 1rem 3.5rem}
+
+/* Pannello score: il blocco "fondale" */
+.score-panel{background:var(--fondale);border:0;border-radius:var(--r-xl);padding:1.1rem;gap:8px;color:#fff;
+  background-image:radial-gradient(120% 90% at 100% 0%,rgba(142,220,230,.16),transparent 55%)}
+.metric{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.85rem .9rem;text-align:left}
+.metric-lbl{text-transform:none;letter-spacing:0;font-size:12px;font-weight:500;color:#A9D3DA;margin-bottom:4px}
+.metric-val{font-family:var(--font-head);color:#fff;font-size:38px;font-weight:700;letter-spacing:-.02em;line-height:1}
+#budget-val,#priority-val{font-size:19px!important;font-weight:650;letter-spacing:-.01em;padding-top:4px!important}
+.metric-sub{color:#CFE6EA;font-size:12.5px;margin-top:5px}
+#score-lbl{color:#E7F4F6!important}
+.score-panel .dot{box-shadow:0 0 0 2px rgba(255,255,255,.18)}
+.conf-row{border-top:1px solid rgba(255,255,255,.10)}
+.conf-hd{color:#CFE6EA;font-size:12.5px}
+.score-panel .bar-track{background:rgba(255,255,255,.14);height:7px}
+.score-panel .bar-fill{background:var(--luce)}
+
+/* Card e sezioni */
+.section-card,.client-bar,.crm-card,.weight-editor,.leve-panel,.stats-section,.dash-block,.kpi,.lead-card,.today-card,.compare-col,.backup-panel{
+  border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surf)}
+.section-card{margin-bottom:.7rem}
+.section-hd{padding:.85rem 1.1rem}
+.section-hd:hover{background:var(--surf2)}
+.sec-title,.crm-card h3,.weight-editor h3,.stats-section h3,.dash-block h3,.today-sec h3,.leva-title{font-family:var(--font-head);font-weight:650;letter-spacing:-.005em}
+.sec-title{font-size:15px}
+.crm-card h3{font-size:15px;margin-bottom:.8rem}
+.weight-editor h3,.stats-section h3{font-size:15px}
+.dash-block h3,.today-sec h3{font-size:14.5px}
+.stag{border-radius:6px;font-size:10.5px;letter-spacing:.03em;padding:3px 7px}
+.sec-prog{font-variant-numeric:tabular-nums}
+.chevron{color:var(--text3)}
+
+/* Campi */
+.field-lbl{font-size:13.5px;color:var(--text);font-weight:500}
+.field-lbl .note{font-style:normal;color:var(--text3);font-weight:400;font-size:12px}
+.w-badge{border-radius:6px;background:var(--surf2);border:1px solid var(--border);font-weight:500}
+.contact-field label,.crm-field label,.price-grid label{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:500;color:var(--text2)}
+.contact-field input,.contact-field textarea,.crm-field input,.crm-field select,.crm-field textarea,.num-row input[type=number],
+.lead-search,.sync-input,.compare-picks select,.photo-bar select,.dt-row input[type=text],.price-grid input{
+  border:1px solid var(--border2);border-radius:var(--r-md);background:var(--surf);color:var(--text);padding:9px 11px;font-size:14.5px;transition:border-color .15s,box-shadow .15s}
+.contact-field input:focus,.contact-field textarea:focus,.crm-field input:focus,.crm-field select:focus,.crm-field textarea:focus,.num-row input:focus,
+.lead-search:focus,.sync-input:focus,.compare-picks select:focus,.photo-bar select:focus,.dt-row input[type=text]:focus,.price-grid input:focus{
+  border-color:var(--acqua);box-shadow:var(--ring);outline:none}
+.chk input,input[type=checkbox],input[type=range]{accent-color:var(--acqua)}
+
+/* Chip di scelta */
+.chip{border:1px solid var(--border2);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:500;background:var(--surf)}
+.chip:hover{background:var(--surf2);border-color:var(--text3)}
+.chip.sel-pos,.chip.sel-neg,.chip.sel-neu,.chip.sel-warn{font-weight:600;border-width:1.5px}
+
+/* Pulsanti */
+.btn{border:1px solid var(--border2);border-radius:var(--r-md);font-weight:600;font-size:13.5px;padding:9px 15px;background:var(--surf);color:var(--text);transition:background .15s,border-color .15s}
+.btn:hover{background:var(--surf2);border-color:var(--text3)}
+.btn-green{background:var(--acqua);border-color:var(--acqua);color:#fff}
+.btn-green:hover{background:var(--acqua-dk);border-color:var(--acqua-dk);color:#fff}
+.btn-win{background:var(--green-bg);color:var(--green-dk);border-color:var(--green)}
+.btn-lose{background:var(--red-bg);color:var(--red-dk);border-color:var(--red)}
+.quick-days button,.mini-btn{border:1px solid var(--border2);border-radius:999px;background:var(--surf);color:var(--text2);font-weight:500;padding:5px 12px}
+.quick-days button:hover,.mini-btn:hover{border-color:var(--acqua);color:var(--acqua-dk)}
+.bottom-bar{padding-top:.25rem}
+
+/* Box informativi */
+.info-box{background:var(--acqua-bg);border:1px solid rgba(14,124,140,.22);color:var(--text);border-radius:var(--r-md);font-size:13px}
+.budget-check{background:var(--surf2);border:1px solid var(--border);border-radius:var(--r-md)}
+.obj-alert{border:1px solid var(--amber);border-radius:var(--r-md)}
+
+/* Badge fase */
+.stage-badge{border-radius:6px;font-weight:600;font-size:11.5px;padding:2px 8px}
+
+/* Archivio, Oggi, Cruscotto */
+.lead-card-name,.today-card .tc-name,.compare-name{font-family:var(--font-head);font-weight:650;font-size:16px;letter-spacing:-.005em}
+.lead-card.current{border-color:var(--acqua);box-shadow:var(--ring)}
+.lead-card-score,.today-card .tc-score,.kpi .v{font-family:var(--font-head);font-weight:700;letter-spacing:-.02em}
+.today-card .tc-score{color:var(--acqua-dk)}
+.today-sec h3 .n{border-radius:6px;background:var(--surf3);font-family:var(--font-ui)}
+.kpi .k{font-size:12px;font-weight:500;color:var(--text2)}
+.kpi .v{font-size:26px}
+.hbar .fill,.coeff-bar,.bar-fill{background:var(--acqua)}
+.hbar .track,.bar-track{background:var(--surf3)}
+.stats-table th,.compare-table th{text-transform:none;letter-spacing:0;font-size:12px;font-weight:600;color:var(--text3)}
+.w-section-lbl{text-transform:none;letter-spacing:0;font-size:12px;font-weight:600}
+
+/* Leve */
+.leva-card{background:var(--surf);border:1px solid var(--border);border-left:3px solid var(--acqua);border-radius:var(--r-md)}
+.leva-name{font-size:14px;font-weight:650}
+.leva-desc{font-size:13px}
+
+/* Notifiche e finestre */
+.toast{background:var(--fondale);color:#fff;border-radius:999px;padding:.65rem 1.1rem;font-weight:500;box-shadow:0 6px 24px rgba(11,58,74,.25)}
+#update-bar{background:var(--fondale);color:#fff;border-radius:var(--r-lg)}
+#update-bar button{background:var(--luce);color:var(--fondale);border-radius:var(--r-md)}
+.modal{border:1px solid var(--border)}
+.photo-th{border-radius:12px}
+
+/* Report: stessi caratteri e colore d'accento */
+.rp{font-family:var(--font-ui);--acc:#0E7C8C}
+.rp-name,.rp-kpi-v{font-family:var(--font-head)}
+.rp-bar .btn-green{background:#0E7C8C;border-color:#0E7C8C}
+.rp-bar-in{background:#0E7C8C}
+
+@media(max-width:540px){
+  .metric-val{font-size:32px}
+  #budget-val,#priority-val{font-size:16px!important}
+  .tab-btn{padding:.9rem .65rem;font-size:13px}
+  .nav-logo{font-size:14px;margin-right:.6rem}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -3301,7 +3458,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-15-1';
+const BUILD = '2026-10-15-2';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
