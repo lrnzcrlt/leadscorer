@@ -2607,7 +2607,8 @@ function renderFitMetric() {
   let val = '—', txt = '—';
   if (f.declared != null && f.ratio != null) {
     val = FIT_DOT[f.level] + ' ' + FIT_LABEL[f.level];
-    txt = eurFmt(f.declared) + ' su ' + eurFmt(f.cost.mid) + ' · ' + Math.round(f.ratio*100) + '%' + (f.stima ? ' · prezzi di stima' : '');
+    const d = f.declared - f.cost.mid;
+    txt = 'Preventivo ' + eurFmt(f.cost.mid) + ' · budget ' + eurFmt(f.declared) + ' · ' + (d >= 0 ? 'avanzano ' : 'mancano ') + eurFmt(Math.abs(d)) + (f.stima ? ' · prezzi di stima' : '');
   } else if (f.declared != null) { val = 'Budget ' + eurFmt(f.declared); txt = 'inserisci le dimensioni per il confronto'; }
   else if (f.cost) { val = 'Budget da chiedere'; txt = 'preventivo ' + eurFmt(f.cost.mid); }
   else if (bgt) { val = bgt.label; txt = bgt.range; }
@@ -4281,7 +4282,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-6';
+const BUILD = '2026-10-21-7';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
