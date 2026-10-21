@@ -1162,7 +1162,7 @@ a.btn.disabled{opacity:.45}
       <div class="metric-sub" id="score-lbl">Nessun dato</div>
     </div>
     <div class="metric">
-      <div class="metric-lbl">Budget stimato</div>
+      <div class="metric-lbl">Fattibilità economica</div>
       <div class="metric-val" id="budget-val" style="font-size:16px;padding-top:6px">—</div>
       <div class="metric-sub" id="budget-range">—</div>
     </div>
@@ -1629,11 +1629,7 @@ a.btn.disabled{opacity:.45}
     <h3>🌍 Gruppo C — Contesto e segnali</h3>
     <div class="weight-grid" id="wg-c"></div>
   </div>
-  <div class="weight-editor">
-    <h3>💶 Budget</h3>
-    <div class="weight-grid" id="wg-budget"></div>
-    <div class="note" style="margin-top:.5rem">Peso del confronto tra budget del cliente e preventivo indicativo. I prezzi si modificano nella pagina <a href="#" onclick="showPage('listino');return false">💶 Listino</a>.</div>
-  </div>
+  <div class="info-box">💶 Il budget non entra più nello score: è valutato a parte come <b>Fattibilità economica</b> (budget del cliente rispetto al preventivo). I prezzi si modificano nel <a href="#" onclick="showPage('listino');return false">Listino</a>.</div>
 
   <div class="bottom-bar">
     <button class="btn" onclick="resetWeights()">↺ Ripristina pesi default</button>
@@ -1742,8 +1738,7 @@ a.btn.disabled{opacity:.45}
 const DEFAULT_WEIGHTS = {
   tipo:3.0, giardino:2.5, prop:2.5, auto:2.0, immobile:2.0,
   figli:2.0, prof:1.8, vacanza:1.6, seconda:1.5, giardinoCurato:1.5, social:1.4, sport:1.0,
-  interesse:2.2, vicini:1.3, arch:1.5, mare:1.0, zona:0.8,
-  budget:3.0
+  interesse:2.2, vicini:1.3, arch:1.5, mare:1.0, zona:0.8
 };
 
 // ── LISTINO PREZZI (modificabile nella pagina 💶 Listino) ──
@@ -1825,8 +1820,7 @@ const VAR_LABELS = {
   immobile:'Valore immobile', figli:'Figli', prof:'Professione', vacanza:'Vacanza estiva',
   seconda:'Seconda casa', giardinoCurato:'Giardino curato', social:'Socialità',
   sport:'Sport / attività', interesse:'Canale interesse', vicini:'Vicini con piscina',
-  arch:'Architetto', mare:'Distanza mare', zona:'Zona',
-  budget:'Budget vs progetto'
+  arch:'Architetto', mare:'Distanza mare', zona:'Zona'
 };
 
 const OBJ_LABELS = {
@@ -1946,15 +1940,13 @@ function fieldDisplay(f) {
 
 function scoreLeadData(lead) {
   const keys = Object.keys(lead.profile || {}).filter(f=>f!=='budget');
-  const bf = budgetFit(cleanCrm(lead.crm).request);
-  if (!keys.length && bf.s==null) return null;
+  if (!keys.length) return null;
   let ws=0, tw=0;
   keys.forEach(f=>{
     const w = weights[f] || 1;
     ws += lead.profile[f].s * w;
     tw += w;
   });
-  if (bf.s!=null) { const w = weights.budget || 1; ws += bf.s*w; tw += w; }
   const raw = Math.round(ws/tw);
   const penalty = Object.values(lead.objections || {}).reduce((a,o)=>a+(o.penalty||0),0);
   const adj = Math.max(0, raw-penalty);
@@ -1988,26 +1980,25 @@ function estimateCost(r) {
   return p ? { lo: p.lo, hi: p.hi, mid: p.mid, area: p.area } : null;
 }
 
-// Budget del cliente confrontato con il costo: produce lo score della variabile "budget" (0–100)
+// FATTIBILITÀ ECONOMICA: budget del cliente rispetto al totale del preventivo (IVA inclusa).
+// Indicatore separato dallo score di propensione: chi è molto propenso ma ha un budget stretto va riposizionato, non scartato.
+// Soglie: in linea ≥95% (≥100% se tetto rigido) · da negoziare 70–95% (85–100% se tetto rigido) · da riposizionare sotto.
+const FIT_LABEL = { ok:'In linea', neg:'Da negoziare', rip:'Da riposizionare', nd:'' };
+const FIT_DOT = { ok:'🟢', neg:'🟡', rip:'🔴', nd:'' };
 function budgetFit(r) {
   const cost = estimateCost(r);
   const B = r && r.budget > 0 ? r.budget : null;
-  if (B == null) return { s:null, cost, declared:null, cls:'neu', verdict:'' };
-  let s, verdict, cls, ratio = null;
-  if (cost) {
-    ratio = B / cost.mid;
-    if (B >= cost.hi)            { s=100; cls='ok';   verdict='Copre anche la versione più completa'; }
-    else if (B >= cost.mid)      { s=85;  cls='ok';   verdict='In linea con il progetto richiesto'; }
-    else if (B >= cost.lo)       { s=60;  cls='warn'; verdict='Al limite: puntare sulla versione base'; }
-    else if (B >= cost.lo*0.75)  { s=35;  cls='bad';  verdict='Sotto il costo: riposizionare dimensioni o accessori'; }
-    else                         { s=15;  cls='bad';  verdict='Molto sotto il costo del progetto richiesto'; }
-  } else {
-    cls = 'neu'; verdict = 'Inserisci lunghezza e larghezza per confrontarlo con il costo';
-    s = B >= 55000 ? 95 : B >= 40000 ? 85 : B >= 30000 ? 72 : B >= 20000 ? 50 : B >= 15000 ? 30 : 12;
-  }
-  if (r.btype === 'tetto' && cls === 'warn') s -= 10;           // tetto rigido al limite = più rischio
-  if (r.btype === 'stimato') s = Math.round(50 + (s-50)*0.6);    // cifra non detta dal cliente: pesa meno
-  return { s, cost, declared:B, ratio, verdict, cls };
+  const stima = !listino.edited;
+  if (B == null) return { s:null, cost, declared:null, ratio:null, cls:'neu', level:'nd', verdict:'', stima };
+  if (!cost) return { s:null, cost, declared:B, ratio:null, cls:'neu', level:'nd', verdict:'Inserisci lunghezza e larghezza per confrontarlo con il preventivo', stima };
+  const ratio = B / cost.mid, tetto = r.btype === 'tetto';
+  const okMin = tetto ? 1 : 0.95, negMin = tetto ? 0.85 : 0.70;
+  let level, cls, verdict;
+  if (ratio >= 1.15)        { level='ok';  cls='ok';   verdict='In linea, con margine: c\u2019è spazio per gli upgrade'; }
+  else if (ratio >= okMin)  { level='ok';  cls='ok';   verdict='In linea con il preventivo'; }
+  else if (ratio >= negMin) { level='neg'; cls='warn'; verdict = tetto ? 'Da negoziare: il tetto è rigido, togliere qualche voce' : 'Da negoziare: rivedere qualche voce o proporre un finanziamento'; }
+  else                      { level='rip'; cls='bad';  verdict='Da riposizionare: serve un progetto più piccolo'; }
+  return { s:null, cost, declared:B, ratio, cls, level, verdict, stima };
 }
 
 // Vasca che sta nel budget (rapporto 2:1, senza accessori, IVA inclusa): spunto per riposizionare l'offerta
@@ -2032,7 +2023,8 @@ function updateBudgetCheck() {
   if (f.declared != null) {
     h.push(`<div class="bc-row"><span>Budget del cliente${r.btype==='stimato'?' (stimato da noi)':r.btype==='tetto'?' (tetto rigido)':''}</span><span class="bc-v">${eurFmt(f.declared)}${f.ratio!=null?' · '+Math.round(f.ratio*100)+'% del preventivo':''}</span></div>`);
     if (f.cost) { const d = f.declared - f.cost.mid; h.push(`<div class="bc-row"><span>${d >= 0 ? 'Margine sul preventivo' : 'Mancano rispetto al preventivo'}</span><span class="bc-v" style="color:${d >= 0 ? 'var(--green-dk)' : 'var(--red-dk)'}">${d >= 0 ? '+ ' : '− '}${eurFmt(Math.abs(d))}</span></div>`); }
-    h.push(`<span class="bc-badge bc-${f.cls}">${esc(f.verdict)}</span>`);
+    h.push(`<span class="bc-badge bc-${f.cls}">${f.ratio != null ? FIT_DOT[f.level] + ' ' : ''}${esc(f.verdict)}</span>`);
+    if (f.ratio != null && f.stima) h.push(`<div class="bc-tip" style="color:var(--amber-dk)">⚠ Prezzi di stima: il confronto diventa affidabile quando aggiorni il 💶 Listino.</div>`);
     if (f.cls === 'bad' || f.cls === 'warn') {
       const fs0 = fitSize(f.declared, r), fs = fs0 && (!f.cost || fs0.A < f.cost.area) ? fs0 : null;
       h.push(`<div class="bc-tip">💡 ${fs ? 'Con questo budget sta una vasca di circa <b>'+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m</b> (≈'+fs.A+' m²) senza accessori. ' : ''}Accessori in un secondo tempo o finanziamento possono chiudere la differenza.</div>`);
@@ -2461,7 +2453,7 @@ function renderCompare() {
   rows.push(`<tr><td>Indirizzo</td><td>${esc(a.contact?.address||'—')}</td><td>${esc(b.contact?.address||'—')}</td><td></td></tr>`);
   const fa = budgetFit(cleanCrm(a.crm).request), fb = budgetFit(cleanCrm(b.crm).request);
   rows.push(`<tr><td>Budget del cliente</td><td>${fa.declared!=null?eurFmt(fa.declared):'—'}</td><td>${fb.declared!=null?eurFmt(fb.declared):'—'}</td><td>${delta(fa.declared, fb.declared, true)}</td></tr>`);
-  rows.push(`<tr><td>Verifica budget</td><td>${esc(fa.verdict||'—')}</td><td>${esc(fb.verdict||'—')}</td><td>${delta(fa.s, fb.s, true)}</td></tr>`);
+  rows.push(`<tr><td>Fattibilità economica</td><td>${esc(fa.ratio!=null ? FIT_LABEL[fa.level]+' · '+Math.round(fa.ratio*100)+'%' : (fa.verdict||'—'))}</td><td>${esc(fb.ratio!=null ? FIT_LABEL[fb.level]+' · '+Math.round(fb.ratio*100)+'%' : (fb.verdict||'—'))}</td><td>${delta(fa.ratio!=null?Math.round(fa.ratio*100):null, fb.ratio!=null?Math.round(fb.ratio*100):null, true)}</td></tr>`);
   rows.push(`<tr><td>Telefono</td><td>${esc(a.contact?.phone||'—')}</td><td>${esc(b.contact?.phone||'—')}</td><td></td></tr>`);
   rows.push(`<tr><td>Email</td><td>${esc(a.contact?.email||'—')}</td><td>${esc(b.contact?.email||'—')}</td><td></td></tr>`);
   [...GROUPS.a,...GROUPS.b,...GROUPS.c].forEach(f=>{
@@ -2547,11 +2539,9 @@ function updateNum(id, silent) {
 // ══════════════════════════════════════════
 function calcScore() {
   const keys = Object.keys(state);
-  const bf = budgetFit(crm.request);
-  if(!keys.length && bf.s==null) return null;
+  if(!keys.length) return null;
   let ws=0, tw=0;
   keys.forEach(f=>{const w=weights[f]||1;ws+=state[f]*w;tw+=w;});
-  if (bf.s!=null) { const w=weights.budget||1; ws+=bf.s*w; tw+=w; }
   const raw = Math.round(ws/tw);
   const penalty = Object.values(objState).reduce((a,b)=>a+b,0);
   const adj = Math.max(0, raw-penalty);
@@ -2571,6 +2561,7 @@ function refreshAll() {
   updateBudgetCheck();
   const sc = calcScore();
   const sp = document.getElementById('score-panel'); if (sp) sp.dataset.temp = tempOf(sc ? sc.adj : null);
+  renderFitMetric();
   const bgt = calcBudget();
   const totalVars = Object.values(GROUPS).flat().length;
   const filled = Object.keys(state).length;
@@ -2600,9 +2591,6 @@ function refreshAll() {
   else if(score>=42){sl.innerHTML='<span class="dot" style="background:var(--amber)"></span>Propensione media';sl.style.color='var(--amber-dk)';}
   else{sl.innerHTML='<span class="dot" style="background:var(--red)"></span>Bassa propensione';sl.style.color='var(--red-dk)';}
 
-  document.getElementById('budget-val').textContent = bgt?bgt.label:'—';
-  const bfit = budgetFit(crm.request);
-  document.getElementById('budget-range').textContent = bgt ? bgt.range + (bfit.ratio!=null ? ' · '+Math.round(bfit.ratio*100)+'% del preventivo' : '') : '—';
 
   let pv='—',ps='—';
   if(score>=76){pv='🔴 Urgente';ps='Contattare entro 24h';}
@@ -2613,8 +2601,20 @@ function refreshAll() {
   document.getElementById('priority-sub').textContent=ps;
 }
 
+function renderFitMetric() {
+  const v = document.getElementById('budget-val'), sub = document.getElementById('budget-range'); if (!v) return;
+  const f = budgetFit(crm.request), bgt = calcBudget();
+  let val = '—', txt = '—';
+  if (f.declared != null && f.ratio != null) {
+    val = FIT_DOT[f.level] + ' ' + FIT_LABEL[f.level];
+    txt = eurFmt(f.declared) + ' su ' + eurFmt(f.cost.mid) + ' · ' + Math.round(f.ratio*100) + '%' + (f.stima ? ' · prezzi di stima' : '');
+  } else if (f.declared != null) { val = 'Budget ' + eurFmt(f.declared); txt = 'inserisci le dimensioni per il confronto'; }
+  else if (f.cost) { val = 'Budget da chiedere'; txt = 'preventivo ' + eurFmt(f.cost.mid); }
+  else if (bgt) { val = bgt.label; txt = bgt.range; }
+  v.textContent = val; sub.textContent = txt;
+}
 function setEmpty() {
-  ['score-val','budget-val','budget-range','priority-val','priority-sub'].forEach(id=>{
+  ['score-val','priority-val','priority-sub'].forEach(id=>{
     document.getElementById(id).textContent='—';
   });
   document.getElementById('score-lbl').textContent='Nessun dato';
@@ -2669,10 +2669,10 @@ function buildLeve() {
   const bfL = budgetFit(crm.request);
   if (bfL.cls==='bad' || bfL.cls==='warn') {
     const fs0 = bfL.declared ? fitSize(bfL.declared, crm.request) : null, fs = fs0 && (!bfL.cost || fs0.A < bfL.cost.area) ? fs0 : null;
-    leve.push({icon:'📐',name:bfL.cls==='bad'?'Riposizionare l\'offerta sul budget':'Budget al limite: proteggere il margine',desc:(bfL.cls==='bad'?'Il budget ('+eurFmt(bfL.declared)+') è sotto il costo del progetto richiesto ('+eurFmt(bfL.cost.lo)+'–'+eurFmt(bfL.cost.hi)+'). ':'Il budget copre solo la versione base. ')+(fs?'Proponi una vasca di circa '+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m e ':'Proponi ')+'gli accessori in un secondo tempo, oppure un finanziamento che porti la differenza a una rata mensile. Mai scontare prima di aver ridotto il perimetro.',urgency:'alta'});
+    leve.push({icon:'📐',name:bfL.cls==='bad'?'Riposizionare l\'offerta sul budget':'Negoziare: avvicinare preventivo e budget',desc:'Il budget ('+eurFmt(bfL.declared)+') copre il '+Math.round(bfL.ratio*100)+'% del preventivo ('+eurFmt(bfL.cost.mid)+'): mancano '+eurFmt(bfL.cost.mid-bfL.declared)+'. '+(fs?'Proponi una vasca di circa '+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m e ':'Proponi ')+'gli accessori in un secondo tempo, oppure un finanziamento che porti la differenza a una rata mensile. Mai scontare prima di aver ridotto il perimetro.',urgency:'alta'});
   }
-  if (bfL.cost && bfL.declared!=null && bfL.declared>=bfL.cost.hi) leve.push({icon:'✨',name:'Budget capiente: proporre gli upgrade',desc:'Il budget supera anche la versione più completa stimata. Presenta subito il pacchetto premium (copertura automatica, pompa di calore, illuminazione, zona solarium): alza il valore del contratto senza allungare la trattativa.',urgency:'media'});
-  if (bfL.declared==null && sc) leve.push({icon:'💶',name:'Qualificare il budget',desc:'Il budget non è ancora noto ed è la variabile più predittiva. Non chiedere "quanto vuole spendere?": proponi una forbice'+(bfL.cost?' ('+eurFmt(bfL.cost.lo)+' o '+eurFmt(bfL.cost.hi)+')':' (25–35 mila o 40–60 mila)')+' e lascia scegliere. Annota anche se è un tetto rigido o indicativo.',urgency:'media'});
+  if (bfL.ratio!=null && bfL.ratio>=1.15) leve.push({icon:'✨',name:'Budget capiente: proporre gli upgrade',desc:'Il budget supera il preventivo di '+eurFmt(bfL.declared-bfL.cost.mid)+'. Presenta subito il pacchetto premium (copertura automatica, pompa di calore, illuminazione, zona solarium): alza il valore del contratto senza allungare la trattativa.',urgency:'media'});
+  if (bfL.declared==null && sc) leve.push({icon:'💶',name:'Qualificare il budget',desc:'Il budget non è ancora noto: senza, non sai se il progetto richiesto è fattibile. Non chiedere "quanto vuole spendere?": proponi una forbice'+(bfL.cost?' ('+eurFmt(bfL.cost.lo)+' o '+eurFmt(bfL.cost.hi)+')':' (25–35 mila o 40–60 mila)')+' e lascia scegliere. Annota anche se è un tetto rigido o indicativo.',urgency:'media'});
 
   const urgOrd0 = {alta:0,media:1,bassa:2};
   return leve.sort((a,b)=>urgOrd0[a.urgency]-urgOrd0[b.urgency]);
@@ -2725,8 +2725,6 @@ function refreshStats() {
       contribs.push({f,w,s,c});if(c>maxContrib)maxContrib=c;
     }
   });
-  const bfS = budgetFit(crm.request);
-  if (bfS.s!=null) { const w=weights.budget||1; const c=parseFloat((w*bfS.s/100).toFixed(2)); contribs.push({f:'budget',w,s:bfS.s,c}); if(c>maxContrib)maxContrib=c; }
   tbody.innerHTML=`<tr><th>Variabile</th><th>Peso (W)</th><th>Score raw</th><th>Contributo</th><th>Barra</th></tr>`+
     (contribs.length?contribs.map(x=>{
       const barW=maxContrib>0?Math.round((x.c/maxContrib)*120):0;
@@ -2746,8 +2744,8 @@ function refreshStats() {
 // EDITOR PESI
 // ══════════════════════════════════════════
 function renderWeightEditor() {
-  const groups = {...GROUPS, budget:['budget']};
-  ['a','b','c','budget'].forEach(g=>{
+  const groups = {...GROUPS};
+  ['a','b','c'].forEach(g=>{
     const el=document.getElementById('wg-'+g);
     if (!el) return;
     el.innerHTML=groups[g].map(f=>`
@@ -2798,7 +2796,7 @@ RISULTATO
   Score finale aggiustato: ${sc?sc.adj+'/100':'—'}
   Confidenza:              ${sc?sc.conf+'%':'—'} (${Object.keys(state).length}/17 variabili)
   Fascia di budget:        ${bgt?bgt.label+' — '+bgt.range:'—'}
-  Verifica budget:         ${bfx.declared!=null?(bfx.cost?eurFmt(bfx.declared)+' vs costo '+eurFmt(bfx.cost.lo)+'–'+eurFmt(bfx.cost.hi)+' → ':'')+bfx.verdict+' (score '+bfx.s+')':'budget non indicato'}
+  Fattibilità economica:   ${bfx.declared!=null?(bfx.cost?eurFmt(bfx.declared)+' su preventivo '+eurFmt(bfx.cost.mid)+' ('+Math.round(bfx.ratio*100)+'%) → ':'')+bfx.verdict:'budget non indicato'}
   Priorità:                ${document.getElementById('priority-val').textContent}
 ${'─'.repeat(46)}
 NOTE COMMERCIALE
@@ -2815,7 +2813,7 @@ DITTA LAVORI
   Foto sopralluogo: ${photos.length}
 ${'─'.repeat(46)}
 VARIABILI PROFILO
-${varsStr||'  (nessuna inserita)'}${bfx.s!=null?'\n  • Budget vs progetto: '+bfx.verdict+' (score:'+bfx.s+', w:'+weights.budget.toFixed(1)+')':''}
+${varsStr||'  (nessuna inserita)'}
 ${'─'.repeat(46)}
 OBIEZIONI CON IMPATTO
 ${objStr}
@@ -3053,7 +3051,7 @@ function reportHtml() {
   h += `<div class="rp-kpis">
     <div class="rp-kpi ${lvl}"><div class="rp-kpi-l">Score</div><div class="rp-kpi-v">${sc ? sc.adj + '<span style="font-size:13px;font-weight:500">/100</span>' : '—'}</div><div class="rp-kpi-s">${lvlTxt}</div></div>
     <div class="rp-kpi"><div class="rp-kpi-l">Priorità</div><div class="rp-kpi-v" style="font-size:16px">${prio[0]}</div><div class="rp-kpi-s">${prio[1]}</div></div>
-    <div class="rp-kpi ${bf.cls==='ok'?'hi':bf.cls==='warn'?'md':bf.cls==='bad'?'lo':''}"><div class="rp-kpi-l">Budget</div><div class="rp-kpi-v" style="font-size:16px">${bf.declared!=null ? eurFmt(bf.declared) : (bgt ? E(bgt.label) : '—')}</div><div class="rp-kpi-s">${bf.declared!=null ? E(bf.verdict) : (bgt ? 'stima dal profilo' : 'non indicato')}</div></div>
+    <div class="rp-kpi ${bf.cls==='ok'?'hi':bf.cls==='warn'?'md':bf.cls==='bad'?'lo':''}"><div class="rp-kpi-l">Fattibilità economica</div><div class="rp-kpi-v" style="font-size:16px">${bf.declared!=null ? eurFmt(bf.declared) : (bgt ? E(bgt.label) : '—')}</div><div class="rp-kpi-s">${bf.declared!=null ? E(bf.verdict) : (bgt ? 'stima dal profilo' : 'non indicato')}</div></div>
     <div class="rp-kpi"><div class="rp-kpi-l">Affidabilità</div><div class="rp-kpi-v">${sc ? sc.conf + '%' : '—'}</div><div class="rp-kpi-s">${Object.keys(state).length} di 17 variabili</div></div>
   </div>`;
 
@@ -3087,14 +3085,14 @@ function reportHtml() {
     let b = dl([
       row('Budget del cliente', bf.declared!=null ? eurFmt(bf.declared) + (r.btype ? ' <span style="color:var(--ink3)">('+lab(BUDGET_TYPES, r.btype).toLowerCase()+')</span>' : '') : '<span class="rp-empty">non ancora chiesto</span>'),
       row('Costo indicativo', bf.cost ? eurFmt(bf.cost.lo)+' – '+eurFmt(bf.cost.hi) : ''),
-      row('Copertura', bf.ratio!=null ? Math.round(bf.ratio*100)+'% del preventivo' : ''),
+      row('Copertura', bf.ratio!=null ? Math.round(bf.ratio*100)+'% del preventivo · ' + FIT_LABEL[bf.level].toLowerCase() : ''),
       row('Fascia', bgt ? E(bgt.label) : '')
     ]);
     if (bf.declared != null) {
       const fs0 = (bf.cls==='bad' || bf.cls==='warn') ? fitSize(bf.declared, r) : null; const fs = fs0 && (!bf.cost || fs0.A < bf.cost.area) ? fs0 : null;
       b += `<div class="rp-box ${bf.cls}"><b>${E(bf.verdict)}</b>${fs ? `<br>Con questo budget sta una vasca di circa ${fmtNum(fs.L)} × ${fmtNum(fs.W)} m (≈${fs.A} m²) senza accessori.` : ''}</div>`;
     }
-    h += sec('Budget e fattibilità', b, 'stima su listino indicativo, non è un preventivo');
+    h += sec('Fattibilità economica', b, bf.stima ? 'prezzi di stima: da confermare col listino' : 'budget rispetto al preventivo');
   }
 
   // Preventivo indicativo
@@ -3122,14 +3120,12 @@ function reportHtml() {
   let prow = '', maxC = 0;
   const all = [...GROUPS.a, ...GROUPS.b, ...GROUPS.c].filter(f=>state[f]!==undefined);
   all.forEach(f=>{ maxC = Math.max(maxC, (weights[f]||1)*state[f]); });
-  if (bf.s!=null) maxC = Math.max(maxC, (weights.budget||1)*bf.s);
   const bar = v => `<span class="rp-bar-in" style="width:${maxC ? Math.max(2, Math.round(v/maxC*70)) : 0}px"></span>`;
   groups.forEach(([g,title])=>{
     const fs = GROUPS[g].filter(f=>state[f]!==undefined);
     if (!fs.length) return;
     prow += `<tr class="grp"><td colspan="4">${title}</td></tr>` + fs.map(f=>`<tr><td>${E(VAR_LABELS[f])}</td><td>${E(fieldDisplay(f))}</td><td class="n">${state[f]}</td><td>${bar((weights[f]||1)*state[f])}</td></tr>`).join('');
   });
-  if (bf.s!=null) prow += `<tr class="grp"><td colspan="4">Budget</td></tr><tr><td>Budget vs progetto</td><td>${E(bf.verdict)}</td><td class="n">${bf.s}</td><td>${bar((weights.budget||1)*bf.s)}</td></tr>`;
   const missing = 17 - Object.keys(state).length;
   h += sec('Profilo del cliente', prow ? `<table class="rp-tbl"><tr><th>Variabile</th><th>Valore</th><th class="n">Score</th><th>Peso nel risultato</th></tr>${prow}</table>` +
     (sc ? `<div style="font-size:12px;color:var(--ink2);margin-top:6px">Score profilo ${sc.raw}/100 − penalità obiezioni ${sc.penalty} pt = <b>${sc.adj}/100</b>${missing>0 ? ' · ' + missing + ' variabili ancora da raccogliere' : ''}</div>` : '') : '');
@@ -4251,6 +4247,14 @@ function renderDash() {
     const vals = w.map(x=>x.c.closeValue).filter(v=>v!=null);
     return `<tr><td>${esc(lab.split(' (')[0])}</td><td>${g.length}</td><td>${w.length}</td><td>${l2.length}</td><td>${(w.length+l2.length) ? Math.round(w.length/(w.length+l2.length)*100)+'%' : '—'}</td><td>${vals.length ? eur(Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)) : '—'}</td></tr>`;
   }).join('');
+  const withFit = all.map(x=>({ ...x, f: budgetFit(x.c.request) })).filter(x=>x.f.ratio!=null);
+  const fitRows = ['ok','neg','rip'].map(k=>{
+    const g = withFit.filter(x=>x.f.level===k), w = g.filter(x=>x.c.stage==='vinto').length, l2 = g.filter(x=>x.c.stage==='perso').length;
+    return `<tr><td>${FIT_DOT[k]} ${FIT_LABEL[k]}</td><td>${g.length}</td><td>${w}</td><td>${l2}</td><td>${(w+l2) ? Math.round(w/(w+l2)*100)+'%' : '—'}</td></tr>`;
+  }).join('');
+  const wonB = won.filter(x=>x.c.request.budget>0 && x.c.closeValue>0);
+  const avgUp = wonB.length ? wonB.reduce((a,x)=>a + x.c.closeValue/x.c.request.budget, 0)/wonB.length : null;
+  const lostRip = lost.filter(x=>budgetFit(x.c.request).level==='rip').length;
   const lossMap = {}; lost.forEach(x=>{ const k = x.c.closeReason || ''; lossMap[k] = (lossMap[k]||0)+1; });
   const lossRows = Object.entries(lossMap).sort((a,b)=>b[1]-a[1]).map(([k,n])=>{ const lab = (LOSS_REASONS.find(r=>r[0]===k)||[0,'Non indicato'])[1]; return `<div class="hbar"><span>${esc(k?lab:'Non indicato')}</span><div class="track"><div class="fill" style="background:var(--red);width:${Math.round(n/lost.length*100)}%"></div></div><span>${n}</span></div>`; }).join('');
   body.innerHTML = `
@@ -4266,6 +4270,9 @@ function renderDash() {
     <div class="dash-block"><h3>Il punteggio funziona? (esiti per fascia)</h3>
       <table class="dash-table"><tr><th>Score</th><th>Lead</th><th>Vinti</th><th>Persi</th><th>Conv.</th></tr>${bandRows}</table>
       <div class="dash-note">${closedN < 15 ? 'Per ora hai solo '+closedN+' lead chiusi: servono almeno 15–20 esiti perché i confronti siano affidabili. Continua a segnare vinto/perso su ogni lead.' : 'Se le fasce alte non convertono di più delle basse, i pesi vanno rivisti.'}</div></div>
+    <div class="dash-block"><h3>💶 Budget e preventivo</h3>
+      <table class="dash-table"><tr><th>Fattibilità</th><th>Lead</th><th>Vinti</th><th>Persi</th><th>Conv.</th></tr>${fitRows}</table>
+      <div class="dash-note">${avgUp!=null ? 'Nei '+wonB.length+' contratti vinti con budget noto, il valore finale è stato in media il <b>'+Math.round(avgUp*100)+'%</b> del budget dichiarato all\u2019inizio' + (avgUp>1.05 ? ': i clienti tendono a dichiarare meno di quanto spendono.' : '.') : 'Quando chiudi dei lead vinti, indica budget e valore del contratto: qui vedrai quanto i clienti sottostimano il budget all\u2019inizio.'}${lostRip ? ' · '+lostRip+' lead persi erano "da riposizionare".' : ''}${withFit.length < 15 ? ' Servono almeno 15–20 lead chiusi con budget e dimensioni per tarare le soglie.' : ''}</div></div>
     <div class="dash-block"><h3>Privati e pubblici</h3>
       <table class="dash-table"><tr><th>Tipo</th><th>Lead</th><th>Vinti</th><th>Persi</th><th>Conv.</th><th>Valore medio</th></tr>${typeRows}</table></div>
     <div class="dash-block"><h3>Da dove arrivano i lead</h3>
@@ -4274,7 +4281,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-5';
+const BUILD = '2026-10-21-6';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
