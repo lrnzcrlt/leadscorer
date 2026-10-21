@@ -1052,7 +1052,7 @@ a.btn.disabled{opacity:.45}
       <div class="crm-field"><label>Ingresso in acqua</label><select id="req-entry" onchange="onReqField()"></select></div>
       <div class="crm-field"><label>Profondità minima (m)</label><input type="number" id="req-dmin" min="0" max="10" step="0.1" inputmode="decimal" oninput="onReqField()"/></div>
       <div class="crm-field"><label>Profondità massima (m)</label><input type="number" id="req-dmax" min="0" max="10" step="0.1" inputmode="decimal" oninput="onReqField()"/></div>
-      <div class="crm-field"><label>Budget del cliente (€)</label><input type="number" id="req-budget" min="0" step="500" inputmode="numeric" placeholder="es. 35000" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Budget del cliente (€)</label><input type="text" id="req-budget" inputmode="decimal" autocomplete="off" placeholder="es. 35.000" oninput="onReqField()" onblur="fmtEuroInput(this)"/></div>
       <div class="crm-field"><label>Che budget è?</label><select id="req-btype" onchange="onReqField()"></select></div>
       <div class="crm-field"><label>Tempi desiderati</label><select id="req-timing" onchange="onReqField()"></select></div>
       <div class="crm-field full"><label>Accessori e complementi</label><div class="feat-grid" id="req-feats"></div></div>
@@ -1146,7 +1146,7 @@ a.btn.disabled{opacity:.45}
       <div class="crm-field" id="crm-closed-a" style="display:none"><label id="crm-reason-lbl">Motivo</label>
         <select id="crm-reason" onchange="onCrmField()"></select></div>
       <div class="crm-field" id="crm-closed-b" style="display:none"><label>Valore del contratto (€)</label>
-        <input type="number" id="crm-value" min="0" step="100" inputmode="numeric" oninput="onCrmField()"/></div>
+        <input type="text" id="crm-value" inputmode="decimal" autocomplete="off" placeholder="es. 42.500" oninput="onCrmField()" onblur="fmtEuroInput(this)"/></div>
       <div class="crm-field full"><label>Registra un contatto</label>
         <div style="display:flex;gap:8px"><input type="text" id="crm-log-input" maxlength="300" placeholder="es. Telefonata: vuole un preventivo, richiamare giovedì"/>
         <button class="btn" type="button" onclick="addContactLog()">＋ Registra</button></div></div>
@@ -2028,9 +2028,10 @@ function updateBudgetCheck() {
   const r = crm.request, f = budgetFit(r);
   if (!f.cost && f.declared == null) { el.innerHTML = ''; return; }
   const h = [];
-  if (f.cost) h.push(`<div class="bc-row"><span>Costo indicativo del progetto (${f.cost.area} m²)</span><span class="bc-v">${eurFmt(f.cost.lo)} – ${eurFmt(f.cost.hi)}</span></div>`);
+  if (f.cost) h.push(`<div class="bc-row"><span>Totale preventivo (IVA inclusa, ${f.cost.area} m²)</span><span class="bc-v">${eurFmt(f.cost.mid)}</span></div>`);
   if (f.declared != null) {
-    h.push(`<div class="bc-row"><span>Budget del cliente${r.btype==='stimato'?' (stimato da noi)':r.btype==='tetto'?' (tetto rigido)':''}</span><span class="bc-v">${eurFmt(f.declared)}${f.ratio!=null?' · '+Math.round(f.ratio*100)+'% del costo medio':''}</span></div>`);
+    h.push(`<div class="bc-row"><span>Budget del cliente${r.btype==='stimato'?' (stimato da noi)':r.btype==='tetto'?' (tetto rigido)':''}</span><span class="bc-v">${eurFmt(f.declared)}${f.ratio!=null?' · '+Math.round(f.ratio*100)+'% del preventivo':''}</span></div>`);
+    if (f.cost) { const d = f.declared - f.cost.mid; h.push(`<div class="bc-row"><span>${d >= 0 ? 'Margine sul preventivo' : 'Mancano rispetto al preventivo'}</span><span class="bc-v" style="color:${d >= 0 ? 'var(--green-dk)' : 'var(--red-dk)'}">${d >= 0 ? '+ ' : '− '}${eurFmt(Math.abs(d))}</span></div>`); }
     h.push(`<span class="bc-badge bc-${f.cls}">${esc(f.verdict)}</span>`);
     if (f.cls === 'bad' || f.cls === 'warn') {
       const fs0 = fitSize(f.declared, r), fs = fs0 && (!f.cost || fs0.A < f.cost.area) ? fs0 : null;
@@ -2039,7 +2040,7 @@ function updateBudgetCheck() {
   } else {
     h.push(`<div class="bc-tip">Budget non ancora chiesto. In telefonata proponi una forbice: «Per orientarci, pensava più sui ${eurFmt(f.cost.lo)} o sui ${eurFmt(f.cost.hi)}?»</div>`);
   }
-  h.push(`<div class="bc-tip" style="font-size:12px">Costo IVA inclusa ±${listino.varPct}% dal 💶 Listino: orientativo, non è un'offerta.</div>`);
+  h.push(`<div class="bc-tip" style="font-size:12px">Confronto con il preventivo indicativo (forbice ±${listino.varPct}%: ${f.cost ? eurFmt(f.cost.lo)+' – '+eurFmt(f.cost.hi) : '—'}). Prezzi dal 💶 Listino.</div>`);
   el.innerHTML = h.join('');
 }
 
@@ -2601,7 +2602,7 @@ function refreshAll() {
 
   document.getElementById('budget-val').textContent = bgt?bgt.label:'—';
   const bfit = budgetFit(crm.request);
-  document.getElementById('budget-range').textContent = bgt ? bgt.range + (bfit.ratio!=null ? ' · '+Math.round(bfit.ratio*100)+'% del costo' : '') : '—';
+  document.getElementById('budget-range').textContent = bgt ? bgt.range + (bfit.ratio!=null ? ' · '+Math.round(bfit.ratio*100)+'% del preventivo' : '') : '—';
 
   let pv='—',ps='—';
   if(score>=76){pv='🔴 Urgente';ps='Contattare entro 24h';}
@@ -3086,7 +3087,7 @@ function reportHtml() {
     let b = dl([
       row('Budget del cliente', bf.declared!=null ? eurFmt(bf.declared) + (r.btype ? ' <span style="color:var(--ink3)">('+lab(BUDGET_TYPES, r.btype).toLowerCase()+')</span>' : '') : '<span class="rp-empty">non ancora chiesto</span>'),
       row('Costo indicativo', bf.cost ? eurFmt(bf.cost.lo)+' – '+eurFmt(bf.cost.hi) : ''),
-      row('Copertura', bf.ratio!=null ? Math.round(bf.ratio*100)+'% del costo medio' : ''),
+      row('Copertura', bf.ratio!=null ? Math.round(bf.ratio*100)+'% del preventivo' : ''),
       row('Fascia', bgt ? E(bgt.label) : '')
     ]);
     if (bf.declared != null) {
@@ -3528,7 +3529,7 @@ function renderCrmForm() {
   document.getElementById('crm-closed-b').style.display = crm.stage==='vinto' ? '' : 'none';
   document.getElementById('crm-reason-lbl').textContent = crm.stage==='vinto' ? 'Perché ha scelto noi' : 'Motivo della perdita';
   document.getElementById('crm-reason').innerHTML = optionsHtml(crm.stage==='vinto' ? WIN_REASONS : LOSS_REASONS, crm.closeReason);
-  document.getElementById('crm-value').value = crm.closeValue == null ? '' : crm.closeValue;
+  if (document.activeElement !== document.getElementById('crm-value')) document.getElementById('crm-value').value = crm.closeValue == null ? '' : crm.closeValue.toLocaleString('it-IT', { maximumFractionDigits: 2 });
   document.getElementById('outcome-box').innerHTML = isClosed(crm)
     ? `<div class="outcome-done ${esc(crm.stage)}"><strong>${crm.stage==='vinto' ? '✅ Lead vinto' : '❌ Lead perso'}</strong>${crm.closedAt ? ' il '+esc(fmtDT(crm.closedAt)) : ''} — compila qui sotto ${crm.stage==='vinto' ? 'il motivo e il valore del contratto' : 'il motivo della perdita'}. <button type="button" class="mini-btn" onclick="setOutcome('trattativa')">↩ Riapri</button></div>`
     : `<div class="row"><button type="button" class="btn btn-win" onclick="setOutcome('vinto')">✅ Segna VINTO</button><button type="button" class="btn btn-lose" onclick="setOutcome('perso')">❌ Segna PERSO</button></div>`;
@@ -3746,8 +3747,7 @@ function onCrmField() {
   crm.nextAction = document.getElementById('crm-next-action').value.slice(0,200);
   crm.nextDate = document.getElementById('crm-next-date').value;
   const rs = document.getElementById('crm-reason'); if (rs && isClosed(crm)) crm.closeReason = rs.value;
-  const vl = document.getElementById('crm-value').value;
-  crm.closeValue = (vl === '' || !isFinite(Number(vl)) || Number(vl) < 0) ? null : Number(vl);
+  crm.closeValue = parseEuro(document.getElementById('crm-value').value);
   if (crm.stage !== prev) {
     pushLog(crm, 'fase', 'Fase: '+STAGE_LABEL[prev]+' → '+STAGE_LABEL[crm.stage]);
     if (isClosed(crm)) { crm.closedAt = Date.now(); crm.closeReason = ''; if (crm.stage==='perso') crm.closeValue = null; crm.nextAction = ''; crm.nextDate = ''; }
@@ -3857,11 +3857,32 @@ function cleanReq(raw) {
   return r;
 }
 function fmtNum(n) { return String(n).replace('.',','); }
+// Legge importi scritti in qualsiasi modo: 28000, 28.000, 28,000, 28 000 €, 28k, 28 mila, 28.500,50
+function parseEuro(v) {
+  let t = String(v == null ? '' : v).toLowerCase().replace(/€|euro|eur/g,'').replace(/\s+/g,'');
+  if (!t) return null;
+  let mult = 1;
+  if (/mila$/.test(t)) { mult = 1000; t = t.replace(/mila$/,''); } else if (/k$/.test(t)) { mult = 1000; t = t.replace(/k$/,''); }
+  if (!/^[\d.,]+$/.test(t)) return null;
+  const dots = (t.match(/\./g)||[]).length, commas = (t.match(/,/g)||[]).length;
+  if (dots && commas) {
+    const last = Math.max(t.lastIndexOf('.'), t.lastIndexOf(','));
+    const dec = t.slice(last+1);
+    t = dec.length <= 2 ? t.slice(0,last).replace(/[.,]/g,'') + '.' + dec : t.replace(/[.,]/g,'');
+  } else if (dots || commas) {
+    const sep = dots ? '.' : ',', parts = t.split(sep);
+    if (parts.length > 2 || (parts[1] && parts[1].length === 3)) t = parts.join('');   // separatore delle migliaia
+    else t = parts[0] + '.' + (parts[1] || '');                                         // decimali
+  }
+  const n = Number(t) * mult;
+  return isFinite(n) && n >= 0 ? Math.round(n*100)/100 : null;
+}
+function fmtEuroInput(el) { const n = parseEuro(el.value); if (n != null) el.value = n.toLocaleString('it-IT', { maximumFractionDigits: 2 }); }
 function renderRequestForm() {
   const r = crm.request;
   const set = (id,v)=>{ const el = document.getElementById(id); if (el) el.value = (v===null || v===undefined) ? '' : v; };
   if (!document.getElementById('req-text')) return;
-  set('req-text', r.text); set('req-len', r.len); set('req-wid', r.wid); set('req-color', r.color); set('req-dmin', r.dmin); set('req-dmax', r.dmax); set('req-budget', r.budget);
+  set('req-text', r.text); set('req-len', r.len); set('req-wid', r.wid); set('req-color', r.color); set('req-dmin', r.dmin); set('req-dmax', r.dmax); set('req-budget', r.budget == null ? '' : r.budget.toLocaleString('it-IT', { maximumFractionDigits: 2 }));
   document.getElementById('req-shape').innerHTML = optionsHtml(SHAPES, r.shape);
   document.getElementById('req-depthtype').innerHTML = optionsHtml(DEPTHS, r.depthType);
   document.getElementById('req-entry').innerHTML = optionsHtml(ENTRIES, r.entry);
@@ -3875,7 +3896,7 @@ function onReqField() {
   const r = crm.request;
   const num = id=>{ const v = document.getElementById(id).value; return (v==='' || !isFinite(Number(v)) || Number(v)<0) ? null : Number(v); };
   r.text = document.getElementById('req-text').value.slice(0,3000);
-  r.len = num('req-len'); r.wid = num('req-wid'); r.dmin = num('req-dmin'); r.dmax = num('req-dmax'); r.budget = num('req-budget');
+  r.len = num('req-len'); r.wid = num('req-wid'); r.dmin = num('req-dmin'); r.dmax = num('req-dmax'); r.budget = parseEuro(document.getElementById('req-budget').value);
   r.shape = document.getElementById('req-shape').value; r.depthType = document.getElementById('req-depthtype').value;
   r.entry = document.getElementById('req-entry').value; r.timing = document.getElementById('req-timing').value;
   r.btype = document.getElementById('req-btype').value;
@@ -4253,7 +4274,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-4';
+const BUILD = '2026-10-21-5';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
