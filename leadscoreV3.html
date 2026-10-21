@@ -1985,6 +1985,8 @@ function estimateCost(r) {
 // Soglie: in linea ≥95% (≥100% se tetto rigido) · da negoziare 70–95% (85–100% se tetto rigido) · da riposizionare sotto.
 const FIT_LABEL = { ok:'In linea', neg:'Da negoziare', rip:'Da riposizionare', nd:'' };
 const FIT_DOT = { ok:'🟢', neg:'🟡', rip:'🔴', nd:'' };
+// Quanto del budget del cliente serve per il preventivo (es. 84% = il preventivo sta nel budget)
+function budgetUse(f) { return f && f.ratio != null ? Math.round(f.cost.mid / f.declared * 100) : null; }
 function budgetFit(r) {
   const cost = estimateCost(r);
   const B = r && r.budget > 0 ? r.budget : null;
@@ -2019,10 +2021,10 @@ function updateBudgetCheck() {
   const r = crm.request, f = budgetFit(r);
   if (!f.cost && f.declared == null) { el.innerHTML = ''; return; }
   const h = [];
-  if (f.cost) h.push(`<div class="bc-row"><span>Totale preventivo (IVA inclusa, ${f.cost.area} m²)</span><span class="bc-v">${eurFmt(f.cost.mid)}</span></div>`);
+  if (f.declared != null) h.push(`<div class="bc-row"><span>Budget del cliente${r.btype==='stimato'?' (stimato da noi)':r.btype==='tetto'?' (tetto rigido)':''}</span><span class="bc-v">${eurFmt(f.declared)}</span></div>`);
+  if (f.cost) h.push(`<div class="bc-row"><span>Totale preventivo (IVA inclusa, ${f.cost.area} m²)</span><span class="bc-v">${eurFmt(f.cost.mid)}${f.ratio!=null?' · '+budgetUse(f)+'% del budget':''}</span></div>`);
   if (f.declared != null) {
-    h.push(`<div class="bc-row"><span>Budget del cliente${r.btype==='stimato'?' (stimato da noi)':r.btype==='tetto'?' (tetto rigido)':''}</span><span class="bc-v">${eurFmt(f.declared)}${f.ratio!=null?' · '+Math.round(f.ratio*100)+'% del preventivo':''}</span></div>`);
-    if (f.cost) { const d = f.declared - f.cost.mid; h.push(`<div class="bc-row"><span>${d >= 0 ? 'Margine sul preventivo' : 'Mancano rispetto al preventivo'}</span><span class="bc-v" style="color:${d >= 0 ? 'var(--green-dk)' : 'var(--red-dk)'}">${d >= 0 ? '+ ' : '− '}${eurFmt(Math.abs(d))}</span></div>`); }
+    if (f.cost) { const d = f.declared - f.cost.mid; h.push(`<div class="bc-row"><span>${d >= 0 ? 'Avanzano nel budget' : 'Mancano per coprire il preventivo'}</span><span class="bc-v" style="color:${d >= 0 ? 'var(--green-dk)' : 'var(--red-dk)'}">${d >= 0 ? '+ ' : '− '}${eurFmt(Math.abs(d))}</span></div>`); }
     h.push(`<span class="bc-badge bc-${f.cls}">${f.ratio != null ? FIT_DOT[f.level] + ' ' : ''}${esc(f.verdict)}</span>`);
     if (f.ratio != null && f.stima) h.push(`<div class="bc-tip" style="color:var(--amber-dk)">⚠ Prezzi di stima: il confronto diventa affidabile quando aggiorni il 💶 Listino.</div>`);
     if (f.cls === 'bad' || f.cls === 'warn') {
@@ -2453,7 +2455,7 @@ function renderCompare() {
   rows.push(`<tr><td>Indirizzo</td><td>${esc(a.contact?.address||'—')}</td><td>${esc(b.contact?.address||'—')}</td><td></td></tr>`);
   const fa = budgetFit(cleanCrm(a.crm).request), fb = budgetFit(cleanCrm(b.crm).request);
   rows.push(`<tr><td>Budget del cliente</td><td>${fa.declared!=null?eurFmt(fa.declared):'—'}</td><td>${fb.declared!=null?eurFmt(fb.declared):'—'}</td><td>${delta(fa.declared, fb.declared, true)}</td></tr>`);
-  rows.push(`<tr><td>Fattibilità economica</td><td>${esc(fa.ratio!=null ? FIT_LABEL[fa.level]+' · '+Math.round(fa.ratio*100)+'%' : (fa.verdict||'—'))}</td><td>${esc(fb.ratio!=null ? FIT_LABEL[fb.level]+' · '+Math.round(fb.ratio*100)+'%' : (fb.verdict||'—'))}</td><td>${delta(fa.ratio!=null?Math.round(fa.ratio*100):null, fb.ratio!=null?Math.round(fb.ratio*100):null, true)}</td></tr>`);
+  rows.push(`<tr><td>Fattibilità economica</td><td>${esc(fa.ratio!=null ? FIT_LABEL[fa.level]+' · preventivo al '+budgetUse(fa)+'% del budget' : (fa.verdict||'—'))}</td><td>${esc(fb.ratio!=null ? FIT_LABEL[fb.level]+' · preventivo al '+budgetUse(fb)+'% del budget' : (fb.verdict||'—'))}</td><td>${delta(budgetUse(fa), budgetUse(fb), false)}</td></tr>`);
   rows.push(`<tr><td>Telefono</td><td>${esc(a.contact?.phone||'—')}</td><td>${esc(b.contact?.phone||'—')}</td><td></td></tr>`);
   rows.push(`<tr><td>Email</td><td>${esc(a.contact?.email||'—')}</td><td>${esc(b.contact?.email||'—')}</td><td></td></tr>`);
   [...GROUPS.a,...GROUPS.b,...GROUPS.c].forEach(f=>{
@@ -2608,7 +2610,7 @@ function renderFitMetric() {
   if (f.declared != null && f.ratio != null) {
     val = FIT_DOT[f.level] + ' ' + FIT_LABEL[f.level];
     const d = f.declared - f.cost.mid;
-    txt = 'Preventivo ' + eurFmt(f.cost.mid) + ' · budget ' + eurFmt(f.declared) + ' · ' + (d >= 0 ? 'avanzano ' : 'mancano ') + eurFmt(Math.abs(d)) + (f.stima ? ' · prezzi di stima' : '');
+    txt = 'Preventivo ' + eurFmt(f.cost.mid) + ' su budget ' + eurFmt(f.declared) + ' (' + budgetUse(f) + '%) · ' + (d >= 0 ? 'avanzano ' : 'mancano ') + eurFmt(Math.abs(d)) + (f.stima ? ' · prezzi di stima' : '');
   } else if (f.declared != null) { val = 'Budget ' + eurFmt(f.declared); txt = 'inserisci le dimensioni per il confronto'; }
   else if (f.cost) { val = 'Budget da chiedere'; txt = 'preventivo ' + eurFmt(f.cost.mid); }
   else if (bgt) { val = bgt.label; txt = bgt.range; }
@@ -2670,7 +2672,7 @@ function buildLeve() {
   const bfL = budgetFit(crm.request);
   if (bfL.cls==='bad' || bfL.cls==='warn') {
     const fs0 = bfL.declared ? fitSize(bfL.declared, crm.request) : null, fs = fs0 && (!bfL.cost || fs0.A < bfL.cost.area) ? fs0 : null;
-    leve.push({icon:'📐',name:bfL.cls==='bad'?'Riposizionare l\'offerta sul budget':'Negoziare: avvicinare preventivo e budget',desc:'Il budget ('+eurFmt(bfL.declared)+') copre il '+Math.round(bfL.ratio*100)+'% del preventivo ('+eurFmt(bfL.cost.mid)+'): mancano '+eurFmt(bfL.cost.mid-bfL.declared)+'. '+(fs?'Proponi una vasca di circa '+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m e ':'Proponi ')+'gli accessori in un secondo tempo, oppure un finanziamento che porti la differenza a una rata mensile. Mai scontare prima di aver ridotto il perimetro.',urgency:'alta'});
+    leve.push({icon:'📐',name:bfL.cls==='bad'?'Riposizionare l\'offerta sul budget':'Negoziare: avvicinare preventivo e budget',desc:'Il preventivo ('+eurFmt(bfL.cost.mid)+') è il '+budgetUse(bfL)+'% del budget del cliente ('+eurFmt(bfL.declared)+'): mancano '+eurFmt(bfL.cost.mid-bfL.declared)+'. '+(fs?'Proponi una vasca di circa '+fmtNum(fs.L)+' × '+fmtNum(fs.W)+' m e ':'Proponi ')+'gli accessori in un secondo tempo, oppure un finanziamento che porti la differenza a una rata mensile. Mai scontare prima di aver ridotto il perimetro.',urgency:'alta'});
   }
   if (bfL.ratio!=null && bfL.ratio>=1.15) leve.push({icon:'✨',name:'Budget capiente: proporre gli upgrade',desc:'Il budget supera il preventivo di '+eurFmt(bfL.declared-bfL.cost.mid)+'. Presenta subito il pacchetto premium (copertura automatica, pompa di calore, illuminazione, zona solarium): alza il valore del contratto senza allungare la trattativa.',urgency:'media'});
   if (bfL.declared==null && sc) leve.push({icon:'💶',name:'Qualificare il budget',desc:'Il budget non è ancora noto: senza, non sai se il progetto richiesto è fattibile. Non chiedere "quanto vuole spendere?": proponi una forbice'+(bfL.cost?' ('+eurFmt(bfL.cost.lo)+' o '+eurFmt(bfL.cost.hi)+')':' (25–35 mila o 40–60 mila)')+' e lascia scegliere. Annota anche se è un tetto rigido o indicativo.',urgency:'media'});
@@ -2797,7 +2799,7 @@ RISULTATO
   Score finale aggiustato: ${sc?sc.adj+'/100':'—'}
   Confidenza:              ${sc?sc.conf+'%':'—'} (${Object.keys(state).length}/17 variabili)
   Fascia di budget:        ${bgt?bgt.label+' — '+bgt.range:'—'}
-  Fattibilità economica:   ${bfx.declared!=null?(bfx.cost?eurFmt(bfx.declared)+' su preventivo '+eurFmt(bfx.cost.mid)+' ('+Math.round(bfx.ratio*100)+'%) → ':'')+bfx.verdict:'budget non indicato'}
+  Fattibilità economica:   ${bfx.declared!=null?(bfx.cost?'preventivo '+eurFmt(bfx.cost.mid)+' su budget '+eurFmt(bfx.declared)+' ('+budgetUse(bfx)+'% del budget) → ':'')+bfx.verdict:'budget non indicato'}
   Priorità:                ${document.getElementById('priority-val').textContent}
 ${'─'.repeat(46)}
 NOTE COMMERCIALE
@@ -2952,7 +2954,7 @@ function quoteHtml(mode) {
     const sc = calcScore(), bf = budgetFit(r);
     h += sec('Dati interni', `<dl class="rp-dl">
       <div><dt>Score</dt><dd>${sc ? sc.adj + '/100' : '—'}</dd></div><div><dt>Fase</dt><dd>${E(STAGE_LABEL[crm.stage] || '')}</dd></div>
-      <div><dt>Budget del cliente</dt><dd>${bf.declared != null ? eurFmt(bf.declared) : 'non indicato'}</dd></div><div><dt>Copertura</dt><dd>${bf.ratio != null ? Math.round(bf.ratio*100) + '% del totale' : '—'}</dd></div>
+      <div><dt>Budget del cliente</dt><dd>${bf.declared != null ? eurFmt(bf.declared) : 'non indicato'}</dd></div><div><dt>Preventivo / budget</dt><dd>${bf.ratio != null ? budgetUse(bf) + '% del budget' : '—'}</dd></div>
       <div><dt>Sconto applicato</dt><dd>${p && p.sconto > 0 ? fmtNum(p.scontoPct) + '% (' + eurFmt(p.sconto) + ')' : 'nessuno'}</dd></div><div><dt>Forbice</dt><dd>${p ? eurFmt(p.lo) + ' – ' + eurFmt(p.hi) : '—'}</dd></div>
       ${techSummaryLines().map(x=>`<div class="wide"><dt>Locale tecnico</dt><dd>${E(x)}</dd></div>`).join('')}
       ${crm.ditta.name ? `<div class="wide"><dt>Ditta lavori</dt><dd>${E(crm.ditta.name)}${crm.ditta.phone ? ' · ' + E(crm.ditta.phone) : ''}${crm.ditta.start ? ' · inizio ' + E(fmtDate(crm.ditta.start)) : ''}</dd></div>` : ''}
@@ -3086,7 +3088,7 @@ function reportHtml() {
     let b = dl([
       row('Budget del cliente', bf.declared!=null ? eurFmt(bf.declared) + (r.btype ? ' <span style="color:var(--ink3)">('+lab(BUDGET_TYPES, r.btype).toLowerCase()+')</span>' : '') : '<span class="rp-empty">non ancora chiesto</span>'),
       row('Costo indicativo', bf.cost ? eurFmt(bf.cost.lo)+' – '+eurFmt(bf.cost.hi) : ''),
-      row('Copertura', bf.ratio!=null ? Math.round(bf.ratio*100)+'% del preventivo · ' + FIT_LABEL[bf.level].toLowerCase() : ''),
+      row('Preventivo / budget', bf.ratio!=null ? budgetUse(bf)+'% del budget · ' + FIT_LABEL[bf.level].toLowerCase() : ''),
       row('Fascia', bgt ? E(bgt.label) : '')
     ]);
     if (bf.declared != null) {
@@ -4282,7 +4284,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-7';
+const BUILD = '2026-10-21-8';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
