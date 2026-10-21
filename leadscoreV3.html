@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="theme-color" content="#0B3A4A"/>
+<meta name="theme-color" content="#072F3B"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&family=Sora:wght@400..800&display=swap" rel="stylesheet"/>
 <title>Lead Scorer v4 — Piscine San Lorenzo</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -740,6 +740,173 @@ button,input,select,textarea{font-family:inherit}
 .urgency-media{color:var(--tiepido)}
 .leva-card:has(.urgency-alta) .leva-icon{background:var(--caldo-bg)}
 .leva-card:has(.urgency-media) .leva-icon{background:var(--tiepido-bg)}
+
+/* ═══════════ TEMA v3 "LIQUID GLASS ACQUATICO" — profondità, materiali, rilievo ═══════════
+   Vetro smerigliato solo per menu, score e barre fisse; contenuti su schede piene (leggibilità). */
+:root{
+  --font-ui:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --font-head:'Sora','Plus Jakarta Sans',-apple-system,sans-serif;
+  --fondale:#072F3B;--acqua:#0E8A99;--acqua-dk:#0A6976;--acqua-hi:#22B5C4;--acqua-bg:#DDF2F4;--luce:#9BE6EF;
+  --bg:#DCEAEC;--surf:#FFFFFF;--surf2:#F1F6F7;--surf3:#E1EBED;
+  --border:rgba(7,47,59,.08);--border2:rgba(7,47,59,.16);
+  --text:#0C2229;--text2:#43595F;--text3:#7A9096;
+  --card:rgba(255,255,255,.88);--card-edge:rgba(255,255,255,.95);
+  --glass:rgba(255,255,255,.55);--glass-edge:rgba(255,255,255,.75);
+  --glass-dark:rgba(6,40,51,.62);
+  --sh-1:0 1px 1px rgba(7,47,59,.04),0 2px 6px -2px rgba(7,47,59,.08),0 12px 28px -10px rgba(7,47,59,.16);
+  --sh-2:0 2px 4px rgba(7,47,59,.06),0 18px 44px -14px rgba(7,47,59,.30);
+  --hi:inset 0 1px 0 rgba(255,255,255,.95);
+  --r-md:14px;--r-lg:22px;--r-xl:28px;
+  --ring:0 0 0 4px rgba(14,138,153,.18);
+}
+@media(prefers-color-scheme:dark){:root{
+  --fondale:#04202A;--acqua:#22B5C4;--acqua-dk:#5CCFDB;--acqua-hi:#53D3E0;--acqua-bg:#0B2F37;
+  --bg:#05171D;--surf:#0F242B;--surf2:#132D35;--surf3:#1B3942;
+  --border:rgba(170,225,235,.08);--border2:rgba(170,225,235,.16);
+  --text:#E6F2F4;--text2:#A2BBC0;--text3:#6A858B;
+  --card:rgba(16,38,46,.86);--card-edge:rgba(170,225,235,.10);
+  --glass:rgba(16,40,48,.55);--glass-edge:rgba(170,225,235,.14);--glass-dark:rgba(3,22,29,.62);
+  --sh-1:0 1px 1px rgba(0,0,0,.25),0 12px 28px -10px rgba(0,0,0,.55);
+  --sh-2:0 18px 44px -14px rgba(0,0,0,.7);
+  --hi:inset 0 1px 0 rgba(255,255,255,.06);
+}}
+
+/* Fondo: acqua di piscina con riflessi morbidi */
+html{background:var(--bg)}
+body{font-family:var(--font-ui);font-size:15px;letter-spacing:-.003em;background:
+  radial-gradient(60vw 50vw at 85% -10%,rgba(34,181,196,.30),transparent 60%),
+  radial-gradient(55vw 45vw at -10% 30%,rgba(155,230,239,.45),transparent 62%),
+  radial-gradient(70vw 50vw at 60% 110%,rgba(14,138,153,.18),transparent 60%),
+  linear-gradient(180deg,#E6F2F3 0%,#D6E7EA 100%);background-attachment:fixed;min-height:100vh}
+@media(prefers-color-scheme:dark){body{background:
+  radial-gradient(60vw 50vw at 85% -10%,rgba(34,181,196,.20),transparent 60%),
+  radial-gradient(55vw 45vw at -10% 30%,rgba(14,138,153,.18),transparent 62%),
+  linear-gradient(180deg,#06191F 0%,#041217 100%);background-attachment:fixed}}
+
+/* Titoli */
+.page::before{font-family:var(--font-head);font-weight:700;letter-spacing:-.04em;
+  background:linear-gradient(100deg,var(--fondale) 10%,var(--acqua) 95%);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media(prefers-color-scheme:dark){.page::before{background:linear-gradient(100deg,#E6F2F4 10%,var(--luce) 95%);-webkit-background-clip:text;background-clip:text}}
+.sec-title,.crm-card h3,.weight-editor h3,.stats-section h3,.dash-block h3,.today-sec h3,.leva-title,.sub-h,
+.lead-card-name,.today-card .tc-name,.compare-name,.chk-group .chk-sum{font-family:var(--font-head);font-weight:650;letter-spacing:-.025em}
+.metric-val,.lead-card-score,.today-card .tc-score,.kpi .v,.weight-grid .w-val{font-family:var(--font-head);letter-spacing:-.045em}
+
+/* Menu: vetro scuro */
+.nav-bar{background:var(--glass-dark);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,.08),0 0 40px rgba(4,32,42,.25)}
+.nav-logo{font-family:var(--font-head);letter-spacing:-.035em}
+.tab-btn{border-radius:14px}
+.tab-btn.active{background:linear-gradient(180deg,rgba(155,230,239,.26),rgba(155,230,239,.12));box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 16px -6px rgba(0,0,0,.35)}
+@media(min-width:900px){.nav-bar{background:linear-gradient(180deg,rgba(6,44,56,.80),rgba(4,30,39,.86))}}
+@media(max-width:899.98px){
+  .nav-bar{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));height:var(--dock);padding:8px;border-radius:26px;background:rgba(6,40,51,.86);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 16px 40px -10px rgba(4,32,42,.55)}
+  .page{padding-bottom:calc(var(--dock) + 60px)}
+  body::before{font-family:var(--font-head);letter-spacing:-.03em}
+}
+
+/* Schede di contenuto: piene, con bordo di luce e ombra a più livelli */
+.section-card,.client-bar,.crm-card,.weight-editor,.leve-panel,.stats-section,.dash-block,.kpi,.lead-card,.today-card,.compare-col,.backup-panel{
+  background:var(--card);border:1px solid var(--card-edge);box-shadow:var(--hi),var(--sh-1)}
+.section-card{overflow:visible}
+.crm-card h3,.sec-title{color:var(--text)}
+
+/* Campi: incavati, come vasche */
+.contact-field input,.contact-field textarea,.crm-field input,.crm-field select,.crm-field textarea,.num-row input[type=number],
+.lead-search,.sync-input,.compare-picks select,.photo-bar select,.dt-row input[type=text],.price-grid input{
+  background:linear-gradient(180deg,rgba(7,47,59,.045),rgba(7,47,59,.015));border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:inset 0 1.5px 3px rgba(7,47,59,.07)}
+@media(prefers-color-scheme:dark){.contact-field input,.contact-field textarea,.crm-field input,.crm-field select,.crm-field textarea,.num-row input[type=number],
+.lead-search,.sync-input,.compare-picks select,.photo-bar select,.dt-row input[type=text],.price-grid input{background:rgba(0,0,0,.22);box-shadow:inset 0 1.5px 3px rgba(0,0,0,.35)}}
+.contact-field input:hover,.crm-field input:hover,.crm-field select:hover,.contact-field textarea:hover,.crm-field textarea:hover{background:linear-gradient(180deg,rgba(7,47,59,.06),rgba(7,47,59,.02))}
+.contact-field input:focus,.contact-field textarea:focus,.crm-field input:focus,.crm-field select:focus,.crm-field textarea:focus,.num-row input:focus,
+.lead-search:focus,.sync-input:focus,.compare-picks select:focus,.photo-bar select:focus,.dt-row input[type=text]:focus,.price-grid input:focus{
+  background:var(--surf);border-color:var(--acqua);box-shadow:var(--ring),inset 0 1px 2px rgba(7,47,59,.05)}
+
+/* Pulsanti: in rilievo, si "premono" */
+.btn,.quick-days button,.mini-btn{background:linear-gradient(180deg,#FFFFFF,#EEF4F5);border:1px solid rgba(7,47,59,.12);color:var(--text);
+  box-shadow:var(--hi),0 1px 2px rgba(7,47,59,.08),0 4px 10px -4px rgba(7,47,59,.14);transition:transform .08s,box-shadow .15s,filter .15s}
+.btn:hover,.quick-days button:hover,.mini-btn:hover{filter:brightness(1.02);border-color:rgba(7,47,59,.22);color:var(--text)}
+.btn:active,.quick-days button:active,.mini-btn:active{transform:translateY(1px);box-shadow:inset 0 2px 4px rgba(7,47,59,.12)}
+@media(prefers-color-scheme:dark){.btn,.quick-days button,.mini-btn{background:linear-gradient(180deg,#1B3740,#132A31);border-color:rgba(170,225,235,.14);color:var(--text)}}
+.btn-green,.rp-bar .btn-green{background:linear-gradient(180deg,var(--acqua-hi) 0%,var(--acqua) 55%,var(--acqua-dk) 100%);border-color:rgba(7,80,90,.55);color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 2px rgba(7,47,59,.2),0 8px 18px -6px rgba(14,138,153,.65);text-shadow:0 1px 0 rgba(0,0,0,.15)}
+.btn-green:hover{color:#fff;filter:brightness(1.06)}
+@media(prefers-color-scheme:dark){.btn-green{background:linear-gradient(180deg,#2CC3D2,#11909F 55%,#0B6E7A);color:#fff}}
+.btn-win{background:linear-gradient(180deg,#34C08A,#1F9D6B 60%,#17855A);border-color:#16754F;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 8px 18px -6px rgba(31,157,107,.6)}
+.btn-lose{background:linear-gradient(180deg,#FFFFFF,#FBEFEE);color:var(--red-dk);border-color:rgba(210,72,63,.45)}
+@media(prefers-color-scheme:dark){.btn-lose{background:linear-gradient(180deg,#2A1E20,#211719)}}
+a.btn.disabled{opacity:.45}
+
+/* Scelte: tasti fisici che si illuminano */
+.chip{background:linear-gradient(180deg,#FFFFFF,#F1F6F7);border:1px solid rgba(7,47,59,.13);
+  box-shadow:var(--hi),0 1px 2px rgba(7,47,59,.07),0 3px 8px -3px rgba(7,47,59,.12)}
+@media(prefers-color-scheme:dark){.chip{background:linear-gradient(180deg,#1B3740,#132A31);border-color:rgba(170,225,235,.14)}}
+.chip:hover{border-color:rgba(7,47,59,.25)}
+.chip.sel-pos{background:linear-gradient(180deg,#38C892,#1F9D6B);border-color:#178257;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 16px -5px rgba(31,157,107,.7)}
+.chip.sel-neg{background:linear-gradient(180deg,#EC6A60,#D2483F);border-color:#B23A32;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 16px -5px rgba(210,72,63,.65)}
+.chip.sel-neu{background:linear-gradient(180deg,#8B86E0,#6E6AC9);border-color:#5955B0;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 16px -5px rgba(110,106,201,.65)}
+.chip.sel-warn{background:linear-gradient(180deg,#F0AE48,#D98E1F);border-color:#B97614;color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 16px -5px rgba(217,142,31,.65)}
+
+/* Pannello score: liquido, con riflesso di vetro */
+.score-panel{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 24px 50px -18px rgba(4,32,42,.6)}
+.score-panel::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(160deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.04) 32%,transparent 33%),
+             radial-gradient(90% 60% at 50% 120%,rgba(155,230,239,.16),transparent 70%)}
+.score-panel>*{position:relative;z-index:1}
+.metric{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.metric-val{font-weight:700;text-shadow:0 2px 14px rgba(0,0,0,.18)}
+.score-panel .bar-track{background:rgba(0,0,0,.22);box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.score-panel .bar-fill{box-shadow:0 0 12px rgba(155,230,239,.7)}
+
+/* Barra azioni fissa: vetro chiaro */
+.bottom-bar{background:var(--glass);border:1px solid var(--glass-edge);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 18px 40px -14px rgba(4,32,42,.35)}
+@media(max-width:899.98px){.bottom-bar{background:var(--card);backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:var(--hi),var(--sh-1)}}
+#page-archivio>.bottom-bar{border:0}
+
+/* Riepiloghi e box */
+.req-sum,.budget-check{background:linear-gradient(180deg,rgba(14,138,153,.07),rgba(14,138,153,.03));border:1px solid rgba(14,138,153,.14);box-shadow:none}
+.info-box{border-left-width:4px;border-left-color:var(--acqua-hi)}
+.w-badge,.sec-prog{background:rgba(7,47,59,.06)}
+
+/* Leve, statistiche, cruscotto */
+.leva-card{background:var(--card);border:1px solid var(--card-edge);box-shadow:var(--hi),var(--sh-1)}
+.leva-icon{box-shadow:var(--hi),0 4px 10px -4px rgba(7,47,59,.25)}
+.hbar .track,.bar-track{box-shadow:inset 0 1px 2px rgba(7,47,59,.12)}
+.hbar .fill,.coeff-bar,.bar-fill{background:linear-gradient(90deg,var(--acqua),var(--acqua-hi))}
+.kpi .v{background:linear-gradient(100deg,var(--fondale),var(--acqua));-webkit-background-clip:text;background-clip:text;color:transparent}
+@media(prefers-color-scheme:dark){.kpi .v{background:linear-gradient(100deg,#E6F2F4,var(--luce));-webkit-background-clip:text;background-clip:text}}
+
+/* Schede elenco: sollevate, si alzano al passaggio */
+.lead-card,.today-card{transition:transform .15s,box-shadow .15s}
+@media(hover:hover){.lead-card:hover,.today-card:hover{transform:translateY(-2px);box-shadow:var(--hi),var(--sh-2)}}
+.stage-badge{box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
+
+/* Notifiche */
+.toast,#update-bar{background:rgba(6,40,51,.82);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.12)}
+#update-bar button{background:linear-gradient(180deg,#C2F2F7,var(--luce));box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+
+/* Report: font coerenti */
+.rp{font-family:var(--font-ui)}
+.rp-name,.rp-kpi-v{font-family:var(--font-head);letter-spacing:-.03em}
+
+@media(prefers-reduced-motion:reduce){.lead-card:hover,.today-card:hover{transform:none}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .nav-bar{background:#062C38}.bottom-bar{background:var(--surf)}.toast,#update-bar{background:#062C38}}
+
+/* Caselle di spunta in rilievo */
+.chk,.crm-field label.chk,.dt-row label.chk{display:flex;align-items:center;gap:12px;margin:0;font-size:14.5px;font-weight:500;color:var(--text)}
+.chk input[type=checkbox]{-webkit-appearance:none;appearance:none;width:22px;height:22px;flex:none;margin:0;border-radius:7px;cursor:pointer;
+  background:linear-gradient(180deg,#FFFFFF,#EEF4F5);border:1px solid rgba(7,47,59,.22);box-shadow:var(--hi),0 1px 2px rgba(7,47,59,.10);
+  display:grid;place-items:center;transition:background .12s,border-color .12s}
+.chk input[type=checkbox]::after{content:'';width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);margin-top:-3px;opacity:0}
+.chk input[type=checkbox]:checked{background:linear-gradient(180deg,var(--acqua-hi),var(--acqua));border-color:var(--acqua-dk);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 3px 8px -2px rgba(14,138,153,.55)}
+.chk input[type=checkbox]:checked::after{opacity:1}
+.chk input[type=checkbox]:focus-visible{outline:2px solid var(--acqua);outline-offset:2px}
+@media(prefers-color-scheme:dark){.chk input[type=checkbox]{background:linear-gradient(180deg,#1B3740,#132A31);border-color:rgba(170,225,235,.22)}}
 </style>
 </head>
 <body>
@@ -3649,7 +3816,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-15-6';
+const BUILD = '2026-10-21-1';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
