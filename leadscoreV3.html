@@ -973,10 +973,10 @@ a.btn.disabled{opacity:.45}
 
 /* Menu: gruppi (lavoro sul lead · analisi · impostazioni) */
 @media(min-width:900px){
-  .tab-btn[data-page="statistica"],.tab-btn[data-page="listino"]{margin-top:18px}
-  .tab-btn[data-page="statistica"]::after,.tab-btn[data-page="listino"]::after{content:'';position:absolute;left:14px;right:14px;top:-10px;height:1px;background:rgba(255,255,255,.12)}
+  .tab-btn[data-page="statistica"]{margin-top:18px}
+  .tab-btn[data-page="statistica"]::after{content:'';position:absolute;left:14px;right:14px;top:-10px;height:1px;background:rgba(255,255,255,.12)}
 }
-@media(max-width:899.98px){.tab-btn[data-page="statistica"],.tab-btn[data-page="listino"]{margin-left:10px}}
+@media(max-width:899.98px){.tab-btn[data-page="statistica"]{margin-left:10px}}
 </style>
 </head>
 <body>
@@ -991,12 +991,12 @@ a.btn.disabled{opacity:.45}
     <button class="tab-btn active" data-page="profilo" onclick="showPage('profilo')">Profilo cliente</button>
     <button class="tab-btn" data-page="trattativa" onclick="showPage('trattativa')">Trattativa</button>
     <button class="tab-btn" data-page="leve" onclick="showPage('leve')">Leve suggerite</button>
+    <button class="tab-btn" data-page="listino" onclick="showPage('listino')">💶 Listino</button>
     <button class="tab-btn" data-page="preventivo" onclick="showPage('preventivo')">📑 Preventivo</button>
     <button class="tab-btn" data-page="statistica" onclick="showPage('statistica')">Statistiche</button>
+    <button class="tab-btn" data-page="pesi" onclick="showPage('pesi')">⚙ Pesi</button>
     <button class="tab-btn" data-page="confronta" onclick="showPage('confronta')">Confronta</button>
     <button class="tab-btn" data-page="dash" onclick="showPage('dash')">📊 Cruscotto</button>
-    <button class="tab-btn" data-page="listino" onclick="showPage('listino')">💶 Listino</button>
-    <button class="tab-btn" data-page="pesi" onclick="showPage('pesi')">⚙ Pesi</button>
   </div>
 </div>
 
@@ -4358,7 +4358,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-12';
+const BUILD = '2026-10-21-13';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
