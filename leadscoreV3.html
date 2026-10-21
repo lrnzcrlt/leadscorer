@@ -255,8 +255,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .rp-foot{margin-top:28px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--ink3);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 @media print{
   @page{size:A4;margin:14mm 12mm}
-  body{background:#fff!important}
+  html,body{background:#fff!important}
+  body::before{display:none!important}
   body>*:not(#report-ov){display:none!important}
+  .rp-sec:has(.qt-tot){break-inside:avoid}
   #report-ov{position:static;display:block!important;background:#fff;overflow:visible}
   .rp-bar{display:none!important}
   .rp{box-shadow:none;margin:0;padding:0;max-width:none;border-radius:0}
@@ -474,6 +476,7 @@ button,input,select,textarea{font-family:inherit}
 #page-confronta::before{content:'Confronta'}
 #page-pesi::before{content:'Pesi'}
 #page-listino::before{content:'Listino prezzi'}
+#page-preventivo::before{content:'Preventivo'}
 
 /* ── Profilo: score sempre visibile ── */
 @media(min-width:1180px){
@@ -941,6 +944,32 @@ a.btn.disabled{opacity:.45}
 .pv-sub td{font-weight:650;background:rgba(7,47,59,.03)}
 .pv-tot td{font-family:var(--font-head);font-weight:700;font-size:18px;letter-spacing:-.02em;color:var(--fondale);border-bottom:0;padding-top:12px}
 @media(prefers-color-scheme:dark){.pv-tot td{color:var(--luce)}}
+
+/* PREVENTIVO */
+.qt-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 20px;align-items:end}
+.qt-client{font-family:var(--font-head);font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.qt-sub{font-size:13px;color:var(--text3);margin-top:3px}
+.qt-hero-r{text-align:right}
+.qt-total{font-family:var(--font-head);font-size:32px;font-weight:700;letter-spacing:-.04em;color:var(--fondale);line-height:1}
+@media(prefers-color-scheme:dark){.qt-total{color:var(--luce)}}
+.qt-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+@media(max-width:600px){.qt-hero{grid-template-columns:1fr}.qt-hero-r{text-align:left}}
+.qt-desc{padding:10px 0;border-bottom:1px solid var(--border)}
+.qt-desc:last-child{border-bottom:0}
+.qt-desc-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;font-size:14.5px}
+.qt-desc textarea{width:100%;padding:10px 12px;font-size:14.5px;line-height:1.5;border:1px solid var(--border);border-radius:var(--r-md);resize:vertical;font-family:inherit;color:var(--text);
+  background:linear-gradient(180deg,rgba(7,47,59,.045),rgba(7,47,59,.015));box-shadow:inset 0 1.5px 3px rgba(7,47,59,.07);outline:none}
+.qt-desc textarea:focus{border-color:var(--acqua);background:var(--surf);box-shadow:var(--ring)}
+.ls-row.qt-fase{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 40px}
+@media(max-width:600px){.ls-row.qt-fase{grid-template-columns:minmax(0,1fr) 36px}.qt-fase>input:nth-child(2){grid-column:1/-1;grid-row:2}}
+.qt-fase .quick-days{margin-top:10px}
+.qt-to{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:6px;max-width:360px;line-height:1.5}
+.qt-to-n{font-size:16px;font-weight:700}
+.qt-list{margin:0;padding-left:20px;display:grid;gap:8px;font-size:13px;line-height:1.5}
+.qt-list li{break-inside:avoid}
+.qt-tot td{font-size:15px}
+.qt-sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:46px;break-inside:avoid}
+.qt-sign div{border-top:1px solid var(--ink);padding-top:6px;font-size:12px;color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -953,6 +982,7 @@ a.btn.disabled{opacity:.45}
     <button class="tab-btn" data-page="oggi" onclick="showPage('oggi')">📋 Oggi</button>
     <button class="tab-btn active" data-page="profilo" onclick="showPage('profilo')">Profilo cliente</button>
     <button class="tab-btn" data-page="trattativa" onclick="showPage('trattativa')">Trattativa</button>
+    <button class="tab-btn" data-page="preventivo" onclick="showPage('preventivo')">📑 Preventivo</button>
     <button class="tab-btn" data-page="leve" onclick="showPage('leve')">Leve suggerite</button>
     <button class="tab-btn" data-page="statistica" onclick="showPage('statistica')">Statistiche</button>
     <button class="tab-btn" data-page="archivio" onclick="showPage('archivio')">Archivio</button>
@@ -1571,6 +1601,10 @@ a.btn.disabled{opacity:.45}
 <!-- ═══════════════════════════════════════════════════
      PAGE 5 — PESI (editor)
 ═══════════════════════════════════════════════════ -->
+<div class="page" id="page-preventivo">
+  <div id="qt-body"></div>
+</div>
+
 <div class="page" id="page-listino">
   <div class="info-box" id="ls-intro"></div>
   <div id="ls-body"></div>
@@ -1764,11 +1798,11 @@ function calcPreventivo(r) {
   const area = r.len * r.wid, rows = [];
   const v = vascaOf(r);
   const vascaImp = v ? area * v.prezzo : 0;
-  rows.push({ voce: 'Vasca' + (v ? ' — ' + v.nome : ''), dett: fmtNum(Math.round(area*10)/10) + ' m² × ' + eurFmt(v ? v.prezzo : 0) + '/m²', imp: vascaImp, grp:'vasca' });
-  if (r.feats && r.feats.sfioro) rows.push({ voce:'Bordo a sfioro', dett:'+' + fmtNum(listino.sfioroPct) + '% sulla vasca', imp: vascaImp * listino.sfioroPct/100, grp:'vasca' });
-  listino.fissi.forEach(f=>{ if (f.prezzo > 0) rows.push({ voce:f.nome || 'Costo fisso', dett:'a corpo', imp:f.prezzo, grp:'fissi' }); });
-  LS_ACC.forEach(([k,label])=>{ if (r.feats && r.feats[k]) rows.push({ voce:label, dett:'a corpo', imp:listino.acc[k]||0, grp:'acc' }); });
-  listino.extra.forEach(x=>{ if (r.extras && r.extras[x.id]) rows.push({ voce:x.nome || 'Voce extra', dett: x.unita==='m2' ? fmtNum(Math.round(area*10)/10)+' m² × '+eurFmt(x.prezzo)+'/m²' : 'a corpo', imp: x.unita==='m2' ? x.prezzo*area : x.prezzo, grp:'extra' }); });
+  rows.push({ voce: 'Vasca' + (v ? ' — ' + v.nome : ''), dett: fmtNum(Math.round(area*10)/10) + ' m² × ' + eurFmt(v ? v.prezzo : 0) + '/m²', imp: vascaImp, grp:'vasca', key:'vasca' });
+  if (r.feats && r.feats.sfioro) rows.push({ voce:'Bordo a sfioro', dett:'+' + fmtNum(listino.sfioroPct) + '% sulla vasca', imp: vascaImp * listino.sfioroPct/100, grp:'vasca', key:'sfioro' });
+  listino.fissi.forEach(f=>{ if (f.prezzo > 0) rows.push({ voce:f.nome || 'Costo fisso', dett:'a corpo', imp:f.prezzo, grp:'fissi', key:'fisso:'+f.id }); });
+  LS_ACC.forEach(([k,label])=>{ if (r.feats && r.feats[k]) rows.push({ voce:label, dett:'a corpo', imp:listino.acc[k]||0, grp:'acc', key:'acc:'+k }); });
+  listino.extra.forEach(x=>{ if (r.extras && r.extras[x.id]) rows.push({ voce:x.nome || 'Voce extra', dett: x.unita==='m2' ? fmtNum(Math.round(area*10)/10)+' m² × '+eurFmt(x.prezzo)+'/m²' : 'a corpo', imp: x.unita==='m2' ? x.prezzo*area : x.prezzo, grp:'extra', key:'extra:'+x.id }); });
   const lordo = rows.reduce((a,x)=>a+x.imp,0);
   const scontoPct = r.sconto > 0 ? r.sconto : 0;
   const sconto = lordo * scontoPct/100;
@@ -2462,6 +2496,7 @@ function showPage(id) {
   if(id==='leve') refreshLeve();
   if(id==='pesi') renderWeightEditor();
   if(id==='listino') renderListino();
+  if(id==='preventivo') renderQuotePage();
   if(id==='archivio') renderArchive();
   if(id==='confronta') renderCompare();
   if(id==='oggi') renderOggi();
@@ -2787,6 +2822,190 @@ ${'─'.repeat(46)}
 Lead Scorer v2.0 — Piscine San Lorenzo`;
 
   return txt;
+}
+
+
+// ══════════════════════════════════════════
+// PREVENTIVO (documento per cliente / versione interna)
+// ══════════════════════════════════════════
+const QUOTE_CFG_KEY = 'psl_quote_cfg_v1';
+const QUOTE_DESC = {
+  vasca: r => `Fornitura e posa di vasca interrata con struttura portante in pannelli d'acciaio, platea di fondo in calcestruzzo armato e rivestimento interno impermeabile${r.color ? ' colore ' + r.color.toLowerCase() : ''}. Dimensioni ${fmtNum(r.len)} × ${fmtNum(r.wid)} m` + ((r.dmin!=null||r.dmax!=null) ? `, profondità ${r.dmin!=null && r.dmax!=null && r.dmin!==r.dmax ? fmtNum(r.dmin)+'–'+fmtNum(r.dmax) : fmtNum(r.dmax ?? r.dmin)} m` : '') + (r.entry ? `, ingresso con ${({gradini:'gradini',scala:'scala',rampa:'rampa / spiaggia',altro:'ingresso dedicato'})[r.entry]}` : '') + '.',
+  sfioro: () => 'Realizzazione del bordo a sfioro con canalina perimetrale di raccolta e vasca di compenso.',
+  'fisso:progetto': () => 'Progetto della piscina e pratiche edilizie presso il Comune (CILA, SCIA o permesso di costruire, secondo i casi).',
+  'fisso:scavo': () => 'Scavo di sbancamento, movimentazione del terreno e rinterro perimetrale a fine montaggio.',
+  'fisso:filtrazione': () => 'Impianto di filtrazione completo: pompa, filtro, skimmer, bocchette di mandata, presa di fondo e tubazioni fino al locale tecnico.',
+  'acc:luci': () => 'Fari LED subacquei con trasformatore e comando.',
+  'acc:riscald': () => "Pompa di calore per il riscaldamento dell'acqua, collegata all'impianto di filtrazione.",
+  'acc:copertura': () => "Copertura della vasca per sicurezza, pulizia e mantenimento della temperatura dell'acqua.",
+  'acc:idro': () => 'Idromassaggio / cascata con pompa dedicata.',
+  'acc:controc': () => 'Sistema di nuoto controcorrente.',
+  'acc:domotica': () => 'Centralina domotica per gestire da smartphone filtrazione, luci e temperatura.',
+  'acc:sale': () => "Trattamento dell'acqua a sale (elettrolisi), in sostituzione del cloro tradizionale.",
+  'extra:pavimento': () => 'Pavimentazione perimetrale intorno alla vasca.',
+  'extra:scala': () => 'Scala / gradini di accesso in muratura.'
+};
+function quoteDescDefault(key, r) { const f = QUOTE_DESC[key]; return f ? f(r) : ''; }
+const QUOTE_FASI = [
+  ['Sopralluogo e progetto', '1–2 settimane'],
+  ['Pratiche edilizie', '2–6 settimane, secondo il Comune'],
+  ['Scavo e platea di fondo', 'circa 1 settimana'],
+  ['Montaggio struttura e impianti', '1–2 settimane'],
+  ['Rivestimento, riempimento e collaudo', 'circa 1 settimana'],
+  ['Consegna e istruzioni per l’uso', '1 giorno']
+];
+const QUOTE_PAY = 'Acconto 30% alla firma del contratto, 40% a fine montaggio della struttura, saldo 30% al collaudo.';
+const QUOTE_EXCL = 'Salvo diversa indicazione sono esclusi: opere murarie e pavimentazioni non elencate, allacciamenti elettrici e idrici fino al locale tecnico, smaltimento di roccia o terreno non idoneo, oneri e diritti comunali, prima fornitura d’acqua.';
+function defaultQuote() { return { num:'', date:'', validDays:30, desc:{}, fasi:null, pay:null, excl:null, note:'' }; }
+function cleanQuote(raw) {
+  const q = defaultQuote();
+  if (!raw || typeof raw !== 'object') return q;
+  const str = (v,n)=> typeof v==='string' ? v.slice(0,n) : '';
+  q.num = str(raw.num, 40); q.note = str(raw.note, 2000);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw.date || '')) q.date = raw.date;
+  const vd = Number(raw.validDays); if (isFinite(vd) && vd >= 1 && vd <= 365) q.validDays = Math.round(vd);
+  if (raw.desc && typeof raw.desc === 'object') Object.keys(raw.desc).slice(0,60).forEach(k=>{ if (/^[A-Za-z0-9_:-]{1,60}$/.test(k) && typeof raw.desc[k]==='string') q.desc[k] = raw.desc[k].slice(0,1500); });
+  if (Array.isArray(raw.fasi)) q.fasi = raw.fasi.slice(0,20).map(f=>({ t: str(f && f.t, 120), d: str(f && f.d, 120) }));
+  if (typeof raw.pay === 'string') q.pay = raw.pay.slice(0,2000);
+  if (typeof raw.excl === 'string') q.excl = raw.excl.slice(0,2000);
+  return q;
+}
+function quoteFasi(q) { return q.fasi || QUOTE_FASI.map(([t,d])=>({t,d})); }
+function quoteNum(q) { return q.num || ('PSL-' + new Date().getFullYear() + '-' + String(currentLeadId || 'nuovo').replace(/[^A-Za-z0-9]/g,'').slice(-4).toUpperCase()); }
+function quoteDate(q) { return q.date || todayISO(); }
+function loadQuoteCfg() { try { const c = JSON.parse(localStorage.getItem(QUOTE_CFG_KEY) || 'null'); return Object.assign({ azienda:'Piscine San Lorenzo', referente:'', tel:'', email:'' }, (c && typeof c==='object') ? c : {}); } catch { return { azienda:'Piscine San Lorenzo', referente:'', tel:'', email:'' }; } }
+function saveQuoteCfg(c) { try { localStorage.setItem(QUOTE_CFG_KEY, JSON.stringify(c)); } catch {} }
+
+function renderQuotePage() {
+  const body = document.getElementById('qt-body'); if (!body) return;
+  const c = contactFields(), r = crm.request, q = crm.quote, p = calcPreventivo(r), cfg = loadQuoteCfg();
+  if (!c.name && !currentLeadId) { body.innerHTML = '<div class="info-box">📑 Apri un cliente dall’<b>Archivio</b> o compila il <b>Profilo cliente</b>: il preventivo si prepara da lì.</div>'; return; }
+  const head = `<div class="crm-card qt-hero"><div class="qt-hero-l"><div class="qt-client">${esc(c.name || 'Cliente senza nome')}</div>
+      <div class="qt-sub">${esc([c.address, c.comune].filter(Boolean).join(', ') || 'Indirizzo da completare')}</div></div>
+      <div class="qt-hero-r"><div class="qt-total">${p ? eurFmt(p.totale) : '—'}</div><div class="qt-sub">${p ? 'totale IVA inclusa' : 'mancano le dimensioni'}</div></div>
+      <div class="qt-actions"><button class="btn btn-green" onclick="openQuoteDoc('cliente')">📄 Documento per il cliente</button><button class="btn" onclick="openQuoteDoc('interno')">🔒 Versione interna</button></div></div>`;
+  if (!p) { body.innerHTML = head + '<div class="info-box">Inserisci <b>lunghezza e larghezza</b> nella Richiesta del cliente (Profilo cliente): costi e descrizioni si compilano da soli. <a href="#" onclick="showPage(\'profilo\');return false">Vai al profilo</a></div>'; return; }
+  const doc = `<div class="crm-card"><h3>🧾 Dati del documento</h3><div class="crm-grid">
+      <div class="crm-field"><label>Numero preventivo</label><input type="text" maxlength="40" value="${esc(q.num)}" placeholder="${esc(quoteNum(q))}" data-q="num" oninput="onQuoteField(this)"/></div>
+      <div class="crm-field"><label>Data</label><input type="date" value="${esc(quoteDate(q))}" data-q="date" onchange="onQuoteField(this)"/></div>
+      <div class="crm-field"><label>Validità dell’offerta (giorni)</label><input type="number" min="1" max="365" value="${q.validDays}" data-q="validDays" oninput="onQuoteField(this)"/></div>
+    </div></div>`;
+  const costs = `<div class="crm-card"><h3>💶 Costi</h3>${document.getElementById('prev-table') ? '' : ''}<div class="ls-note">Calcolati dal preventivo indicativo del cliente. Per cambiare voci, sconto o extra vai al <a href="#" onclick="showPage('profilo');document.getElementById('prev-card').scrollIntoView();return false">Profilo cliente</a>, per i prezzi al <a href="#" onclick="showPage('listino');return false">Listino</a>.</div>
+      <table class="pv-tbl">${p.rows.map(x=>`<tr><td>${esc(x.voce)}<div class="pv-d">${esc(x.dett)}</div></td><td class="n">${eurFmt(x.imp)}</td></tr>`).join('')}
+      ${p.sconto > 0 ? `<tr><td>Sconto ${fmtNum(p.scontoPct)}%</td><td class="n">− ${eurFmt(p.sconto)}</td></tr>` : ''}
+      <tr class="pv-sub"><td>Imponibile</td><td class="n">${eurFmt(p.imponibile)}</td></tr><tr><td>IVA ${fmtNum(listino.iva)}%</td><td class="n">${eurFmt(p.iva)}</td></tr>
+      <tr class="pv-tot"><td>Totale</td><td class="n">${eurFmt(p.totale)}</td></tr></table></div>`;
+  const desc = `<div class="crm-card"><h3>🛠 Descrizione dei lavori</h3><div class="ls-note">Testi già pronti per ogni voce: modificali se serve, oppure ripristina quello standard.</div>
+      ${p.rows.map(x=>{ const custom = q.desc[x.key] != null; const txt = custom ? q.desc[x.key] : quoteDescDefault(x.key, r);
+        return `<div class="qt-desc"><div class="qt-desc-h"><b>${esc(x.voce)}</b>${custom ? `<button type="button" class="mini-btn" onclick="resetQuoteDesc('${esc(x.key)}')">↺ Testo standard</button>` : ''}</div>
+          <textarea rows="2" maxlength="1500" data-qd="${esc(x.key)}" placeholder="Descrivi cosa comprende questa voce" oninput="onQuoteDesc(this)">${esc(txt)}</textarea></div>`; }).join('')}</div>`;
+  const fasi = quoteFasi(q);
+  const fasiH = `<div class="crm-card"><h3>📅 Fasi e tempi</h3><div class="ls-note">Tempi indicativi${crm.ditta.start ? ' · inizio lavori previsto dalla ditta: <b>' + esc(fmtDate(crm.ditta.start)) + '</b>' : ''}.</div>
+      ${fasi.map((f,i)=>`<div class="ls-row qt-fase"><input type="text" maxlength="120" value="${esc(f.t)}" placeholder="Fase" data-qf="${i}.t" oninput="onQuoteFase(this)"/><input type="text" maxlength="120" value="${esc(f.d)}" placeholder="Durata" data-qf="${i}.d" oninput="onQuoteFase(this)"/><button type="button" class="ls-del" onclick="delQuoteFase(${i})">✕</button></div>`).join('')}
+      <div class="quick-days"><button type="button" onclick="addQuoteFase()">＋ Aggiungi fase</button>${q.fasi ? '<button type="button" onclick="resetQuoteFasi()">↺ Fasi standard</button>' : ''}</div></div>`;
+  const cond = `<div class="crm-card"><h3>📌 Condizioni</h3><div class="crm-grid">
+      <div class="crm-field full"><label>Modalità di pagamento</label><textarea rows="2" maxlength="2000" data-q="pay" oninput="onQuoteField(this)">${esc(q.pay ?? QUOTE_PAY)}</textarea></div>
+      <div class="crm-field full"><label>Esclusioni</label><textarea rows="3" maxlength="2000" data-q="excl" oninput="onQuoteField(this)">${esc(q.excl ?? QUOTE_EXCL)}</textarea></div>
+      <div class="crm-field full"><label>Note per il cliente</label><textarea rows="2" maxlength="2000" data-q="note" placeholder="es. Prezzi validi per lavori avviati entro marzo" oninput="onQuoteField(this)">${esc(q.note)}</textarea></div>
+    </div><div class="ls-note" style="margin:10px 0 0">Testi standard di partenza: verificali con Piscine San Lorenzo prima di usarli con i clienti.</div></div>`;
+  const cfgH = `<div class="crm-card"><h3>🏷 Intestazione</h3><div class="ls-note">Uguale per tutti i preventivi (salvata su questo dispositivo).</div><div class="crm-grid">
+      <div class="crm-field"><label>Azienda</label><input type="text" maxlength="80" value="${esc(cfg.azienda)}" data-qc="azienda" oninput="onQuoteCfg(this)"/></div>
+      <div class="crm-field"><label>Referente / agente</label><input type="text" maxlength="80" value="${esc(cfg.referente)}" placeholder="Nome e cognome" data-qc="referente" oninput="onQuoteCfg(this)"/></div>
+      <div class="crm-field"><label>Telefono</label><input type="tel" maxlength="40" value="${esc(cfg.tel)}" data-qc="tel" oninput="onQuoteCfg(this)"/></div>
+      <div class="crm-field"><label>Email</label><input type="email" maxlength="80" value="${esc(cfg.email)}" data-qc="email" oninput="onQuoteCfg(this)"/></div>
+    </div></div>`;
+  body.innerHTML = head + doc + costs + desc + fasiH + cond + cfgH;
+}
+function onQuoteField(el) {
+  const k = el.dataset.q, q = crm.quote;
+  if (k === 'validDays') { const n = Number(el.value); if (!(n >= 1 && n <= 365)) return; q.validDays = Math.round(n); }
+  else if (k === 'date') q.date = el.value;
+  else q[k] = el.value.slice(0, k === 'num' ? 40 : 2000);
+  markUnsaved();
+}
+function onQuoteDesc(el) { crm.quote.desc[el.dataset.qd] = el.value.slice(0,1500); markUnsaved(); }
+function resetQuoteDesc(key) { delete crm.quote.desc[key]; markUnsaved(); renderQuotePage(); }
+function onQuoteFase(el) {
+  const [i, f] = el.dataset.qf.split('.'); const q = crm.quote;
+  if (!q.fasi) q.fasi = quoteFasi(q).map(x=>({...x}));
+  q.fasi[+i][f] = el.value.slice(0,120); markUnsaved();
+}
+function addQuoteFase() { const q = crm.quote; if (!q.fasi) q.fasi = quoteFasi(q).map(x=>({...x})); q.fasi.push({ t:'', d:'' }); markUnsaved(); renderQuotePage(); }
+function delQuoteFase(i) { const q = crm.quote; if (!q.fasi) q.fasi = quoteFasi(q).map(x=>({...x})); q.fasi.splice(i,1); markUnsaved(); renderQuotePage(); }
+function resetQuoteFasi() { crm.quote.fasi = null; markUnsaved(); renderQuotePage(); }
+function onQuoteCfg(el) { const c = loadQuoteCfg(); c[el.dataset.qc] = el.value.slice(0,80); saveQuoteCfg(c); }
+
+function quoteHtml(mode) {
+  const c = contactFields(), r = crm.request, q = crm.quote, p = calcPreventivo(r), cfg = loadQuoteCfg();
+  const E = v => esc(v == null ? '' : String(v));
+  const date = new Date(quoteDate(q) + 'T12:00:00');
+  const scad = new Date(date.getTime() + q.validDays * 86400000);
+  const fd = d => d.toLocaleDateString('it-IT', { day:'numeric', month:'long', year:'numeric' });
+  const sec = (title, body, small) => body ? `<section class="rp-sec"><h2><span>${title}</span>${small?`<small>${small}</small>`:''}</h2>${body}</section>` : '';
+  const interno = mode === 'interno';
+  let h = `<header class="rp-head"><div><div class="rp-brand">${E(cfg.azienda || 'Piscine San Lorenzo')}${interno ? ' · uso interno' : ''}</div>
+      <div class="rp-name">Preventivo ${E(quoteNum(q))}</div>
+      <div class="rp-where">del ${E(fd(date))} · valido fino al ${E(fd(scad))}</div></div>
+    <div class="rp-meta">${cfg.referente ? '<b>' + E(cfg.referente) + '</b><br>' : ''}${cfg.tel ? E(cfg.tel) + '<br>' : ''}${cfg.email ? E(cfg.email) : ''}</div></header>`;
+  h += `<div class="qt-to"><div class="rp-kpi-l">Spett.le</div><div class="qt-to-n">${E(c.name || 'Cliente')}</div><div>${E([c.address, c.comune].filter(Boolean).join(', '))}</div>${c.phone || c.email ? `<div style="color:var(--ink2)">${E([c.phone, c.email].filter(Boolean).join(' · '))}</div>` : ''}</div>`;
+  if (interno) {
+    const sc = calcScore(), bf = budgetFit(r);
+    h += sec('Dati interni', `<dl class="rp-dl">
+      <div><dt>Score</dt><dd>${sc ? sc.adj + '/100' : '—'}</dd></div><div><dt>Fase</dt><dd>${E(STAGE_LABEL[crm.stage] || '')}</dd></div>
+      <div><dt>Budget del cliente</dt><dd>${bf.declared != null ? eurFmt(bf.declared) : 'non indicato'}</dd></div><div><dt>Copertura</dt><dd>${bf.ratio != null ? Math.round(bf.ratio*100) + '% del totale' : '—'}</dd></div>
+      <div><dt>Sconto applicato</dt><dd>${p && p.sconto > 0 ? fmtNum(p.scontoPct) + '% (' + eurFmt(p.sconto) + ')' : 'nessuno'}</dd></div><div><dt>Forbice</dt><dd>${p ? eurFmt(p.lo) + ' – ' + eurFmt(p.hi) : '—'}</dd></div>
+      ${techSummaryLines().map(x=>`<div class="wide"><dt>Locale tecnico</dt><dd>${E(x)}</dd></div>`).join('')}
+      ${crm.ditta.name ? `<div class="wide"><dt>Ditta lavori</dt><dd>${E(crm.ditta.name)}${crm.ditta.phone ? ' · ' + E(crm.ditta.phone) : ''}${crm.ditta.start ? ' · inizio ' + E(fmtDate(crm.ditta.start)) : ''}</dd></div>` : ''}
+      ${c.notes ? `<div class="wide"><dt>Note commerciale</dt><dd>${E(c.notes)}</dd></div>` : ''}
+      ${listino.edited ? '' : '<div class="wide"><dt>Attenzione</dt><dd>prezzi di stima: listino non ancora aggiornato</dd></div>'}</dl>`);
+  }
+  if (!p) return h + sec('Lavori', '<p class="rp-empty">Mancano le dimensioni della vasca: compilale nel Profilo cliente.</p>');
+  h += sec('Descrizione dei lavori', `<ol class="qt-list">${p.rows.map(x=>{ const t = q.desc[x.key] != null ? q.desc[x.key] : quoteDescDefault(x.key, r); return `<li><b>${E(x.voce)}</b>${t ? '<br>' + E(t) : ''}</li>`; }).join('')}</ol>`);
+  let t = `<table class="rp-tbl"><tr><th>Voce</th><th>Quantità</th><th class="n">Importo</th></tr>` + p.rows.map(x=>`<tr><td>${E(x.voce)}</td><td>${E(x.dett)}</td><td class="n">${eurFmt(x.imp)}</td></tr>`).join('');
+  if (p.sconto > 0) t += `<tr><td colspan="2">Totale voci</td><td class="n">${eurFmt(p.lordo)}</td></tr><tr><td colspan="2">Sconto ${fmtNum(p.scontoPct)}%</td><td class="n">− ${eurFmt(p.sconto)}</td></tr>`;
+  t += `<tr class="grp"><td colspan="2">Imponibile</td><td class="n">${eurFmt(p.imponibile)}</td></tr><tr><td colspan="2">IVA ${fmtNum(listino.iva)}%</td><td class="n">${eurFmt(p.iva)}</td></tr>
+        <tr class="grp qt-tot"><td colspan="2">Totale</td><td class="n">${eurFmt(p.totale)}</td></tr></table>`;
+  h += sec('Riepilogo economico', t);
+  const fasi = quoteFasi(q).filter(f=>f.t || f.d);
+  if (fasi.length) h += sec('Fasi e tempi', `<ol class="qt-list qt-fasi">${fasi.map(f=>`<li><b>${E(f.t)}</b>${f.d ? ' — ' + E(f.d) : ''}</li>`).join('')}</ol>` + (crm.ditta.start ? `<p style="font-size:12.5px;color:var(--ink2);margin:6px 0 0">Inizio lavori previsto: ${E(fmtDate(crm.ditta.start))}</p>` : ''), 'tempi indicativi');
+  const pay = q.pay ?? QUOTE_PAY, excl = q.excl ?? QUOTE_EXCL;
+  h += sec('Condizioni', `<dl class="rp-dl">
+      <div class="wide"><dt>Validità</dt><dd>${q.validDays} giorni, fino al ${E(fd(scad))}</dd></div>
+      ${pay ? `<div class="wide"><dt>Pagamento</dt><dd>${E(pay)}</dd></div>` : ''}
+      ${excl ? `<div class="wide"><dt>Esclusioni</dt><dd>${E(excl)}</dd></div>` : ''}
+      ${q.note ? `<div class="wide"><dt>Note</dt><dd>${E(q.note)}</dd></div>` : ''}</dl>`);
+  if (!interno) h += `<div class="qt-sign"><div><span>Luogo e data</span></div><div><span>Firma per accettazione</span></div></div>`;
+  h += `<footer class="rp-foot"><span>${E(cfg.azienda || 'Piscine San Lorenzo')} · preventivo ${E(quoteNum(q))}</span><span>${interno ? 'Documento interno — non consegnare al cliente' : 'Importi in euro'}</span></footer>`;
+  return h;
+}
+function quoteText(mode) {
+  const c = contactFields(), r = crm.request, q = crm.quote, p = calcPreventivo(r), cfg = loadQuoteCfg();
+  const L = [];
+  L.push((cfg.azienda || 'Piscine San Lorenzo') + ' — PREVENTIVO ' + quoteNum(q) + ' del ' + fmtDate(quoteDate(q)));
+  L.push('Cliente: ' + (c.name || '—') + (c.address || c.comune ? ' — ' + [c.address, c.comune].filter(Boolean).join(', ') : ''));
+  if (!p) return L.join('\n');
+  L.push(''); L.push('LAVORI');
+  p.rows.forEach(x=>{ const t = q.desc[x.key] != null ? q.desc[x.key] : quoteDescDefault(x.key, r); L.push('• ' + x.voce + ': ' + eurFmt(x.imp) + (t ? '\n  ' + t : '')); });
+  if (p.sconto > 0) L.push('Sconto ' + fmtNum(p.scontoPct) + '%: − ' + eurFmt(p.sconto));
+  L.push('Imponibile ' + eurFmt(p.imponibile) + ' + IVA ' + fmtNum(listino.iva) + '% ' + eurFmt(p.iva) + ' = TOTALE ' + eurFmt(p.totale));
+  const fasi = quoteFasi(q).filter(f=>f.t || f.d);
+  if (fasi.length) { L.push(''); L.push('FASI E TEMPI'); fasi.forEach((f,i)=>L.push((i+1) + '. ' + f.t + (f.d ? ' — ' + f.d : ''))); }
+  L.push(''); L.push('Validità: ' + q.validDays + ' giorni');
+  const pay = q.pay ?? QUOTE_PAY, excl = q.excl ?? QUOTE_EXCL;
+  if (pay) L.push('Pagamento: ' + pay);
+  if (excl) L.push('Esclusioni: ' + excl);
+  if (q.note) L.push('Note: ' + q.note);
+  return L.join('\n');
+}
+function openQuoteDoc(mode) {
+  exportTextCache = quoteText(mode);
+  document.getElementById('report-doc').innerHTML = quoteHtml(mode);
+  document.getElementById('report-ov').classList.add('open');
+  document.getElementById('report-ov').scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  const n = (contactFields().name || 'cliente').replace(/[^\wÀ-ÿ ]+/g,'').trim().replace(/\s+/g,'-');
+  reportPrevTitle = document.title;
+  document.title = (mode === 'interno' ? 'Preventivo-INTERNO-' : 'Preventivo-') + n + '-' + quoteDate(crm.quote);
 }
 
 function openExport() {
@@ -3232,7 +3451,7 @@ let crm = defaultCrm();
 const chkOpen = {};   // quali checklist sono aperte: resta così anche quando la scheda si ridisegna
 
 function defaultCrm() {
-  return { stage:'nuovo', clientType:'privato', request:defaultReq(), tech:defaultTech(), ditta:defaultDitta(), nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
+  return { stage:'nuovo', clientType:'privato', request:defaultReq(), tech:defaultTech(), ditta:defaultDitta(), quote:defaultQuote(), nextDate:'', nextAction:'', source:'', closeReason:'', closeValue:null, closedAt:null, createdAt:null, log:[], checklist:{tel:{}, visita:{}} };
 }
 function cleanCrm(raw) {
   const c = defaultCrm();
@@ -3243,6 +3462,7 @@ function cleanCrm(raw) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw.nextDate || '')) c.nextDate = raw.nextDate;
   c.nextAction = str(raw.nextAction, 200);
   c.request = cleanReq(raw.request);
+  c.quote = cleanQuote(raw.quote);
   c.tech = cleanTech(raw.tech);
   c.ditta = cleanDitta(raw.ditta);
   if (SOURCES.some(x=>x[0]===raw.source)) c.source = raw.source;
@@ -3293,6 +3513,7 @@ function updateContactLinks() {
 function renderCrmForm() {
   const st = document.getElementById('crm-stage');
   if (!st) return;
+  if (document.getElementById('page-preventivo')?.classList.contains('active')) setTimeout(renderQuotePage, 0);
   st.innerHTML = optionsHtml(STAGES, crm.stage);
   document.getElementById('crm-source').innerHTML = optionsHtml(SOURCES, crm.source);
   document.getElementById('crm-type').innerHTML = optionsHtml(CLIENT_TYPES, crm.clientType);
@@ -4032,7 +4253,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-3';
+const BUILD = '2026-10-21-4';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
