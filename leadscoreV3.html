@@ -1718,9 +1718,8 @@ const LISTINO_KEY = 'psl_listino_v1';
 const LS_ACC = [['luci','Illuminazione LED'],['riscald','Riscaldamento / pompa di calore'],['copertura','Copertura'],['idro','Idromassaggio / cascata'],['controc','Nuoto controcorrente'],['domotica','Domotica'],['sale','Trattamento al sale']];
 function defaultListino() {
   return {
-    iva: 22, varPct: 15, sfioroPct: 30, tipoDefault: 'cemento', edited: false, updatedAt: null,
-    vasche: [ {id:'cemento',nome:'Cemento armato',prezzo:700}, {id:'pannelli',nome:'Pannelli in acciaio',prezzo:600},
-              {id:'polistirolo',nome:'Casseri in polistirolo',prezzo:550}, {id:'vetroresina',nome:'Vetroresina (monoblocco)',prezzo:500} ],
+    iva: 22, varPct: 15, sfioroPct: 30, tipoDefault: 'pannelli', edited: false, updatedAt: null,
+    vasche: [ {id:'pannelli',nome:'Pannelli in acciaio',prezzo:600} ],
     fissi: [ {id:'progetto',nome:'Progettazione e pratiche',prezzo:2000}, {id:'scavo',nome:'Scavo e movimento terra',prezzo:3500},
              {id:'filtrazione',nome:'Impianto di filtrazione',prezzo:3000} ],
     acc: { luci:2000, riscald:4500, copertura:5000, idro:4000, controc:5500, domotica:2000, sale:2000 },
@@ -1746,7 +1745,16 @@ function cleanListino(raw) {
   L.tipoDefault = L.vasche.some(v=>v.id===raw.tipoDefault) ? raw.tipoDefault : (L.vasche[0] ? L.vasche[0].id : '');
   return L;
 }
-function loadListino() { try { listino = cleanListino(JSON.parse(localStorage.getItem(LISTINO_KEY) || 'null')); } catch { listino = defaultListino(); } }
+function loadListino() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LISTINO_KEY) || 'null');
+    if (raw && Array.isArray(raw.vasche)) {   // Piscine San Lorenzo realizza solo vasche a pannelli in acciaio
+      raw.vasche = raw.vasche.filter(v=>!['cemento','polistirolo','vetroresina'].includes(v && v.id));
+      if (!raw.vasche.length) raw.vasche = defaultListino().vasche;
+    }
+    listino = cleanListino(raw);
+  } catch { listino = defaultListino(); }
+}
 function saveListino() { listino.edited = true; listino.updatedAt = Date.now(); try { localStorage.setItem(LISTINO_KEY, JSON.stringify(listino)); } catch {} }
 function vascaOf(r) { return listino.vasche.find(v=>v.id===(r && r.tipo)) || listino.vasche.find(v=>v.id===listino.tipoDefault) || listino.vasche[0] || null; }
 
@@ -4024,7 +4032,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-2';
+const BUILD = '2026-10-21-3';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
