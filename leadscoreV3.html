@@ -1056,6 +1056,8 @@ a.btn.disabled{opacity:.45}
       <div class="crm-field"><label>Che budget è?</label><select id="req-btype" onchange="onReqField()"></select></div>
       <div class="crm-field"><label>Pavimentazione intorno alla vasca</label><select id="req-pav" onchange="onReqField()"></select></div>
       <div class="crm-field"><label>Superficie pavimentazione (m²)</label><input type="number" id="req-pavmq" min="0" max="2000" step="0.5" inputmode="decimal" oninput="onReqField()"/><div class="pv-d" id="req-pav-hint"></div></div>
+      <div class="crm-field"><label>Pavimentazione realizzata da</label><select id="req-pavby" onchange="onReqField()"></select></div>
+      <div class="crm-field"><label>Il cliente ha già</label><div class="pv-d" id="req-forn" style="padding-top:10px">—</div></div>
       <div class="crm-field"><label>Tempi desiderati</label><select id="req-timing" onchange="onReqField()"></select></div>
       <div class="crm-field full"><label>Accessori e complementi</label><div class="feat-grid" id="req-feats"></div></div>
     </div>
@@ -1804,7 +1806,7 @@ function calcPreventivo(r) {
   if (r.feats && r.feats.sfioro) rows.push({ voce:'Bordo a sfioro', dett:'+' + fmtNum(listino.sfioroPct) + '% sulla vasca', imp: vascaImp * listino.sfioroPct/100, grp:'vasca', key:'sfioro' });
   listino.fissi.forEach(f=>{ if (f.prezzo > 0) rows.push({ voce:f.nome || 'Costo fisso', dett:'a corpo', imp:f.prezzo, grp:'fissi', key:'fisso:'+f.id }); });
   LS_ACC.forEach(([k,label])=>{ if (r.feats && r.feats[k]) rows.push({ voce:label, dett:'a corpo', imp:listino.acc[k]||0, grp:'acc', key:'acc:'+k }); });
-  const pm = pavMq(r);
+  const pm = r.pavBy === 'cliente' ? null : pavMq(r);
   if (pm) rows.push({ voce: 'Pavimentazione — ' + (r.pav === 'bordo' ? 'solo bordo perimetrale' : 'bordo e zona solarium'), dett: fmtNum(pm.mq) + ' m²' + (pm.stima ? ' (bordo da ' + bordoCm() + ' cm)' : '') + ' × ' + eurFmt(listino.pavPrezzo) + '/m²', imp: pm.mq * listino.pavPrezzo, grp:'pav', key:'pav' });
   listino.extra.forEach(x=>{ if (r.extras && r.extras[x.id]) rows.push({ voce:x.nome || 'Voce extra', dett: x.unita==='m2' ? fmtNum(Math.round(area*10)/10)+' m² × '+eurFmt(x.prezzo)+'/m²' : 'a corpo', imp: x.unita==='m2' ? x.prezzo*area : x.prezzo, grp:'extra', key:'extra:'+x.id }); });
   const lordo = rows.reduce((a,x)=>a+x.imp,0);
@@ -2984,10 +2986,18 @@ function quoteHtml(mode) {
       <div class="wide"><dt>Validità</dt><dd>${q.validDays} giorni, fino al ${E(fd(scad))}</dd></div>
       ${pay ? `<div class="wide"><dt>Pagamento</dt><dd>${E(pay)}</dd></div>` : ''}
       ${excl ? `<div class="wide"><dt>Esclusioni</dt><dd>${E(excl)}</dd></div>` : ''}
+      ${clienteCura(r) ? `<div class="wide"><dt>A cura del cliente</dt><dd>${E(clienteCura(r))}</dd></div>` : ''}
       ${q.note ? `<div class="wide"><dt>Note</dt><dd>${E(q.note)}</dd></div>` : ''}</dl>`);
   if (!interno) h += `<div class="qt-sign"><div><span>Luogo e data</span></div><div><span>Firma per accettazione</span></div></div>`;
   h += `<footer class="rp-foot"><span>${E(cfg.azienda || 'Piscine San Lorenzo')} · preventivo ${E(quoteNum(q))}</span><span>${interno ? 'Documento interno — non consegnare al cliente' : 'Importi in euro'}</span></footer>`;
   return h;
+}
+function clienteCura(r) {
+  const L = [];
+  if (r.pav && r.pavBy === 'cliente') { const pm = pavMq(r); L.push((r.pav === 'bordo' ? 'bordo perimetrale' : 'pavimentazione con bordo e zona solarium') + (pm ? ' (' + fmtNum(pm.mq) + ' m²)' : '') + ', con un piastrellista di fiducia del cliente'); }
+  const altri = r.fornitori.filter(f=>f !== 'piastrellista');
+  if (altri.length) L.push('il cliente si avvale già di: ' + altri.join(', '));
+  return L.length ? L.join('; ').replace(/^./, c=>c.toUpperCase()) + '.' : '';
 }
 function quoteText(mode) {
   const c = contactFields(), r = crm.request, q = crm.quote, p = calcPreventivo(r), cfg = loadQuoteCfg();
@@ -3005,6 +3015,7 @@ function quoteText(mode) {
   const pay = q.pay ?? QUOTE_PAY, excl = q.excl ?? QUOTE_EXCL;
   if (pay) L.push('Pagamento: ' + pay);
   if (excl) L.push('Esclusioni: ' + excl);
+  if (clienteCura(r)) L.push('A cura del cliente: ' + clienteCura(r));
   if (q.note) L.push('Note: ' + q.note);
   return L.join('\n');
 }
@@ -3847,6 +3858,8 @@ const DEPTHS = [['','—'],['costante','Costante'],['variabile','Variabile']];
 const ENTRIES = [['','—'],['gradini','Gradini'],['scala','Scala'],['rampa','Rampa / spiaggia'],['altro','Altro']];
 const TIMINGS = [['','—'],['subito','Subito / al più presto'],['3mesi','Entro 3 mesi'],['stagione','Per la prossima stagione'],['nonso','Non definito']];
 const FEATURES = [['luci','Illuminazione LED'],['riscald','Riscaldamento / pompa di calore'],['copertura','Copertura'],['idro','Idromassaggio / cascata'],['controc','Nuoto controcorrente'],['domotica','Domotica'],['sale','Trattamento al sale'],['sfioro','Bordo a sfioro']];
+const PAV_BY = [['','Noi (incluso nel preventivo)'],['cliente','Il cliente (suo piastrellista)']];
+const FORNITORI = ['piastrellista','elettricista','idraulico','muratore','giardiniere','geometra','architetto'];
 const PAV_TYPES = [['','Nessuna / da definire'],['bordo','Solo bordo perimetrale'],['solarium','Bordo e zona solarium']];
 // Solo bordo: cornice di larghezza fissa (standard aziendale, nel Listino) intorno a tutta la vasca, angoli inclusi:
 // (L + 2b) × (W + 2b) − L × W. Usata se i m² non sono indicati.
@@ -3857,12 +3870,14 @@ function updatePavHint() {
   const el = document.getElementById('req-pav-hint'); if (!el) return;
   const r = crm.request, e = pavBordoStima(r);
   const inp = document.getElementById('req-pavmq'); inp.disabled = !r.pav;
+  const by = document.getElementById('req-pavby'); if (by) by.disabled = !r.pav;
   if (!r.pav) { el.textContent = ''; inp.placeholder = ''; return; }
   if (r.pav === 'bordo') { inp.placeholder = e ? 'circa ' + fmtNum(e) : ''; el.textContent = e ? (r.pavMq > 0 ? 'Bordo standard da ' + bordoCm() + ' cm = ' + fmtNum(e) + ' m²' : 'Calcolato in automatico: bordo da ' + bordoCm() + ' cm = ' + fmtNum(e) + ' m²') : 'Inserisci prima lunghezza e larghezza'; }
   else { inp.placeholder = 'es. 40'; el.textContent = r.pavMq > 0 ? '' : 'Indica i m² totali di bordo + solarium'; }
+  if (r.pavBy === 'cliente') el.textContent += (el.textContent ? ' · ' : '') + 'a cura del cliente: esclusa dal preventivo';
 }
 const BUDGET_TYPES = [['','—'],['indicativo','Indicativo / flessibile'],['tetto','Tetto massimo rigido'],['stimato','Stimato da noi (non detto dal cliente)']];
-function defaultReq() { return { text:'', len:null, wid:null, shape:'', color:'', depthType:'', dmin:null, dmax:null, entry:'', timing:'', budget:null, btype:'', feats:{}, tipo:'', extras:{}, sconto:null, pav:'', pavMq:null }; }
+function defaultReq() { return { text:'', len:null, wid:null, shape:'', color:'', depthType:'', dmin:null, dmax:null, entry:'', timing:'', budget:null, btype:'', feats:{}, tipo:'', extras:{}, sconto:null, pav:'', pavMq:null, pavBy:'', fornitori:[] }; }
 function cleanReq(raw) {
   const r = defaultReq();
   if (!raw || typeof raw !== 'object') return r;
@@ -3874,7 +3889,8 @@ function cleanReq(raw) {
   r.color = typeof raw.color==='string' ? raw.color.slice(0,60) : '';
   FEATURES.forEach(([k])=>{ if (raw.feats && raw.feats[k] === true) r.feats[k] = true; });
   if (typeof raw.tipo === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(raw.tipo)) r.tipo = raw.tipo;
-  r.pav = inList(PAV_TYPES, raw.pav); r.pavMq = num(raw.pavMq, 2000);
+  r.pav = inList(PAV_TYPES, raw.pav); r.pavMq = num(raw.pavMq, 2000); r.pavBy = inList(PAV_BY, raw.pavBy);
+  r.fornitori = Array.isArray(raw.fornitori) ? FORNITORI.filter(f=>raw.fornitori.includes(f)) : [];
   if (raw.extras && typeof raw.extras === 'object') Object.keys(raw.extras).slice(0,40).forEach(k=>{ if (/^[A-Za-z0-9_-]{1,40}$/.test(k) && raw.extras[k] === true) r.extras[k] = true; });
   r.sconto = num(raw.sconto, 50);
   return r;
@@ -3913,6 +3929,8 @@ function renderRequestForm() {
   document.getElementById('req-btype').innerHTML = optionsHtml(BUDGET_TYPES, r.btype);
   document.getElementById('req-pav').innerHTML = optionsHtml(PAV_TYPES, r.pav);
   set('req-pavmq', r.pavMq); updatePavHint();
+  document.getElementById('req-pavby').innerHTML = optionsHtml(PAV_BY, r.pavBy);
+  document.getElementById('req-forn').innerHTML = r.fornitori.length ? r.fornitori.map(f=>`<span class="stage-badge" style="margin:0 4px 4px 0">${esc(f)}</span>`).join('') : '—';
   document.getElementById('req-feats').innerHTML = FEATURES.map(([k,l])=>`<label class="chk"><input type="checkbox" ${r.feats[k]?'checked':''} onchange="onReqField()" data-feat="${k}"><span>${esc(l)}</span></label>`).join('');
   updateReqSummary();
   renderPrevControls();
@@ -3926,7 +3944,7 @@ function onReqField() {
   r.entry = document.getElementById('req-entry').value; r.timing = document.getElementById('req-timing').value;
   r.btype = document.getElementById('req-btype').value;
   r.color = document.getElementById('req-color').value.slice(0,60);
-  r.pav = document.getElementById('req-pav').value; r.pavMq = num('req-pavmq'); updatePavHint();
+  r.pav = document.getElementById('req-pav').value; r.pavMq = num('req-pavmq'); r.pavBy = document.getElementById('req-pavby').value; updatePavHint();
   r.feats = {};
   document.querySelectorAll('#req-feats input[data-feat]').forEach(i=>{ if (i.checked) r.feats[i.dataset.feat] = true; });
   updateReqSummary();
@@ -3964,6 +3982,7 @@ function renderPreventivo() {
   h += `<tr class="pv-sub"><td>Imponibile</td><td class="n">${eurFmt(p.imponibile)}</td></tr>
         <tr><td>IVA ${fmtNum(listino.iva)}%</td><td class="n">${eurFmt(p.iva)}</td></tr>
         <tr class="pv-tot"><td>Totale indicativo</td><td class="n">${eurFmt(p.totale)}</td></tr></table>
+        ${crm.request.pav && crm.request.pavBy === 'cliente' ? '<div class="bc-tip">🪨 Pavimentazione a cura del cliente (suo piastrellista): esclusa dal preventivo.</div>' : ''}
         <div class="bc-tip">Forbice realistica ±${fmtNum(listino.varPct)}%: <b>${eurFmt(p.lo)} – ${eurFmt(p.hi)}</b>${listino.edited ? '' : ' · <span style="color:var(--amber-dk)">prezzi di stima: aggiorna il listino</span>'}</div>`;
   el.innerHTML = h;
 }
@@ -4067,7 +4086,8 @@ function requestSummaryText() {
     L.push(d.trim());
   }
   if (r.entry) L.push('Ingresso: ' + lab(ENTRIES, r.entry).toLowerCase());
-  if (r.pav) { const pm = pavMq(r); L.push('Pavimentazione: ' + lab(PAV_TYPES, r.pav).toLowerCase() + (pm ? ', ' + fmtNum(pm.mq) + ' m²' + (pm.stima ? ' (bordo da ' + bordoCm() + ' cm)' : '') : '')); }
+  if (r.pav) { const pm = pavMq(r); L.push('Pavimentazione: ' + lab(PAV_TYPES, r.pav).toLowerCase() + (pm ? ', ' + fmtNum(pm.mq) + ' m²' + (pm.stima ? ' (bordo da ' + bordoCm() + ' cm)' : '') : '') + (r.pavBy === 'cliente' ? ' — a cura del cliente' : '')); }
+  if (r.fornitori.length) L.push('Il cliente ha già: ' + r.fornitori.join(', '));
   const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
   if (feats.length) L.push('Accessori: ' + feats.join(', '));
   if (r.budget != null) L.push('Budget ' + (r.btype==='stimato' ? 'stimato' : 'dichiarato') + ': € ' + r.budget.toLocaleString('it-IT') + (r.btype==='tetto' ? ' (tetto massimo)' : ''));
@@ -4112,7 +4132,16 @@ function extractRequest(text) {
   const F = { luci:/illuminazion|\bled\b|\bluci\b|faretti/, riscald:/riscaldament|pompa di calore/, copertura:/copertur|\btelo\b/, idro:/idromassagg|cascata|jacuzzi|getti/, controc:/controcorrente/, domotica:/domotic|automazion/, sale:/\bsale\b|elettrolisi/, sfioro:/sfioro|infinity/ };
   Object.entries(F).forEach(([k,re])=>{ if (re.test(T)) out.feats[k] = true; });
   if (/solarium|prendisole|zona (?:relax|sole|lettini)|bordo piscina e zona/.test(T)) out.pav = 'solarium';
-  else if (/bordo (?:perimetrale|in pietra|in travertino|piscina)|bordi in/.test(T)) out.pav = 'bordo';
+  else if (/(?:platea|bordo|marciapiede|camminamento|pavimentazione) (?:perimetral|in pietra|in travertino|piscina|intorno)|bordi in|platea perimetrale/.test(T)) out.pav = 'bordo';
+  const bw = T.match(/(?:platea|bordo|marciapiede|camminamento|pavimentazione)[^\d]{0,30}(\d{2,3})\s*cm/);
+  if (bw) out.pavLarg = Number(bw[1]) / 100;
+  out.fornitori = FORNITORI.filter(f=>new RegExp('\\b' + f).test(T));
+  if (out.fornitori.includes('piastrellista') || /pavimentazione (?:la fa|se la fa|a cura|la realizza)|(?:bordo|platea|pavimentazione)[^.]{0,30}(?:lo|la) fa (?:lui|lei|loro)/.test(T)) out.pavBy = 'cliente';
+  const tx = {};
+  if (/casett/.test(T)) tx.type = 'casetta'; else if (/interrat/.test(T) && /locale tecnico/.test(T)) tx.type = 'interrato'; else if (/garage|cantina|taverna/.test(T)) tx.type = 'esistente';
+  const td = T.match(/locale tecnico[^\d]{0,30}(\d{1,3}(?:[.,]\d+)?)\s*(?:m|mt|metri)\b/); if (td) tx.dist = toN(td[1]);
+  if (/gi[aà] costruit|gi[aà] esistent|gi[aà] present/.test(T) && tx.type) tx.notes = 'Locale tecnico già esistente (indicato dal cliente)';
+  if (Object.keys(tx).length) out.tech = tx;
   if (/subito|quanto prima|al pi[uù] presto|urgent/.test(T)) out.timing = 'subito';
   else { const mm = T.match(/(\d{1,2})\s*mesi/); if (mm && Number(mm[1]) <= 3) out.timing = '3mesi'; else if (/primavera|estate|stagione|maggio|giugno|luglio/.test(T)) out.timing = 'stagione'; }
   const re = /(?:budget|massimo|spesa|disponibil\w*|circa|intorno a|fino a)[^\d]{0,25}(\d{1,3}(?:[.\s]\d{3})+|\d+(?:[.,]\d+)?)\s*(k|mila|€|euro)?/g;
@@ -4140,7 +4169,12 @@ function parseRequest() {
   const x = extractRequest(src);
   let n = 0;
   const fill = (k)=>{ if (x[k] !== undefined && (r[k] === null || r[k] === '' )) { r[k] = x[k]; n++; } };
-  ['len','wid','shape','color','depthType','dmin','dmax','entry','timing','budget','pav'].forEach(fill);
+  ['len','wid','shape','color','depthType','dmin','dmax','entry','timing','budget','pav','pavBy'].forEach(fill);
+  if (x.pavLarg && r.pav === 'bordo' && r.pavMq == null && Math.abs(x.pavLarg - (listino.bordoLarg || 0.8)) > 0.01 && r.len > 0 && r.wid > 0) {
+    const b = x.pavLarg; r.pavMq = Math.round(((r.len + 2*b) * (r.wid + 2*b) - r.len * r.wid) * 2) / 2; n++;   // larghezza diversa dallo standard
+  }
+  (x.fornitori || []).forEach(f=>{ if (!r.fornitori.includes(f)) { r.fornitori.push(f); n++; } });
+  if (x.tech) { const t = crm.tech; ['type','dist','notes'].forEach(k=>{ if (x.tech[k] !== undefined && (t[k] === null || t[k] === '')) { t[k] = x.tech[k]; n++; } }); renderTechForm(); }
   Object.keys(x.feats).forEach(k=>{ if (!r.feats[k]) { r.feats[k] = true; n++; } });
   const adEl = document.getElementById('clientAddress');
   if (adEl && !adEl.value.trim()) { const ad = extractAddress(src); if (ad) { adEl.value = ad; updateContactLinks(); n++; } }
@@ -4317,7 +4351,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-21-10';
+const BUILD = '2026-10-21-11';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
