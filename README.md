@@ -6,7 +6,7 @@ Strumento a file singolo (`leadscoreV3.html`) per valutare i lead, seguire la tr
 - **📋 Oggi**: si apre da solo e mostra cosa fare: lead in ritardo, per oggi, senza prossima azione, prossimi 7 giorni. Da qui: Chiama, Apri, ✓ Fatto, +3 gg.
 - **Profilo cliente → Pipeline**: fase (da chiamare → contattato → sopralluogo → preventivo → trattativa → vinto/perso), prossima azione con data, fonte, storico dei contatti, checklist per telefonata e sopralluogo.
 - Chiudendo un lead come **vinto/perso** si registrano motivo e valore: servono a ricalibrare i pesi con dati reali.
-- **💶 Listino**: prezzi modificabili (vasca al m² per tipo, costi fissi, accessori, voci extra, IVA, variabilità). Alimentano il **preventivo indicativo** di ogni cliente e la verifica del budget. Il listino è salvato sul singolo dispositivo.
+- **💶 Listino**: prezzi del listino Archimede Costruzioni 2026 (rev. 01) per formato di vasca (7×3, 8×4, 10×5) in Soluzione A (vasca e tecnologia) e B (con opere edili); fornitura kit, accessori, pavimentazione e voci extra modificabili (a 0 = "da definire"). Alimenta preventivo, documento e fattibilità economica. Il listino è salvato sul singolo dispositivo.
 - **📊 Cruscotto**: conversione, lead per fase, esiti per fascia di punteggio, fonti, motivi di perdita.
 
 ## Dove vengono salvati i lead
