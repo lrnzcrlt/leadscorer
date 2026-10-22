@@ -926,6 +926,12 @@ a.btn.disabled{opacity:.45}
 .ls-price span{position:absolute;right:12px;font-size:12.5px;color:var(--text3);pointer-events:none}
 .ls-del{width:36px;height:36px;border-radius:10px;border:1px solid var(--border2);background:var(--surf);color:var(--text3);cursor:pointer;font-size:14px}
 .ls-del:hover{color:var(--red-dk);border-color:var(--red)}
+.ls-row>textarea{grid-column:1/-1}
+.ls-row textarea,.ls-fmt textarea,#ls-body .crm-field>textarea{width:100%;padding:9px 12px;font-size:14px;line-height:1.45;border:1px solid var(--border);border-radius:var(--r-md);background:linear-gradient(180deg,rgba(7,47,59,.045),rgba(7,47,59,.015));color:var(--text);font-family:inherit;resize:vertical}
+.ls-row textarea:focus,.ls-fmt textarea:focus,#ls-body .crm-field>textarea:focus{border-color:var(--acqua);background:var(--surf);box-shadow:var(--ring);outline:none}
+.ls-fmt-hn{gap:10px}.ls-fmt-hn>input{flex:1;min-width:0;padding:10px 12px;font-size:15px;font-weight:600;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surf);color:var(--text)}
+#ls-body .ls-fmt>.crm-field{margin-top:10px}
+#ls-body .qt-fase>input{width:100%;padding:10px 12px;font-size:15px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--surf);color:var(--text)}
 .ls-add{margin-top:12px}
 @media(max-width:600px){
   .ls-row,.ls-row-u{grid-template-columns:minmax(0,1fr) 36px;padding:10px 0}
@@ -933,6 +939,7 @@ a.btn.disabled{opacity:.45}
   .ls-row>.ls-del{grid-column:2;grid-row:1}
   .ls-row>.ls-price{grid-column:1/-1;grid-row:2}
   .ls-row-u>select{grid-column:1/-1;grid-row:3}
+  .ls-row-u>textarea{grid-column:1/-1;grid-row:4}
   .ls-row:has(.ls-name){grid-template-columns:minmax(0,1fr) 130px}
   .ls-row:has(.ls-name)>.ls-price{grid-column:2;grid-row:1}
 }
@@ -1767,22 +1774,62 @@ const DEFAULT_WEIGHTS = {
 // Soluzione A = costruzione vasca e installazione tecnologia (platea e prese di fondo a cura del cliente).
 // Soluzione B = Soluzione A + opere edili (tracciamento, platea, armature, plinti marciapiede, cordolo contrafforti).
 // Ciò che il listino esclude ha prezzo 0 = "da definire" e non entra nei totali.
+const QUOTE_PAY = '10% alla firma del preventivo/contratto; 40% all\u2019inizio dei lavori; 45% al completamento dei lavori e prima della posa della membrana di rivestimento (liner); 5% a 30 giorni dalla messa in moto dell\u2019impianto.';
+const QUOTE_EXCL_A = 'Ogni opera di carattere edile; posa di centraline per la disinfezione dell’acqua; modifiche al locale tecnico; ogni tipo di by-pass; posa di impianti di idromassaggio e nuoto controcorrente, illuminazioni particolari in vasca; modifiche al telaio per il posizionamento di accessori; sigillature speciali su giunti pannello/pannello e pannello/platea; linea di scarico del locale tecnico e troppo-pieno; opere impiantistiche idrauliche ed elettriche; messa in moto dell’impianto e istruzioni di funzionamento.';
+const QUOTE_EXCL_B = 'Posa di centraline per la disinfezione dell’acqua; modifiche al locale tecnico; ogni tipo di by-pass; posa di impianti di idromassaggio e nuoto controcorrente, illuminazioni particolari in vasca; modifiche al telaio per il posizionamento di accessori; sigillature speciali su giunti pannello/pannello e pannello/platea; scavi, rinterri e movimento terra, assistenza allo scavo; costruzione della scala di ingresso; piano vasca (bordo, marciapiede, solarium); opere edili a servizio dell’impiantistica di vasca; opere di finitura; linea di scarico del locale tecnico e troppo-pieno; opere impiantistiche idrauliche ed elettriche; messa in moto dell’impianto e istruzioni di funzionamento.';
+const QUOTE_ONERI = 'A carico del cliente: IVA di legge; fornitura di energia elettrica e acqua adeguate ai lavori; permessi comunali ed eventuale occupazione di suolo pubblico; trasporto dei materiali ordinati direttamente dal cliente; smaltimento dei materiali di risulta; scavo e movimento terra; opere impiantistiche idrauliche ed elettriche; linea di scarico del locale tecnico e troppo-pieno da innestare nello scarico esistente; eventuale assistenza a ditte terze incaricate dal cliente (fatturata a parte); servizio igienico per le maestranze o, in alternativa, noleggio di un bagno chimico.';
+const QUOTE_FASI = [
+  ['Sopralluogo tecnico e conferma dei prezzi', ''],
+  ['Permessi comunali (a cura del cliente)', 'secondo i tempi del Comune'],
+  ['Scavo e movimento terra (a cura del cliente)', ''],
+  ['Tracciamento, platea di fondo e armature', ''],
+  ['Montaggio struttura, impiantistica e locale tecnico', ''],
+  ['Cordolo dei contrafforti e posa del liner', ''],
+  ['Riempimento e messa in moto dell\u2019impianto', '']
+];
 const LISTINO_KEY = 'psl_listino_v2';
 const LISTINO_FONTE = 'Archimede Costruzioni Srl — Listino 2026 al cliente, 30/09/2026 rev. 01';
-const LS_ACC = [['luci','Illuminazione particolare in vasca'],['riscald','Riscaldamento / pompa di calore'],['copertura','Copertura'],['idro','Idromassaggio / cascata'],['controc','Nuoto controcorrente'],['domotica','Domotica'],['sale','Centralina di disinfezione / sale']];
-const SOLUZIONI = [['B','Soluzione B — comprese opere edili'],['A','Soluzione A — senza opere edili (platea a cura del cliente)']];
+const LS_UNITA = [['corpo','a corpo'],['m2','al m² di vasca'],['pct','% sul prezzo vasca']];
+const LS_UNITA_EC = [['ora','€/ora'],['giorno','€/giorno'],['mese','€/mese'],['corpo','a corpo']];
+const LS_VASCA_A = "Realizzazione piscina San Lorenzo Piscine con telaio in pannelli prefabbricati in acciaio e contrafforti: posa della struttura e del profilo fermatelo, posa dell'impiantistica interna alla vasca, installazione del locale tecnico pre-assemblato da interrare, collegamento delle tubazioni di mandata e ritorno, posa della membrana armata in PVC (liner) termosaldata.";
+const LS_COND = 'Prezzi validi per cantieri entro 50 km da Padova, escluse zone montane e insulari, e per siti raggiungibili dai mezzi operativi; confermati previo sopralluogo tecnico. Opere edili salvo diverse disposizioni dello strutturista: elaborati grafici e strutturali da consegnare prima dell’inizio dei lavori. Eventuali opere impreviste emerse in corso d’opera saranno segnalate e andranno autorizzate dal cliente.';
+const LS_TUTTO = ' Tutto quanto non espressamente indicato nel preventivo.';
 function defaultListino() {
   return {
-    iva: 22, varPct: 5, sfioroPct: 0, pavPrezzo: 0, bordoLarg: 0.8, solDefault: 'B', fonte: LISTINO_FONTE, edited: false, updatedAt: null,
-    formati: [
-      { id:'f7x3',  L:7,  W:3, a:5900, b:16200, kit:0, dot:'1 skimmer, 2 bocchette di mandata, 2 prese di fondo, 1 faro' },
-      { id:'f8x4',  L:8,  W:4, a:6300, b:17300, kit:0, dot:'2 skimmer, 3 bocchette di mandata, 2 prese di fondo, 1 faro' },
-      { id:'f10x5', L:10, W:5, a:8100, b:21800, kit:0, dot:'2 skimmer, 3 bocchette di mandata, 2 prese di fondo, 1 faro' }
+    iva: 22, varPct: 5, pavPrezzo: 0, bordoLarg: 0.8, solDefault: 'B', fonte: LISTINO_FONTE, edited: false, updatedAt: null,
+    soluzioni: [
+      { id:'B', nome:'Soluzione B — vasca, tecnologia e opere edili',
+        desc: LS_VASCA_A + ' Comprese le opere edili: tracciamento della piscina, platea di fondo in calcestruzzo (spessore circa 25 cm) con doppia rete elettrosaldata, plinti per il sostegno del marciapiede perimetrale (marciapiede escluso), cordolo in calcestruzzo di bloccaggio dei contrafforti (spessore circa 15 cm).',
+        escl: QUOTE_EXCL_B + LS_TUTTO },
+      { id:'A', nome:'Soluzione A — vasca e tecnologia, senza opere edili',
+        desc: LS_VASCA_A + ' La platea in cemento armato e le prese di fondo sono a cura del cliente. Rivestimento della scala di ingresso escluso.',
+        escl: QUOTE_EXCL_A + LS_TUTTO }
     ],
-    econ: { manodopera:35, assistenza:45, bagno:200 },
+    formati: [
+      { id:'f7x3',  L:7,  W:3, prezzi:{ A:5900, B:16200 }, kit:0, dot:'1 skimmer, 2 bocchette di mandata, 2 prese di fondo, 1 faro' },
+      { id:'f8x4',  L:8,  W:4, prezzi:{ A:6300, B:17300 }, kit:0, dot:'2 skimmer, 3 bocchette di mandata, 2 prese di fondo, 1 faro' },
+      { id:'f10x5', L:10, W:5, prezzi:{ A:8100, B:21800 }, kit:0, dot:'2 skimmer, 3 bocchette di mandata, 2 prese di fondo, 1 faro' }
+    ],
+    kit: { nome:'Fornitura kit piscina San Lorenzo', dett:'pannelli, contrafforti, liner, tecnologia e locale tecnico', attivo:true,
+           desc:'Fornitura del kit piscina San Lorenzo Piscine: pannelli in acciaio e contrafforti, membrana di rivestimento, componenti di filtrazione e locale tecnico.' },
+    acc: [
+      { id:'luci', nome:'Illuminazione LED in vasca', prezzo:0, unita:'corpo', desc:'Fari LED subacquei con trasformatore e comando.' },
+      { id:'riscald', nome:'Riscaldamento / pompa di calore', prezzo:0, unita:'corpo', desc:"Pompa di calore per il riscaldamento dell'acqua, collegata all'impianto di filtrazione." },
+      { id:'copertura', nome:'Copertura', prezzo:0, unita:'corpo', desc:"Copertura della vasca per sicurezza, pulizia e mantenimento della temperatura dell'acqua." },
+      { id:'idro', nome:'Idromassaggio / cascata', prezzo:0, unita:'corpo', desc:'Idromassaggio / cascata con pompa dedicata.' },
+      { id:'controc', nome:'Nuoto controcorrente', prezzo:0, unita:'corpo', desc:'Sistema di nuoto controcorrente.' },
+      { id:'domotica', nome:'Domotica', prezzo:0, unita:'corpo', desc:'Centralina domotica per gestire da smartphone filtrazione, luci e temperatura.' },
+      { id:'sale', nome:'Trattamento al sale / disinfezione', prezzo:0, unita:'corpo', desc:"Trattamento dell'acqua a sale (elettrolisi), in sostituzione del cloro tradizionale." },
+      { id:'sfioro', nome:'Bordo a sfioro', prezzo:0, unita:'pct', desc:'Realizzazione del bordo a sfioro con canalina perimetrale di raccolta e vasca di compenso.' }
+    ],
     fissi: [],
-    acc: { luci:0, riscald:0, copertura:0, idro:0, controc:0, domotica:0, sale:0 },
-    extra: [ {id:'scala',nome:'Scala di ingresso in muratura',prezzo:0,unita:'corpo'}, {id:'bagno',nome:'Noleggio bagno chimico (1 mese)',prezzo:200,unita:'corpo'} ]
+    extra: [ { id:'scala', nome:'Scala di ingresso in muratura', prezzo:0, unita:'corpo', desc:'Scala / gradini di accesso in muratura.' },
+             { id:'bagno', nome:'Noleggio bagno chimico (1 mese)', prezzo:200, unita:'corpo', desc:'' } ],
+    econ: [ { id:'manodopera', nome:'Manodopera (operaio)', prezzo:35, unita:'ora' },
+            { id:'assistenza', nome:'Assistenza tecnica in cantiere', prezzo:45, unita:'ora' },
+            { id:'bagno', nome:'Noleggio bagno chimico, se manca un servizio igienico', prezzo:200, unita:'mese' } ],
+    testi: { pay: QUOTE_PAY, oneri: QUOTE_ONERI, cond: LS_COND },
+    fasi: QUOTE_FASI.map(([t,d])=>({ t, d }))
   };
 }
 let listino = defaultListino();
@@ -1793,38 +1840,64 @@ function cleanListino(raw) {
   const num = (v,max,def)=>{ const n = Number(v); return (v!==null && v!=='' && v!==undefined && isFinite(n) && n>=0 && n<=max) ? n : def; };
   const str = (v,n)=> typeof v==='string' ? v.slice(0,n) : '';
   const okId = v => typeof v==='string' && /^[A-Za-z0-9_-]{1,40}$/.test(v);
-  const rows = (arr, max, withUnit) => Array.isArray(arr) ? arr.slice(0,40).filter(x=>x && okId(x.id)).map(x=>{
-      const o = { id:x.id, nome:str(x.nome,80), prezzo:num(x.prezzo,max,0) };
-      if (withUnit) o.unita = x.unita==='m2' ? 'm2' : 'corpo';
-      return o; }) : null;
-  const formati = Array.isArray(raw.formati) ? raw.formati.slice(0,20).filter(x=>x && okId(x.id)).map(x=>({
-      id:x.id, L:num(x.L,50,0), W:num(x.W,50,0), a:num(x.a,1000000,0), b:num(x.b,1000000,0), kit:num(x.kit,1000000,0), dot:str(x.dot,200) })).filter(x=>x.L>0 && x.W>0) : null;
-  const L = { iva:num(raw.iva,40,d.iva), varPct:num(raw.varPct,50,d.varPct), sfioroPct:num(raw.sfioroPct,100,d.sfioroPct), pavPrezzo:num(raw.pavPrezzo,100000,d.pavPrezzo),
-    bordoLarg:(num(raw.bordoLarg,3,d.bordoLarg) || d.bordoLarg), solDefault: raw.solDefault==='A' ? 'A' : 'B', fonte: str(raw.fonte,160) || d.fonte,
+  // ── migrazione dalla versione precedente (accessori ed economia come oggetti, prezzi vasca in a/b, sfioro in %) ──
+  let acc = raw.acc, econ = raw.econ;
+  if (acc && !Array.isArray(acc) && typeof acc === 'object') acc = d.acc.map(x=>({ ...x, prezzo: x.id === 'sfioro' ? (Number(raw.sfioroPct) || 0) : (Number(acc[x.id]) || 0) }));
+  if (econ && !Array.isArray(econ) && typeof econ === 'object') econ = d.econ.map(x=>({ ...x, prezzo: econ[x.id] != null ? Number(econ[x.id]) : x.prezzo }));
+  const rows = (arr, units, defs) => Array.isArray(arr) ? arr.slice(0,60).filter(x=>x && okId(x.id)).map(x=>{
+      const def = (defs || []).find(y=>y.id === x.id);
+      return { id:x.id, nome:str(x.nome,120), prezzo:num(x.prezzo,1000000,0), unita: units.includes(x.unita) ? x.unita : units[0],
+               desc: typeof x.desc === 'string' ? x.desc.slice(0,1500) : (def && def.desc) || '' }; }) : null;
+  const sols = (Array.isArray(raw.soluzioni) ? raw.soluzioni.slice(0,10).filter(x=>x && okId(x.id)).map(x=>({ id:x.id, nome:str(x.nome,120), desc:str(x.desc,3000), escl:str(x.escl,4000) })) : []);
+  const soluzioni = sols.length ? sols : d.soluzioni;
+  const fmtRaw = Array.isArray(raw.formati) ? raw.formati : d.formati;
+  let formati = fmtRaw.slice(0,30).filter(x=>x && okId(x.id)).map(x=>{
+      const src = (x.prezzi && typeof x.prezzi === 'object') ? x.prezzi : { A:x.a, B:x.b }, prezzi = {};
+      soluzioni.forEach(so=>{ prezzi[so.id] = num(src[so.id],1000000,0); });
+      return { id:x.id, L:num(x.L,50,0), W:num(x.W,50,0), prezzi, kit:num(x.kit,1000000,0), dot:str(x.dot,300) }; }).filter(x=>x.L>0 && x.W>0);
+  if (!formati.length) formati = cleanListino({ ...d, soluzioni }).formati;
+  const k = (raw.kit && typeof raw.kit === 'object') ? raw.kit : {};
+  const tx = (raw.testi && typeof raw.testi === 'object') ? raw.testi : {};
+  const testi = {}; Object.keys(d.testi).forEach(key=>{ testi[key] = typeof tx[key] === 'string' ? tx[key].slice(0,4000) : d.testi[key]; });
+  const solDefault = soluzioni.some(x=>x.id === raw.solDefault) ? raw.solDefault : (soluzioni.find(x=>x.id === 'B') || soluzioni[0]).id;
+  return { iva:num(raw.iva,40,d.iva), varPct:num(raw.varPct,50,d.varPct), pavPrezzo:num(raw.pavPrezzo,100000,d.pavPrezzo),
+    bordoLarg:(num(raw.bordoLarg,3,d.bordoLarg) || d.bordoLarg), solDefault, fonte: typeof raw.fonte === 'string' ? raw.fonte.slice(0,160) : d.fonte,
     edited: raw.edited===true, updatedAt: Number(raw.updatedAt) > 0 ? Number(raw.updatedAt) : null,
-    formati: (formati && formati.length) ? formati : d.formati,
-    econ: { manodopera:num(raw.econ && raw.econ.manodopera,1000,d.econ.manodopera), assistenza:num(raw.econ && raw.econ.assistenza,1000,d.econ.assistenza), bagno:num(raw.econ && raw.econ.bagno,10000,d.econ.bagno) },
-    fissi: rows(raw.fissi,1000000) || d.fissi, extra: rows(raw.extra,1000000,true) || d.extra, acc:{} };
-  LS_ACC.forEach(([k])=>{ L.acc[k] = num(raw.acc && raw.acc[k], 1000000, d.acc[k]); });
-  return L;
+    soluzioni, formati,
+    kit: { nome: typeof k.nome === 'string' ? k.nome.slice(0,120) : d.kit.nome, dett: typeof k.dett === 'string' ? k.dett.slice(0,200) : d.kit.dett,
+           desc: typeof k.desc === 'string' ? k.desc.slice(0,1500) : d.kit.desc, attivo: k.attivo !== false },
+    acc: rows(acc, ['corpo','m2','pct'], d.acc) || d.acc,
+    fissi: rows(raw.fissi, ['corpo','m2','pct'], d.fissi) || d.fissi,
+    extra: rows(raw.extra, ['corpo','m2','pct'], d.extra) || d.extra,
+    econ: (rows(econ, LS_UNITA_EC.map(x=>x[0]), d.econ) || d.econ).map(({desc, ...x})=>x),
+    testi,
+    fasi: Array.isArray(raw.fasi) ? raw.fasi.slice(0,30).filter(x=>x && typeof x === 'object').map(x=>({ t:str(x.t,160), d:str(x.d,160) })) : d.fasi };
 }
 function loadListino() {
   try { listino = cleanListino(JSON.parse(localStorage.getItem(LISTINO_KEY) || 'null')); } catch { listino = defaultListino(); }
   try { localStorage.removeItem('psl_listino_v1'); } catch {}   // il vecchio listino di stima è superato da quello Archimede
 }
 function saveListino() { listino.edited = true; listino.updatedAt = Date.now(); try { localStorage.setItem(LISTINO_KEY, JSON.stringify(listino)); } catch {} }
-function solOf(r) { return (r && (r.sol === 'A' || r.sol === 'B')) ? r.sol : listino.solDefault; }
+function solById(id) { return listino.soluzioni.find(x=>x.id === id); }
+function solOf(r) { return (r && r.sol && solById(r.sol)) ? r.sol : listino.solDefault; }
+function solObj(r) { return solById(solOf(r)) || listino.soluzioni[0]; }
+function solShort(so) { return ((so && so.nome) || 'Soluzione').split(' — ')[0]; }
+function fPrezzo(f, sol) { return (f.prezzi && f.prezzi[sol]) || 0; }
+function getFeatures() { return listino.acc.map(x=>[x.id, x.nome || 'Accessorio']); }
+function rowImp(x, fm, area) { return x.unita === 'm2' ? x.prezzo * area : x.unita === 'pct' ? (fm ? fm.prezzo : 0) * x.prezzo / 100 : x.prezzo; }
+function rowDett(x, area) { return x.unita === 'm2' ? fmtNum(Math.round(area*10)/10) + ' m²' + (x.prezzo > 0 ? ' × ' + eurFmt(x.prezzo) + '/m²' : '') : x.unita === 'pct' ? (x.prezzo > 0 ? '+' + fmtNum(x.prezzo) + '% sulla vasca' : '% sulla vasca') : 'a corpo'; }
+function rowPriceTxt(x) { return x.prezzo > 0 ? (x.unita === 'pct' ? '+' + fmtNum(x.prezzo) + '% sulla vasca' : eurFmt(x.prezzo) + (x.unita === 'm2' ? '/m²' : '')) : 'da definire'; }
 function fmtFormato(f) { return fmtNum(f.L) + ' × ' + fmtNum(f.W) + ' m'; }
 // Formato di listino per la vasca richiesta: il più piccolo che la contiene; oltre il più grande, stima per estrapolazione (da confermare)
 function formatoFor(r) {
   if (!r || !(r.len > 0 && r.wid > 0)) return null;
-  const Lr = Math.max(r.len, r.wid), Wr = Math.min(r.len, r.wid), sol = solOf(r), key = sol === 'A' ? 'a' : 'b';
+  const Lr = Math.max(r.len, r.wid), Wr = Math.min(r.len, r.wid), sol = solOf(r), P = f => fPrezzo(f, sol);
   const fs = listino.formati.slice().sort((x,y)=>x.L*x.W - y.L*y.W);
   const fit = fs.find(f=>f.L >= Lr - 1e-6 && f.W >= Wr - 1e-6);
-  if (fit) return { f: fit, sol, prezzo: fit[key], exact: Math.abs(fit.L-Lr)<1e-6 && Math.abs(fit.W-Wr)<1e-6, fuori:false, kit: fit.kit };
+  if (fit) return { f: fit, sol, prezzo: P(fit), exact: Math.abs(fit.L-Lr)<1e-6 && Math.abs(fit.W-Wr)<1e-6, fuori:false, kit: fit.kit };
   const big = fs[fs.length-1], prev = fs[fs.length-2];
-  let prezzo = big[key];
-  if (prev) { const slope = (big[key]-prev[key]) / (big.L*big.W - prev.L*prev.W); prezzo = big[key] + Math.max(0, slope) * (Lr*Wr - big.L*big.W); }
+  let prezzo = P(big);
+  if (prev && big.L*big.W > prev.L*prev.W) { const slope = (P(big)-P(prev)) / (big.L*big.W - prev.L*prev.W); prezzo = P(big) + Math.max(0, slope) * (Lr*Wr - big.L*big.W); }
   return { f: big, sol, prezzo: Math.round(prezzo/100)*100, exact:false, fuori:true, kit: big.kit };
 }
 
@@ -1832,19 +1905,18 @@ function formatoFor(r) {
 function calcPreventivo(r) {
   if (!r || !(r.len > 0 && r.wid > 0)) return null;
   const area = r.len * r.wid, rows = [];
-  const fm = formatoFor(r);
+  const fm = formatoFor(r), so = solObj(r);
   const push = (o) => { if (!(o.imp > 0)) { o.imp = 0; o.daQuotare = true; } rows.push(o); };
   const req = fmtNum(Math.max(r.len, r.wid)) + ' × ' + fmtNum(Math.min(r.len, r.wid)) + ' m';
-  push({ voce: fm.sol === 'B' ? 'Soluzione B — vasca, tecnologia e opere edili' : 'Soluzione A — vasca e installazione tecnologia',
+  push({ voce: so.nome || 'Vasca',
          dett: (fm.fuori ? 'oltre il formato ' + fmtFormato(fm.f) + ' (richiesta ' + req + '): prezzo stimato, da confermare' : 'formato ' + fmtFormato(fm.f) + (fm.exact ? '' : ' (richiesta ' + req + ')')) + ' · a corpo',
          imp: fm.prezzo, grp:'vasca', key:'vasca' });
-  push({ voce: 'Fornitura kit piscina San Lorenzo', dett: 'pannelli, contrafforti, liner, tecnologia e locale tecnico' + (fm.kit > 0 ? ' · a corpo' : ' · prezzo da inserire nel Listino'), imp: fm.kit, grp:'vasca', key:'kit' });
-  if (r.feats && r.feats.sfioro) push({ voce:'Bordo a sfioro', dett: listino.sfioroPct > 0 ? '+' + fmtNum(listino.sfioroPct) + '% sulla vasca' : 'non compreso nel listino', imp: fm.prezzo * listino.sfioroPct/100, grp:'vasca', key:'sfioro' });
-  listino.fissi.forEach(f=>{ if (f.prezzo > 0) push({ voce:f.nome || 'Costo fisso', dett:'a corpo', imp:f.prezzo, grp:'fissi', key:'fisso:'+f.id }); });
-  LS_ACC.forEach(([k,label])=>{ if (r.feats && r.feats[k]) push({ voce:label, dett: listino.acc[k] > 0 ? 'a corpo' : 'esclusa dal listino', imp:listino.acc[k]||0, grp:'acc', key:'acc:'+k }); });
+  if (listino.kit.attivo) push({ voce: listino.kit.nome || 'Fornitura kit', dett: [listino.kit.dett, fm.kit > 0 ? 'a corpo' : 'prezzo da inserire nel Listino'].filter(Boolean).join(' · '), imp: fm.kit, grp:'vasca', key:'kit' });
+  listino.fissi.forEach(f=>{ if (f.prezzo > 0) push({ voce:f.nome || 'Costo fisso', dett:rowDett(f, area), imp:rowImp(f, fm, area), grp:'fissi', key:'fisso:'+f.id }); });
+  listino.acc.forEach(x=>{ if (r.feats && r.feats[x.id]) push({ voce:x.nome || 'Accessorio', dett: x.prezzo > 0 ? rowDett(x, area) : 'esclusa dal listino', imp:rowImp(x, fm, area), grp:'acc', key:'acc:'+x.id }); });
   const pm = r.pavBy === 'cliente' ? null : pavMq(r);
   if (pm) push({ voce: 'Pavimentazione — ' + (r.pav === 'bordo' ? 'solo bordo perimetrale' : 'bordo e zona solarium'), dett: fmtNum(pm.mq) + ' m²' + (pm.stima ? ' (bordo da ' + bordoCm() + ' cm)' : '') + (listino.pavPrezzo > 0 ? ' × ' + eurFmt(listino.pavPrezzo) + '/m²' : ' · esclusa dal listino'), imp: pm.mq * listino.pavPrezzo, grp:'pav', key:'pav' });
-  listino.extra.forEach(x=>{ if (r.extras && r.extras[x.id]) push({ voce:x.nome || 'Voce extra', dett: x.unita==='m2' ? fmtNum(Math.round(area*10)/10)+' m²' + (x.prezzo > 0 ? ' × '+eurFmt(x.prezzo)+'/m²' : '') : 'a corpo', imp: x.unita==='m2' ? x.prezzo*area : x.prezzo, grp:'extra', key:'extra:'+x.id }); });
+  listino.extra.forEach(x=>{ if (r.extras && r.extras[x.id]) push({ voce:x.nome || 'Voce extra', dett: rowDett(x, area), imp: rowImp(x, fm, area), grp:'extra', key:'extra:'+x.id }); });
   const lordo = rows.reduce((a,x)=>a+x.imp,0);
   const scontoPct = r.sconto > 0 ? r.sconto : 0;
   const sconto = lordo * scontoPct/100;
@@ -2056,8 +2128,8 @@ function budgetFit(r) {
 
 // Formato di listino più grande che sta nel budget (solo vasca + kit, IVA inclusa): spunto per riposizionare l'offerta
 function fitSize(B, r) {
-  const key = solOf(r) === 'A' ? 'a' : 'b';
-  const ok = listino.formati.filter(f=>(f[key] + f.kit) * (1 + listino.iva/100) <= B).sort((x,y)=>y.L*y.W - x.L*x.W)[0];
+  const sol = solOf(r);
+  const ok = listino.formati.filter(f=>fPrezzo(f, sol) > 0 && (fPrezzo(f, sol) + (listino.kit.attivo ? f.kit : 0)) * (1 + listino.iva/100) <= B).sort((x,y)=>y.L*y.W - x.L*x.W)[0];
   return ok ? { L: ok.L, W: ok.W, A: Math.round(ok.L*ok.W) } : null;
 }
 
@@ -2879,48 +2951,21 @@ Lead Scorer v2.0 — Piscine San Lorenzo`;
 // ══════════════════════════════════════════
 const QUOTE_CFG_KEY = 'psl_quote_cfg_v1';
 const QUOTE_DESC = {
-  vasca: r => { const fm = formatoFor(r), dot = fm && fm.f.dot ? ' (' + fm.f.dot + ')' : '';
+  vasca: r => { const fm = formatoFor(r), so = solObj(r);
     const misure = `Vasca ${fmtNum(Math.max(r.len, r.wid))} × ${fmtNum(Math.min(r.len, r.wid))} m` + ((r.dmin!=null||r.dmax!=null) ? `, profondità ${r.dmin!=null && r.dmax!=null && r.dmin!==r.dmax ? fmtNum(r.dmin)+'–'+fmtNum(r.dmax) : fmtNum(r.dmax ?? r.dmin)} m` : '') + (r.color ? ', liner colore ' + r.color.toLowerCase() : '') + '.';
-    const a = `Realizzazione piscina San Lorenzo Piscine con telaio in pannelli prefabbricati in acciaio e contrafforti: posa della struttura e del profilo fermatelo, posa dell'impiantistica interna alla vasca${dot}, installazione del locale tecnico pre-assemblato da interrare, collegamento delle tubazioni di mandata e ritorno, posa della membrana armata in PVC (liner) termosaldata.`;
-    return solOf(r) === 'B'
-      ? `${a} Comprese le opere edili: tracciamento della piscina, platea di fondo in calcestruzzo (spessore circa 25 cm) con doppia rete elettrosaldata, plinti per il sostegno del marciapiede perimetrale (marciapiede escluso), cordolo in calcestruzzo di bloccaggio dei contrafforti (spessore circa 15 cm). ${misure}`
-      : `${a} La platea in cemento armato e le prese di fondo sono a cura del cliente. Rivestimento della scala di ingresso escluso. ${misure}`; },
-  kit: () => 'Fornitura del kit piscina San Lorenzo Piscine: pannelli in acciaio e contrafforti, membrana di rivestimento, componenti di filtrazione e locale tecnico.',
-  sfioro: () => 'Realizzazione del bordo a sfioro con canalina perimetrale di raccolta e vasca di compenso.',
-  'fisso:progetto': () => 'Progetto della piscina e pratiche edilizie presso il Comune (CILA, SCIA o permesso di costruire, secondo i casi).',
-  'fisso:scavo': () => 'Scavo di sbancamento, movimentazione del terreno e rinterro perimetrale a fine montaggio.',
-  'fisso:filtrazione': () => 'Impianto di filtrazione completo: pompa, filtro, skimmer, bocchette di mandata, presa di fondo e tubazioni fino al locale tecnico.',
-  'acc:luci': () => 'Fari LED subacquei con trasformatore e comando.',
-  'acc:riscald': () => "Pompa di calore per il riscaldamento dell'acqua, collegata all'impianto di filtrazione.",
-  'acc:copertura': () => "Copertura della vasca per sicurezza, pulizia e mantenimento della temperatura dell'acqua.",
-  'acc:idro': () => 'Idromassaggio / cascata con pompa dedicata.',
-  'acc:controc': () => 'Sistema di nuoto controcorrente.',
-  'acc:domotica': () => 'Centralina domotica per gestire da smartphone filtrazione, luci e temperatura.',
-  'acc:sale': () => "Trattamento dell'acqua a sale (elettrolisi), in sostituzione del cloro tradizionale.",
-  pav: r => { const pm = pavMq(r); return r.pav === 'bordo' ? `Bordo perimetrale intorno alla vasca, larghezza ${bordoCm()} cm${pm ? ' (' + fmtNum(pm.mq) + ' m²)' : ''}.` : `Pavimentazione perimetrale con bordo e zona solarium${pm ? ', ' + fmtNum(pm.mq) + ' m² complessivi' : ''}.`; },
-  'extra:scala': () => 'Scala / gradini di accesso in muratura.'
+    return [so.desc, fm && fm.f.dot ? 'Dotazione in vasca: ' + fm.f.dot + '.' : '', misure].filter(Boolean).join(' '); },
+  kit: () => listino.kit.desc,
+  pav: r => { const pm = pavMq(r); return r.pav === 'bordo' ? `Bordo perimetrale intorno alla vasca, larghezza ${bordoCm()} cm${pm ? ' (' + fmtNum(pm.mq) + ' m²)' : ''}.` : `Pavimentazione perimetrale con bordo e zona solarium${pm ? ', ' + fmtNum(pm.mq) + ' m² complessivi' : ''}.`; }
 };
-function quoteDescDefault(key, r) { const f = QUOTE_DESC[key]; return f ? f(r) : ''; }
-const QUOTE_FASI = [
-  ['Sopralluogo tecnico e conferma dei prezzi', ''],
-  ['Permessi comunali (a cura del cliente)', 'secondo i tempi del Comune'],
-  ['Scavo e movimento terra (a cura del cliente)', ''],
-  ['Tracciamento, platea di fondo e armature', ''],
-  ['Montaggio struttura, impiantistica e locale tecnico', ''],
-  ['Cordolo dei contrafforti e posa del liner', ''],
-  ['Riempimento e messa in moto dell\u2019impianto', '']
-];
-const QUOTE_PAY = '10% alla firma del preventivo/contratto; 40% all\u2019inizio dei lavori; 45% al completamento dei lavori e prima della posa della membrana di rivestimento (liner); 5% a 30 giorni dalla messa in moto dell\u2019impianto.';
-const QUOTE_EXCL_A = 'Ogni opera di carattere edile; posa di centraline per la disinfezione dell’acqua; modifiche al locale tecnico; ogni tipo di by-pass; posa di impianti di idromassaggio e nuoto controcorrente, illuminazioni particolari in vasca; modifiche al telaio per il posizionamento di accessori; sigillature speciali su giunti pannello/pannello e pannello/platea; linea di scarico del locale tecnico e troppo-pieno; opere impiantistiche idrauliche ed elettriche; messa in moto dell’impianto e istruzioni di funzionamento.';
-const QUOTE_EXCL_B = 'Posa di centraline per la disinfezione dell’acqua; modifiche al locale tecnico; ogni tipo di by-pass; posa di impianti di idromassaggio e nuoto controcorrente, illuminazioni particolari in vasca; modifiche al telaio per il posizionamento di accessori; sigillature speciali su giunti pannello/pannello e pannello/platea; scavi, rinterri e movimento terra, assistenza allo scavo; costruzione della scala di ingresso; piano vasca (bordo, marciapiede, solarium); opere edili a servizio dell’impiantistica di vasca; opere di finitura; linea di scarico del locale tecnico e troppo-pieno; opere impiantistiche idrauliche ed elettriche; messa in moto dell’impianto e istruzioni di funzionamento.';
-const QUOTE_ONERI = 'A carico del cliente: IVA di legge; fornitura di energia elettrica e acqua adeguate ai lavori; permessi comunali ed eventuale occupazione di suolo pubblico; trasporto dei materiali ordinati direttamente dal cliente; smaltimento dei materiali di risulta; scavo e movimento terra; opere impiantistiche idrauliche ed elettriche; linea di scarico del locale tecnico e troppo-pieno da innestare nello scarico esistente; eventuale assistenza a ditte terze incaricate dal cliente (fatturata a parte); servizio igienico per le maestranze o, in alternativa, noleggio di un bagno chimico.';
-function quoteExclDefault(r) { return (solOf(r) === 'A' ? QUOTE_EXCL_A : QUOTE_EXCL_B) + ' Tutto quanto non espressamente indicato nel preventivo.'; }
+function quoteDescDefault(key, r) {
+  const m = key.match(/^(acc|fisso|extra):(.+)$/);
+  if (m) { const x = ({ acc:listino.acc, fisso:listino.fissi, extra:listino.extra })[m[1]].find(y=>y.id === m[2]); return x ? x.desc : ''; }
+  const f = QUOTE_DESC[key]; return f ? f(r) : ''; }
+function quoteExclDefault(r) { return solObj(r).escl || ''; }
 function quoteCondDefault() {
-  const e = listino.econ;
-  return 'Prezzi validi per cantieri entro 50 km da Padova, escluse zone montane e insulari, e per siti raggiungibili dai mezzi operativi; confermati previo sopralluogo tecnico. ' +
-    'Opere edili salvo diverse disposizioni dello strutturista: elaborati grafici e strutturali da consegnare prima dell’inizio dei lavori. ' +
-    'Eventuali opere impreviste emerse in corso d’opera saranno segnalate e andranno autorizzate dal cliente. ' +
-    'Lavori in economia: manodopera ' + eurFmt(e.manodopera) + '/ora, assistenza tecnica in cantiere ' + eurFmt(e.assistenza) + '/ora (IVA esclusa); in assenza di un servizio igienico, noleggio bagno chimico ' + eurFmt(e.bagno) + '/mese IVA esclusa.';
+  const e = listino.econ.filter(x=>x.nome || x.prezzo > 0);
+  const suf = { ora:'/ora', giorno:'/giorno', mese:'/mese', corpo:'' };
+  return [listino.testi.cond, e.length ? 'Lavori in economia (IVA esclusa): ' + e.map(x=>(x.nome || 'voce') + ' ' + (x.prezzo > 0 ? eurFmt(x.prezzo) + suf[x.unita] : 'da definire')).join('; ') + '.' : ''].filter(Boolean).join(' ');
 }
 function defaultQuote() { return { num:'', date:'', validDays:30, desc:{}, fasi:null, pay:null, excl:null, cond:null, note:'' }; }
 function cleanQuote(raw) {
@@ -2937,7 +2982,7 @@ function cleanQuote(raw) {
   if (typeof raw.cond === 'string') q.cond = raw.cond.slice(0,3000);
   return q;
 }
-function quoteFasi(q) { return q.fasi || QUOTE_FASI.map(([t,d])=>({t,d})); }
+function quoteFasi(q) { return q.fasi || listino.fasi.map(x=>({ t:x.t, d:x.d })); }
 function quoteNum(q) { return q.num || ('PSL-' + new Date().getFullYear() + '-' + String(currentLeadId || 'nuovo').replace(/[^A-Za-z0-9]/g,'').slice(-4).toUpperCase()); }
 function quoteDate(q) { return q.date || todayISO(); }
 function loadQuoteCfg() { try { const c = JSON.parse(localStorage.getItem(QUOTE_CFG_KEY) || 'null'); return Object.assign({ azienda:'Piscine San Lorenzo', referente:'', tel:'', email:'' }, (c && typeof c==='object') ? c : {}); } catch { return { azienda:'Piscine San Lorenzo', referente:'', tel:'', email:'' }; } }
@@ -2971,7 +3016,7 @@ function renderQuotePage() {
       ${fasi.map((f,i)=>`<div class="ls-row qt-fase"><input type="text" maxlength="120" value="${esc(f.t)}" placeholder="Fase" data-qf="${i}.t" oninput="onQuoteFase(this)"/><input type="text" maxlength="120" value="${esc(f.d)}" placeholder="Durata" data-qf="${i}.d" oninput="onQuoteFase(this)"/><button type="button" class="ls-del" onclick="delQuoteFase(${i})">✕</button></div>`).join('')}
       <div class="quick-days"><button type="button" onclick="addQuoteFase()">＋ Aggiungi fase</button>${q.fasi ? '<button type="button" onclick="resetQuoteFasi()">↺ Fasi standard</button>' : ''}</div></div>`;
   const cond = `<div class="crm-card"><h3>📌 Condizioni</h3><div class="crm-grid">
-      <div class="crm-field full"><label>Modalità di pagamento</label><textarea rows="2" maxlength="2000" data-q="pay" oninput="onQuoteField(this)">${esc(q.pay ?? QUOTE_PAY)}</textarea></div>
+      <div class="crm-field full"><label>Modalità di pagamento</label><textarea rows="2" maxlength="2000" data-q="pay" oninput="onQuoteField(this)">${esc(q.pay ?? listino.testi.pay)}</textarea></div>
       <div class="crm-field full"><label>Esclusioni</label><textarea rows="3" maxlength="2000" data-q="excl" oninput="onQuoteField(this)">${esc(q.excl ?? quoteExclDefault(r))}</textarea></div>
       <div class="crm-field full"><label>Condizioni generali</label><textarea rows="4" maxlength="3000" data-q="cond" oninput="onQuoteField(this)">${esc(q.cond ?? quoteCondDefault())}</textarea></div>
       <div class="crm-field full"><label>Note per il cliente</label><textarea rows="2" maxlength="2000" data-q="note" placeholder="es. Prezzi validi per lavori avviati entro marzo" oninput="onQuoteField(this)">${esc(q.note)}</textarea></div>
@@ -3038,12 +3083,12 @@ function quoteHtml(mode) {
   h += sec('Riepilogo economico', t);
   const fasi = quoteFasi(q).filter(f=>f.t || f.d);
   if (fasi.length) h += sec('Fasi e tempi', `<ol class="qt-list qt-fasi">${fasi.map(f=>`<li><b>${E(f.t)}</b>${f.d ? ' — ' + E(f.d) : ''}</li>`).join('')}</ol>` + (crm.ditta.start ? `<p style="font-size:12.5px;color:var(--ink2);margin:6px 0 0">Inizio lavori previsto: ${E(fmtDate(crm.ditta.start))}</p>` : ''), 'tempi indicativi');
-  const pay = q.pay ?? QUOTE_PAY, excl = q.excl ?? quoteExclDefault(r), cond = q.cond ?? quoteCondDefault();
+  const pay = q.pay ?? listino.testi.pay, excl = q.excl ?? quoteExclDefault(r), cond = q.cond ?? quoteCondDefault();
   h += sec('Condizioni', `<dl class="rp-dl">
       <div class="wide"><dt>Validità</dt><dd>${q.validDays} giorni, fino al ${E(fd(scad))}</dd></div>
       ${pay ? `<div class="wide"><dt>Pagamento</dt><dd>${E(pay)}</dd></div>` : ''}
       ${excl ? `<div class="wide"><dt>Escluso</dt><dd>${E(excl)}</dd></div>` : ''}
-      <div class="wide"><dt>Oneri del cliente</dt><dd>${E(QUOTE_ONERI)}</dd></div>
+      ${listino.testi.oneri ? `<div class="wide"><dt>Oneri del cliente</dt><dd>${E(listino.testi.oneri)}</dd></div>` : ''}
       ${cond ? `<div class="wide"><dt>Condizioni generali</dt><dd>${E(cond)}</dd></div>` : ''}
       ${clienteCura(r) ? `<div class="wide"><dt>A cura del cliente</dt><dd>${E(clienteCura(r))}</dd></div>` : ''}
       ${q.note ? `<div class="wide"><dt>Note</dt><dd>${E(q.note)}</dd></div>` : ''}</dl>`);
@@ -3071,10 +3116,10 @@ function quoteText(mode) {
   const fasi = quoteFasi(q).filter(f=>f.t || f.d);
   if (fasi.length) { L.push(''); L.push('FASI E TEMPI'); fasi.forEach((f,i)=>L.push((i+1) + '. ' + f.t + (f.d ? ' — ' + f.d : ''))); }
   L.push(''); L.push('Validità: ' + q.validDays + ' giorni');
-  const pay = q.pay ?? QUOTE_PAY, excl = q.excl ?? quoteExclDefault(r), cond = q.cond ?? quoteCondDefault();
+  const pay = q.pay ?? listino.testi.pay, excl = q.excl ?? quoteExclDefault(r), cond = q.cond ?? quoteCondDefault();
   if (pay) L.push('Pagamento: ' + pay);
   if (excl) L.push('Escluso: ' + excl);
-  L.push('Oneri del cliente: ' + QUOTE_ONERI);
+  if (listino.testi.oneri) L.push('Oneri del cliente: ' + listino.testi.oneri);
   if (cond) L.push('Condizioni generali: ' + cond);
   if (clienteCura(r)) L.push('A cura del cliente: ' + clienteCura(r));
   if (q.note) L.push('Note: ' + q.note);
@@ -3155,7 +3200,7 @@ function reportHtml() {
 
   // Richiesta
   const depth = (r.dmin!=null || r.dmax!=null) ? (r.dmin!=null && r.dmax!=null && r.dmin!==r.dmax ? fmtNum(r.dmin)+' – '+fmtNum(r.dmax)+' m' : fmtNum(r.dmax ?? r.dmin)+' m') : '';
-  const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1]).join(', ');
+  const feats = getFeatures().filter(([k])=>r.feats[k]).map(x=>x[1]).join(', ');
   const reqBody = dl([
     row('Dimensioni', r.len && r.wid ? fmtNum(r.len)+' × '+fmtNum(r.wid)+' m <span style="color:var(--ink3)">('+Math.round(r.len*r.wid)+' m²)</span>' : (r.len||r.wid ? fmtNum(r.len||r.wid)+' m' : '')),
     row('Forma', lab(SHAPES, r.shape)), row('Profondità', E([r.depthType ? labOf(DEPTHS, r.depthType) : '', depth].filter(Boolean).join(', '))),
@@ -3187,7 +3232,7 @@ function reportHtml() {
     t += `<tr class="grp"><td colspan="2">Imponibile</td><td class="n">${eurFmt(pv.imponibile)}</td></tr><tr><td colspan="2">IVA ${fmtNum(listino.iva)}%</td><td class="n">${eurFmt(pv.iva)}</td></tr>
           <tr class="grp"><td colspan="2"><b>Totale indicativo</b></td><td class="n"><b>${eurFmt(pv.totale)}</b></td></tr></table>
           <div style="font-size:12px;color:var(--ink2);margin-top:6px">Forbice ±${fmtNum(listino.varPct)}%: ${eurFmt(pv.lo)} – ${eurFmt(pv.hi)} · prezzi confermati previo sopralluogo tecnico${pv.daQuotare ? ' · voci da definire: ' + E(pv.daQuotareVoci.join(', ').toLowerCase()) : ''}</div>`;
-    h += sec('Preventivo indicativo', t, E((solOf(r) === 'B' ? 'Soluzione B' : 'Soluzione A') + ' · formato ' + fmtFormato(pv.formato.f)));
+    h += sec('Preventivo indicativo', t, E(solShort(solObj(r)) + ' · formato ' + fmtFormato(pv.formato.f)));
   }
 
   // Leve e obiezioni
@@ -3706,7 +3751,7 @@ function dittaSheetText() {
   if (d.give.contatto?.d || d.give.contatto?.v) L.push('Contatto cliente: ' + (d.give.contatto.v || [c.name, c.phone].filter(Boolean).join(' ')));
   if (r.len && r.wid) L.push('Vasca: ' + fmtNum(r.len) + ' × ' + fmtNum(r.wid) + ' m' + (r.shape ? ', ' + labOf(SHAPES, r.shape).toLowerCase() : '') +
     (r.dmin!=null || r.dmax!=null ? ', profondità ' + (r.dmin!=null && r.dmax!=null && r.dmin!==r.dmax ? fmtNum(r.dmin)+'–'+fmtNum(r.dmax) : fmtNum(r.dmax ?? r.dmin)) + ' m' : ''));
-  const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
+  const feats = getFeatures().filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
   if (feats.length) L.push('Accessori: ' + feats.join(', '));
   techSummaryLines().forEach(x=>L.push(x));
   const give = DITTA_GIVE.filter(([id])=>id!=='contatto' && d.give[id]?.v).map(([id,label])=>'• ' + label + ': ' + d.give[id].v);
@@ -3918,7 +3963,6 @@ const SHAPES = [['','—'],['rettangolare','Rettangolare'],['L','Ad L'],['libera
 const DEPTHS = [['','—'],['costante','Costante'],['variabile','Variabile']];
 const ENTRIES = [['','—'],['gradini','Gradini'],['scala','Scala'],['rampa','Rampa / spiaggia'],['altro','Altro']];
 const TIMINGS = [['','—'],['subito','Subito / al più presto'],['3mesi','Entro 3 mesi'],['stagione','Per la prossima stagione'],['nonso','Non definito']];
-const FEATURES = [['luci','Illuminazione LED'],['riscald','Riscaldamento / pompa di calore'],['copertura','Copertura'],['idro','Idromassaggio / cascata'],['controc','Nuoto controcorrente'],['domotica','Domotica'],['sale','Trattamento al sale'],['sfioro','Bordo a sfioro']];
 const PAV_BY = [['','Noi (incluso nel preventivo)'],['cliente','Il cliente (suo piastrellista)']];
 const FORNITORI = ['piastrellista','elettricista','idraulico','muratore','giardiniere','geometra','architetto'];
 const PAV_TYPES = [['','Nessuna / da definire'],['bordo','Solo bordo perimetrale'],['solarium','Bordo e zona solarium']];
@@ -3948,8 +3992,8 @@ function cleanReq(raw) {
   r.len = num(raw.len,100); r.wid = num(raw.wid,100); r.dmin = num(raw.dmin,10); r.dmax = num(raw.dmax,10); r.budget = num(raw.budget,10000000);
   r.shape = inList(SHAPES, raw.shape); r.depthType = inList(DEPTHS, raw.depthType); r.entry = inList(ENTRIES, raw.entry); r.timing = inList(TIMINGS, raw.timing); r.btype = inList(BUDGET_TYPES, raw.btype);
   r.color = typeof raw.color==='string' ? raw.color.slice(0,60) : '';
-  FEATURES.forEach(([k])=>{ if (raw.feats && raw.feats[k] === true) r.feats[k] = true; });
-  if (raw.sol === 'A' || raw.sol === 'B') r.sol = raw.sol;
+  if (raw.feats && typeof raw.feats === 'object') Object.keys(raw.feats).slice(0,60).forEach(k=>{ if (raw.feats[k] === true && /^[A-Za-z0-9_-]{1,40}$/.test(k)) r.feats[k] = true; });
+  if (typeof raw.sol === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(raw.sol)) r.sol = raw.sol;
   r.pav = inList(PAV_TYPES, raw.pav); r.pavMq = num(raw.pavMq, 2000); r.pavBy = inList(PAV_BY, raw.pavBy);
   r.fornitori = Array.isArray(raw.fornitori) ? FORNITORI.filter(f=>raw.fornitori.includes(f)) : [];
   if (raw.extras && typeof raw.extras === 'object') Object.keys(raw.extras).slice(0,40).forEach(k=>{ if (/^[A-Za-z0-9_-]{1,40}$/.test(k) && raw.extras[k] === true) r.extras[k] = true; });
@@ -3978,6 +4022,11 @@ function parseEuro(v) {
   return isFinite(n) && n >= 0 ? Math.round(n*100)/100 : null;
 }
 function fmtEuroInput(el) { const n = parseEuro(el.value); if (n != null) el.value = n.toLocaleString('it-IT', { maximumFractionDigits: 2 }); }
+function renderReqFeats() {
+  const el = document.getElementById('req-feats'); if (!el) return;
+  const r = crm.request, F = getFeatures();
+  el.innerHTML = F.length ? F.map(([k,l])=>`<label class="chk"><input type="checkbox" ${r.feats[k]?'checked':''} onchange="onReqField()" data-feat="${esc(k)}"><span>${esc(l)}</span></label>`).join('') : '<span class="pv-d">Nessun accessorio nel Listino</span>';
+}
 function renderRequestForm() {
   const r = crm.request;
   const set = (id,v)=>{ const el = document.getElementById(id); if (el) el.value = (v===null || v===undefined) ? '' : v; };
@@ -3992,7 +4041,7 @@ function renderRequestForm() {
   set('req-pavmq', r.pavMq); updatePavHint();
   document.getElementById('req-pavby').innerHTML = optionsHtml(PAV_BY, r.pavBy);
   document.getElementById('req-forn').innerHTML = r.fornitori.length ? r.fornitori.map(f=>`<span class="stage-badge" style="margin:0 4px 4px 0">${esc(f)}</span>`).join('') : '—';
-  document.getElementById('req-feats').innerHTML = FEATURES.map(([k,l])=>`<label class="chk"><input type="checkbox" ${r.feats[k]?'checked':''} onchange="onReqField()" data-feat="${k}"><span>${esc(l)}</span></label>`).join('');
+  renderReqFeats();
   updateReqSummary();
   renderPrevControls();
 }
@@ -4016,11 +4065,11 @@ function onReqField() {
 function renderPrevControls() {
   const sel = document.getElementById('prev-tipo'); if (!sel) return;
   const r = crm.request, sol = solOf(r);
-  sel.innerHTML = SOLUZIONI.map(([k,l])=>`<option value="${k}"${k===sol ? ' selected' : ''}>${esc(l)}</option>`).join('');
+  sel.innerHTML = listino.soluzioni.map(x=>`<option value="${esc(x.id)}"${x.id===sol ? ' selected' : ''}>${esc(x.nome || 'Soluzione senza nome')}</option>`).join('');
   document.getElementById('prev-sconto').value = r.sconto == null ? '' : r.sconto;
   const wrap = document.getElementById('prev-extras-wrap');
   wrap.style.display = listino.extra.length ? '' : 'none';
-  document.getElementById('prev-extras').innerHTML = listino.extra.map(x=>`<label class="chk"><input type="checkbox" data-extra="${esc(x.id)}" ${r.extras[x.id]?'checked':''} onchange="onPrevField()"><span>${esc(x.nome || 'Voce extra')} <span style="color:var(--text3)">· ${x.prezzo > 0 ? eurFmt(x.prezzo) + (x.unita==='m2'?'/m²':'') : 'da definire'}</span></span></label>`).join('');
+  document.getElementById('prev-extras').innerHTML = listino.extra.map(x=>`<label class="chk"><input type="checkbox" data-extra="${esc(x.id)}" ${r.extras[x.id]?'checked':''} onchange="onPrevField()"><span>${esc(x.nome || 'Voce extra')} <span style="color:var(--text3)">· ${rowPriceTxt(x)}</span></span></label>`).join('');
   renderPreventivo();
 }
 function onPrevField() {
@@ -4073,78 +4122,107 @@ function copyPreventivo() {
 // ── Pagina Listino ──
 function renderListino() {
   const body = document.getElementById('ls-body'); if (!body) return;
-  document.getElementById('ls-intro').innerHTML = '💶 <b>' + esc(listino.fonte) + '</b>. Prezzi a corpo, IVA esclusa: alimentano il <b>preventivo</b> e la <b>fattibilità economica</b> di ogni cliente. Le voci a 0 risultano "da definire" e non entrano nei totali.';
+  document.getElementById('ls-intro').innerHTML = '💶 <b>' + esc(listino.fonte || 'Listino') + '</b>. Ogni voce si può rinominare, modificare o eliminare. Prezzi IVA esclusa: alimentano il <b>preventivo</b> e la <b>fattibilità economica</b> di ogni cliente. Le voci a 0 risultano "da definire" e non entrano nei totali.';
   document.getElementById('ls-updated').textContent = listino.updatedAt ? 'Ultima modifica: ' + fmtDT(listino.updatedAt) : 'Prezzi originali del listino';
   const num = (path, val, step, suffix) => `<div class="ls-price"><input type="number" min="0" step="${step}" inputmode="decimal" value="${val}" data-ls="${path}" oninput="onListinoField(this)"/><span>${suffix}</span></div>`;
-  const rowsHtml = (key, arr, suffix, step, withUnit) => arr.map((x,i)=>`<div class="ls-row${withUnit?' ls-row-u':''}">
-      <input type="text" maxlength="80" value="${esc(x.nome)}" placeholder="Nome voce" data-ls="${key}.${i}.nome" oninput="onListinoField(this)"/>
-      ${num(key+'.'+i+'.prezzo', x.prezzo, step, withUnit ? (x.unita==='m2' ? '€/m²' : '€') : suffix)}
-      ${withUnit ? `<select data-ls="${key}.${i}.unita" onchange="onListinoField(this,true)"><option value="corpo"${x.unita!=='m2'?' selected':''}>a corpo</option><option value="m2"${x.unita==='m2'?' selected':''}>al m² di vasca</option></select>` : ''}
-      <button type="button" class="ls-del" title="Elimina voce" onclick="delListinoRow('${key}',${i})">✕</button></div>`).join('');
-  const formati = listino.formati.map((f,i)=>`<div class="ls-fmt">
-      <div class="ls-fmt-h"><b>Formato ${esc(fmtFormato(f))}</b><button type="button" class="ls-del" title="Elimina formato" onclick="delListinoRow('formati',${i})">✕</button></div>
-      <div class="ls-fmt-g">
-        <div class="crm-field"><label>Lunghezza (m)</label>${num('formati.'+i+'.L', f.L, 0.5, 'm')}</div>
-        <div class="crm-field"><label>Larghezza (m)</label>${num('formati.'+i+'.W', f.W, 0.5, 'm')}</div>
-        <div class="crm-field"><label>Soluzione A</label>${num('formati.'+i+'.a', f.a, 50, '€')}</div>
-        <div class="crm-field"><label>Soluzione B</label>${num('formati.'+i+'.b', f.b, 50, '€')}</div>
-        <div class="crm-field"><label>Fornitura kit San Lorenzo</label>${num('formati.'+i+'.kit', f.kit, 50, '€')}</div>
-        <div class="crm-field ls-dot"><label>Dotazione in vasca</label><input type="text" maxlength="200" value="${esc(f.dot)}" data-ls="formati.${i}.dot" oninput="onListinoField(this)"/></div>
-      </div></div>`).join('');
+  const txt = (path, val, ph, max, re) => `<input type="text" maxlength="${max||120}" value="${esc(val)}" placeholder="${esc(ph||'')}" data-ls="${path}" oninput="onListinoField(this)"/>`;
+  const area = (path, val, ph, rows) => `<textarea rows="${rows||2}" maxlength="4000" placeholder="${esc(ph||'')}" data-ls="${path}" oninput="onListinoField(this)">${esc(val)}</textarea>`;
+  const sel = (path, opts, v) => `<select data-ls="${path}" onchange="onListinoField(this,true)">${opts.map(([k,l])=>`<option value="${k}"${k===v?' selected':''}>${esc(l)}</option>`).join('')}</select>`;
+  const del = (key, i, t) => `<button type="button" class="ls-del" title="${t||'Elimina voce'}" onclick="delListinoRow('${key}',${i})">✕</button>`;
+  const add = (key, t) => `<button type="button" class="mini-btn ls-add" onclick="addListinoRow('${key}')">＋ ${t}</button>`;
+  const suf = x => x.unita === 'm2' ? '€/m²' : x.unita === 'pct' ? '%' : '€';
+  const items = key => listino[key].map((x,i)=>`<div class="ls-row ls-row-u">
+      ${txt(key+'.'+i+'.nome', x.nome, 'Nome voce', 120, key === 'acc')}
+      ${num(key+'.'+i+'.prezzo', x.prezzo, x.unita === 'pct' ? 1 : 10, suf(x))}
+      ${sel(key+'.'+i+'.unita', LS_UNITA, x.unita)}
+      ${del(key, i)}
+      ${area(key+'.'+i+'.desc', x.desc, 'Descrizione nel preventivo (facoltativa)', 2)}</div>`).join('');
+  const sols = listino.soluzioni;
   body.innerHTML = `
-    <div class="crm-card"><h3>🏊 Vasca per formato</h3>
-      <div class="ls-note"><b>Soluzione A</b>: posa struttura in pannelli d'acciaio e contrafforti, profilo fermatelo, impiantistica interna, locale tecnico pre-assemblato da interrare, collegamento tubazioni, posa liner in PVC armato. Platea e prese di fondo a cura del cliente.<br>
-      <b>Soluzione B</b>: tutto quanto in A più opere edili (tracciamento, platea in calcestruzzo 25 cm con doppia rete, plinti per il marciapiede, cordolo di bloccaggio dei contrafforti).<br>
-      Per misure non standard si usa il formato più piccolo che contiene la vasca. <b>La fornitura del kit</b> non è nel listino Archimede: inserisci il prezzo se va compreso nel preventivo.</div>
-      ${formati}<button type="button" class="mini-btn ls-add" onclick="addListinoRow('formati')">＋ Aggiungi formato</button></div>
+    <div class="crm-card"><h3>🏗 Soluzioni</h3><div class="ls-note">Le soluzioni tra cui scegliere nel preventivo di ogni cliente. Il testo dei lavori compresi e le esclusioni finiscono nel documento per il cliente.</div>
+      ${sols.map((x,i)=>`<div class="ls-fmt">
+        <div class="ls-fmt-h ls-fmt-hn">${txt('soluzioni.'+i+'.nome', x.nome, 'Nome della soluzione', 120, true)}${del('soluzioni', i, 'Elimina soluzione')}</div>
+        <div class="crm-field"><label>Lavori compresi</label>${area('soluzioni.'+i+'.desc', x.desc, 'Cosa comprende questa soluzione', 4)}</div>
+        <div class="crm-field"><label>Esclusioni</label>${area('soluzioni.'+i+'.escl', x.escl, 'Cosa non è compreso', 3)}</div></div>`).join('')}
+      ${add('soluzioni', 'Aggiungi soluzione')}</div>
+    <div class="crm-card"><h3>🏊 Vasca per formato</h3><div class="ls-note">Un prezzo per ogni soluzione. Per misure non standard si usa il formato più piccolo che contiene la vasca; oltre il più grande il prezzo è stimato.</div>
+      ${listino.formati.map((f,i)=>`<div class="ls-fmt">
+        <div class="ls-fmt-h"><b>Formato ${esc(fmtFormato(f))}</b>${del('formati', i, 'Elimina formato')}</div>
+        <div class="ls-fmt-g">
+          <div class="crm-field"><label>Lunghezza (m)</label>${num('formati.'+i+'.L', f.L, 0.5, 'm')}</div>
+          <div class="crm-field"><label>Larghezza (m)</label>${num('formati.'+i+'.W', f.W, 0.5, 'm')}</div>
+          ${sols.map(so=>`<div class="crm-field"><label data-ls-sol="${esc(so.id)}">${esc(solShort(so))}</label>${num('formati.'+i+'.prezzi.'+so.id, fPrezzo(f, so.id), 50, '€')}</div>`).join('')}
+          ${listino.kit.attivo ? `<div class="crm-field"><label data-ls-kit>${esc(listino.kit.nome || 'Fornitura kit')}</label>${num('formati.'+i+'.kit', f.kit, 50, '€')}</div>` : ''}
+          <div class="crm-field ls-dot"><label>Dotazione in vasca</label>${txt('formati.'+i+'.dot', f.dot, 'es. 2 skimmer, 3 bocchette…', 300)}</div>
+        </div></div>`).join('')}
+      ${add('formati', 'Aggiungi formato')}</div>
+    <div class="crm-card"><h3>📦 Fornitura kit</h3><div class="ls-note">Il prezzo si inserisce per ogni formato. Non è nel listino Archimede: se non va nel preventivo, togli la spunta.</div>
+      <label class="chk" style="margin-bottom:10px"><input type="checkbox" data-ls="kit.attivo" ${listino.kit.attivo ? 'checked' : ''} onchange="onListinoField(this,true)"><span>Includi la voce nei preventivi</span></label>
+      ${listino.kit.attivo ? `<div class="crm-grid">
+        <div class="crm-field"><label>Nome della voce</label>${txt('kit.nome', listino.kit.nome, 'Fornitura kit', 120, true)}</div>
+        <div class="crm-field"><label>Dettaglio breve</label>${txt('kit.dett', listino.kit.dett, 'es. pannelli, liner…', 200)}</div>
+        <div class="crm-field full"><label>Descrizione nel preventivo</label>${area('kit.desc', listino.kit.desc, '', 2)}</div></div>` : ''}</div>
     <div class="crm-card"><h3>⚙️ Impostazioni</h3>
       <div class="crm-grid">
         <div class="crm-field"><label>IVA (%)</label>${num('iva', listino.iva, 1, '%')}</div>
         <div class="crm-field"><label>Margine di variazione del preventivo (±%)</label>${num('varPct', listino.varPct, 1, '%')}</div>
-        <div class="crm-field full"><label>Soluzione proposta di default</label><select data-ls="solDefault" onchange="onListinoField(this,true)">${SOLUZIONI.map(([k,l])=>`<option value="${k}"${k===listino.solDefault?' selected':''}>${esc(l)}</option>`).join('')}</select></div>
-        <div class="crm-field full"><label>Fonte dei prezzi</label><input type="text" maxlength="160" value="${esc(listino.fonte)}" data-ls="fonte" oninput="onListinoField(this)"/></div>
+        <div class="crm-field full"><label>Soluzione proposta di default</label>${sel('solDefault', sols.map(x=>[esc(x.id), x.nome || 'Soluzione senza nome']), listino.solDefault)}</div>
+        <div class="crm-field full"><label>Fonte dei prezzi</label>${txt('fonte', listino.fonte, 'Nome del listino', 160)}</div>
       </div></div>
-    <div class="crm-card"><h3>⏱ Lavori in economia e oneri</h3><div class="ls-note">Dal listino: tariffe orarie già comprensive di spese generali e utili d'impresa, IVA esclusa. Usate nelle condizioni del preventivo.</div>
-      <div class="crm-grid">
-        <div class="crm-field"><label>Manodopera (operaio)</label>${num('econ.manodopera', listino.econ.manodopera, 1, '€/h')}</div>
-        <div class="crm-field"><label>Assistenza tecnica in cantiere</label>${num('econ.assistenza', listino.econ.assistenza, 1, '€/h')}</div>
-        <div class="crm-field"><label>Bagno chimico, se manca un servizio igienico</label>${num('econ.bagno', listino.econ.bagno, 10, '€/mese')}</div>
-      </div></div>
-    <div class="crm-card"><h3>🪨 Pavimentazione intorno alla vasca</h3><div class="ls-note">Esclusa dal listino Archimede (bordo, marciapiede, solarium): lascia 0 se la fa il piastrellista del cliente o una ditta terza, oppure inserisci il vostro prezzo al m².</div>
+    <div class="crm-card"><h3>✨ Accessori</h3><div class="ls-note">Compaiono come caselle nella richiesta del cliente. Prezzo a corpo, al m² di vasca o in % sul prezzo della vasca; a 0 risultano "da definire".</div>
+      ${items('acc')}${add('acc', 'Aggiungi accessorio')}</div>
+    <div class="crm-card"><h3>🪨 Pavimentazione intorno alla vasca</h3><div class="ls-note">Esclusa dal listino Archimede (bordo, marciapiede, solarium): lascia 0 se la fa il piastrellista del cliente o una ditta terza.</div>
       <div class="crm-grid"><div class="crm-field"><label>Pavimentazione (€/m²)</label>${num('pavPrezzo', listino.pavPrezzo, 5, '€/m²')}</div>
-        <div class="crm-field"><label>Larghezza standard del solo bordo (m)</label>${num('bordoLarg', listino.bordoLarg, 0.05, 'm')}</div>
-        <div class="crm-field"><label>Bordo a sfioro: maggiorazione sulla vasca</label>${num('sfioroPct', listino.sfioroPct, 1, '%')}</div></div></div>
-    <div class="crm-card"><h3>✨ Accessori</h3><div class="ls-note">Esclusi dal listino Archimede (idromassaggio, controcorrente, illuminazioni particolari, centraline di disinfezione…): a 0 risultano "da definire".</div>
-      ${LS_ACC.map(([k,l])=>`<div class="ls-row"><div class="ls-name">${esc(l)}</div>${num('acc.'+k, listino.acc[k], 100, '€')}</div>`).join('')}</div>
-    <div class="crm-card"><h3>🧱 Costi fissi</h3><div class="ls-note">Voci da aggiungere sempre a ogni preventivo (es. vostre spese di pratica). Scavo, permessi e allacci sono a carico del cliente secondo il listino.</div>
-      ${rowsHtml('fissi', listino.fissi, '€', 100)}<button type="button" class="mini-btn ls-add" onclick="addListinoRow('fissi')">＋ Aggiungi costo fisso</button></div>
+        <div class="crm-field"><label>Larghezza standard del solo bordo (m)</label>${num('bordoLarg', listino.bordoLarg, 0.05, 'm')}</div></div></div>
+    <div class="crm-card"><h3>🧱 Costi fissi</h3><div class="ls-note">Voci aggiunte sempre a ogni preventivo (es. vostre spese di pratica).</div>
+      ${items('fissi')}${add('fissi', 'Aggiungi costo fisso')}</div>
     <div class="crm-card"><h3>➕ Voci extra</h3><div class="ls-note">Voci facoltative da spuntare nel preventivo del cliente.</div>
-      ${rowsHtml('extra', listino.extra, '€', 10, true)}<button type="button" class="mini-btn ls-add" onclick="addListinoRow('extra')">＋ Aggiungi voce extra</button></div>`;
+      ${items('extra')}${add('extra', 'Aggiungi voce extra')}</div>
+    <div class="crm-card"><h3>⏱ Lavori in economia</h3><div class="ls-note">Tariffe IVA esclusa, riportate nelle condizioni generali del preventivo.</div>
+      ${listino.econ.map((x,i)=>`<div class="ls-row ls-row-u">${txt('econ.'+i+'.nome', x.nome, 'Nome voce')}${num('econ.'+i+'.prezzo', x.prezzo, 1, '€')}${sel('econ.'+i+'.unita', LS_UNITA_EC, x.unita)}${del('econ', i)}</div>`).join('')}
+      ${add('econ', 'Aggiungi tariffa')}</div>
+    <div class="crm-card"><h3>📝 Testi standard del preventivo</h3><div class="ls-note">Valori di partenza di ogni nuovo preventivo; nel singolo preventivo restano modificabili. Lascia vuoto un testo per toglierlo dal documento.</div>
+      <div class="crm-field full"><label>Modalità di pagamento</label>${area('testi.pay', listino.testi.pay, '', 3)}</div>
+      <div class="crm-field full"><label>Oneri del cliente</label>${area('testi.oneri', listino.testi.oneri, '', 4)}</div>
+      <div class="crm-field full"><label>Condizioni generali</label>${area('testi.cond', listino.testi.cond, '', 4)}</div>
+      <div class="crm-field full"><label>Fasi e tempi</label>
+        ${listino.fasi.map((x,i)=>`<div class="ls-row qt-fase">${txt('fasi.'+i+'.t', x.t, 'Fase', 160)}${txt('fasi.'+i+'.d', x.d, 'Durata (facoltativa)', 160)}${del('fasi', i, 'Elimina fase')}</div>`).join('')}
+        ${add('fasi', 'Aggiungi fase')}</div></div>`;
 }
 function onListinoField(el, rerender) {
   const path = el.dataset.ls.split('.'), v = el.value;
   const n = Number(v), isNum = el.type === 'number';
   if (isNum && (v === '' || !isFinite(n) || n < 0)) return;
-  let obj = listino; for (let i = 0; i < path.length-1; i++) obj = obj[path[i]];
-  const k = path[path.length-1];
-  obj[k] = isNum ? n : (k === 'nome' ? v.slice(0,80) : v);
+  let obj = listino; for (let i = 0; i < path.length-1; i++) { obj = obj[path[i]]; if (!obj) return; }
+  obj[path[path.length-1]] = el.type === 'checkbox' ? el.checked : isNum ? n : v;
   listino = cleanListino(listino); saveListino();
   document.getElementById('ls-updated').textContent = 'Ultima modifica: ' + fmtDT(listino.updatedAt);
-  if (rerender) renderListino();
-  renderPrevControls(); refreshAll(); renderArchive();
+  if (rerender) renderListino(); else lsSyncLabels();
+  renderReqFeats(); renderPrevControls(); refreshAll(); renderArchive();
+}
+function lsSyncLabels() {   // aggiorna le etichette che dipendono dai nomi senza ridisegnare la pagina (il campo in uso resta attivo)
+  document.querySelectorAll('#ls-body [data-ls-sol]').forEach(l=>{ const so = solById(l.dataset.lsSol); if (so) l.textContent = solShort(so); });
+  document.querySelectorAll('#ls-body [data-ls-kit]').forEach(l=>{ l.textContent = listino.kit.nome || 'Fornitura kit'; });
+  const sd = document.querySelector('#ls-body select[data-ls="solDefault"]');
+  if (sd) [...sd.options].forEach(o=>{ const so = solById(o.value); if (so) o.textContent = so.nome || 'Soluzione senza nome'; });
 }
 function addListinoRow(key) {
-  const row = key === 'formati' ? { id: lsId(), L: 0, W: 0, a: 0, b: 0, kit: 0, dot: '' } : { id: lsId(), nome: '', prezzo: 0 };
-  if (key === 'extra') row.unita = 'corpo';
-  if (key === 'formati') { row.L = 12; row.W = 6; }
-  listino[key].push(row); listino = cleanListino(listino); saveListino(); renderListino(); renderPrevControls(); refreshAll();
-  const inputs = document.querySelectorAll(`#ls-body input[data-ls^="${key}."]`); if (inputs.length) inputs[inputs.length - (key === 'formati' ? 6 : 1)].focus();
+  const id = lsId();
+  const row = key === 'formati' ? { id, L: 12, W: 6, prezzi: {}, kit: 0, dot: '' }
+    : key === 'soluzioni' ? { id, nome: 'Nuova soluzione', desc: '', escl: '' }
+    : key === 'econ' ? { id, nome: '', prezzo: 0, unita: 'ora' }
+    : key === 'fasi' ? { t: '', d: '' }
+    : { id, nome: '', prezzo: 0, unita: 'corpo', desc: '' };
+  listino[key].push(row); listino = cleanListino(listino); saveListino(); renderListino(); renderReqFeats(); renderPrevControls(); refreshAll();
+  const el = document.querySelector(`#ls-body [data-ls^="${key}.${listino[key].length-1}."]`); if (el) { el.focus(); if (el.select) el.select(); }
 }
 function delListinoRow(key, i) {
   const x = listino[key][i]; if (!x) return;
   if (key === 'formati' && listino.formati.length <= 1) { toast('Serve almeno un formato'); return; }
-  if (!confirm('Eliminare "' + (key === 'formati' ? 'formato ' + fmtFormato(x) : (x.nome || 'voce senza nome')) + '" dal listino?')) return;
-  listino[key].splice(i,1); listino = cleanListino(listino); saveListino(); renderListino(); renderPrevControls(); refreshAll(); renderArchive();
+  if (key === 'soluzioni' && listino.soluzioni.length <= 1) { toast('Serve almeno una soluzione'); return; }
+  const nome = key === 'formati' ? 'formato ' + fmtFormato(x) : key === 'fasi' ? (x.t || 'fase senza nome') : (x.nome || 'voce senza nome');
+  if (!confirm('Eliminare "' + nome + '" dal listino?')) return;
+  listino[key].splice(i,1); listino = cleanListino(listino); saveListino(); renderListino(); renderReqFeats(); renderPrevControls(); refreshAll(); renderArchive();
 }
 function resetListino() {
   if (!confirm('Ripristinare i prezzi originali del listino Archimede? Le modifiche fatte a mano andranno perse su questo dispositivo.')) return;
@@ -4171,7 +4249,7 @@ function requestSummaryText() {
   if (r.entry) L.push('Ingresso: ' + lab(ENTRIES, r.entry).toLowerCase());
   if (r.pav) { const pm = pavMq(r); L.push('Pavimentazione: ' + lab(PAV_TYPES, r.pav).toLowerCase() + (pm ? ', ' + fmtNum(pm.mq) + ' m²' + (pm.stima ? ' (bordo da ' + bordoCm() + ' cm)' : '') : '') + (r.pavBy === 'cliente' ? ' — a cura del cliente' : '')); }
   if (r.fornitori.length) L.push('Il cliente ha già: ' + r.fornitori.join(', '));
-  const feats = FEATURES.filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
+  const feats = getFeatures().filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
   if (feats.length) L.push('Accessori: ' + feats.join(', '));
   if (r.budget != null) L.push('Budget ' + (r.btype==='stimato' ? 'stimato' : 'dichiarato') + ': € ' + r.budget.toLocaleString('it-IT') + (r.btype==='tetto' ? ' (tetto massimo)' : ''));
   if (r.timing) L.push('Tempi: ' + lab(TIMINGS, r.timing).toLowerCase());
@@ -4214,6 +4292,7 @@ function extractRequest(text) {
   if (/rettangolar/.test(T)) out.shape = 'rettangolare'; else if (/forma\s+a\s+l\b|\bad\s+l\b/.test(T)) out.shape = 'L'; else if (/forma\s+libera|fagiolo|ovale|curva/.test(T)) out.shape = 'libera';
   const F = { luci:/illuminazion|\bled\b|\bluci\b|faretti/, riscald:/riscaldament|pompa di calore/, copertura:/copertur|\btelo\b/, idro:/idromassagg|cascata|jacuzzi|getti/, controc:/controcorrente/, domotica:/domotic|automazion/, sale:/\bsale\b|elettrolisi/, sfioro:/sfioro|infinity/ };
   Object.entries(F).forEach(([k,re])=>{ if (re.test(T)) out.feats[k] = true; });
+  listino.acc.forEach(x=>{ const n = (x.nome || '').toLowerCase().trim(); if (!F[x.id] && n.length >= 4 && T.includes(n)) out.feats[x.id] = true; });
   if (/solarium|prendisole|zona (?:relax|sole|lettini)|bordo piscina e zona/.test(T)) out.pav = 'solarium';
   else if (/(?:platea|bordo|marciapiede|camminamento|pavimentazione) (?:perimetral|in pietra|in travertino|piscina|intorno)|bordi in|platea perimetrale/.test(T)) out.pav = 'bordo';
   const bw = T.match(/(?:platea|bordo|marciapiede|camminamento|pavimentazione)[^\d]{0,30}(\d{2,3})\s*cm/);
@@ -4434,7 +4513,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-22-1';
+const BUILD = '2026-10-22-2';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
