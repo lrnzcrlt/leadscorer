@@ -954,6 +954,18 @@ input.sl-mod{border-color:var(--amber-dk,#a2581b)}
 .pk-row{display:grid;grid-template-columns:minmax(0,1fr) 120px 36px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
 .pk-n{font-size:14px;font-weight:500}
 #pk-add{width:100%;margin-top:8px}
+.pj-kit{border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:linear-gradient(180deg,rgba(10,127,153,.07),rgba(10,127,153,.02))}
+.pj-kit-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:15px}.pj-kit-h span{margin-left:auto;font:700 16px 'Sora',sans-serif;color:var(--acqua-dk,#0b6f86)}
+.pj-kit-d{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.5}
+.pj-warn{font-size:13px;color:var(--amber-dk,#a2581b);margin-top:6px}
+#pj-acc .pv-d{min-height:0;margin-top:3px}
+.pj-inc-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pj-inc-g>div{border:1px solid var(--border);border-radius:14px;padding:10px 12px;background:var(--surf)}
+.pj-inc-g h4{margin:0 0 6px;font:700 13px 'Sora',sans-serif;color:var(--text)}
+.pj-inc-g ul{margin:0;padding-left:18px;font-size:12.8px;line-height:1.5;color:var(--text2)}
+.pj-inc-g li{margin:2px 0}
+.pj-ver{font-size:12.5px;color:var(--text3);margin-top:8px;line-height:1.5}
+@media(max-width:900px){.pj-inc-g{grid-template-columns:1fr}}
 .pk-from{font-size:13px;color:var(--text2);background:rgba(10,127,153,.06);border-radius:10px;padding:9px 12px;line-height:1.5}
 @media(max-width:600px){.pk-row{grid-template-columns:minmax(0,1fr) 36px}.pk-row>.ls-price{grid-column:1;grid-row:2}.pk-row>.ls-del{grid-column:2;grid-row:1}.sl-in{width:80px}}
 .ls-row.ls-pis{grid-template-columns:minmax(0,1fr) 110px 110px 170px 40px}
@@ -1108,57 +1120,77 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
   </div>
 
   <div class="crm-card" id="req-card">
-    <h3>📝 Richiesta del cliente</h3>
+    <h3>🏊 Progetto piscina</h3>
     <div class="crm-field"><label>Testo della richiesta (incolla il messaggio ricevuto dal sito)</label>
-      <textarea id="req-text" rows="4" maxlength="3000" placeholder="es. Vorrei una piscina 20x8, colore azzurro, profondità variabile, ingresso con gradini, illuminazione…" oninput="onReqField()"></textarea>
+      <textarea id="req-text" rows="4" maxlength="3000" placeholder="es. Vorrei una piscina 8x4 rettangolare, 1,50 di profondità, colore sabbia, scala romana, luci LED e pompa di calore…" oninput="onReqField()"></textarea>
       <div class="quick-days">
         <button type="button" onclick="parseRequest()">✨ Compila i campi dal testo</button>
         <button type="button" onclick="copyRequestSummary()">📋 Copia riepilogo</button>
       </div></div>
-    <div class="crm-grid" style="margin-top:.8rem">
+
+    <div class="pv-sec">📏 Vasca <span>kit San Lorenzo</span></div>
+    <div class="crm-grid">
       <div class="crm-field"><label>Forma</label><select id="req-shape" onchange="onReqField()"></select><div class="pv-d" id="req-shape-hint"></div></div>
       <div class="crm-field"><label>Profondità</label><select id="req-prof" onchange="onReqField()"></select><div class="pv-d" id="req-prof-hint"></div></div>
       <div class="crm-field"><label id="req-len-l">Lunghezza (m)</label><input type="number" id="req-len" min="0" max="100" step="0.5" inputmode="decimal" oninput="onReqField()"/></div>
       <div class="crm-field" id="req-wid-wrap"><label>Larghezza (m)</label><input type="number" id="req-wid" min="0" max="100" step="0.5" inputmode="decimal" oninput="onReqField()"/></div>
+      <div class="crm-field"><label>Modello</label><select id="pk-mod" onchange="onKitField()"></select></div>
+      <div class="crm-field"><label>Misura del kit</label><select id="pk-mis" onchange="onKitField()"></select></div>
       <div class="crm-field"><label>Rivestimento e colore</label><select id="req-color" onchange="onReqField()"></select></div>
-      <div class="crm-field"><label>Ingresso in acqua</label><select id="req-entry" onchange="onReqField()"></select></div>
-      <div class="crm-field"><label>Budget del cliente (€)</label><input type="text" id="req-budget" inputmode="decimal" autocomplete="off" placeholder="es. 35.000" oninput="onReqField()" onblur="fmtEuroInput(this)"/></div>
-      <div class="crm-field"><label>Che budget è?</label><select id="req-btype" onchange="onReqField()"></select></div>
+      <div class="crm-field" id="pk-stell-wrap"><label>Struttura</label><select id="pk-stell" onchange="onKitField()"></select></div>
+      <div class="crm-field full"><div class="pj-kit" id="pj-kit"></div></div>
+    </div>
+
+    <div class="pv-sec">🪜 Ingresso in acqua</div>
+    <div class="crm-grid"><div class="crm-field full"><select id="req-entry" onchange="onReqField()"></select><div class="pv-d" id="req-entry-hint"></div></div></div>
+
+    <div class="pv-sec">✨ Accessori <span>dal listino, dimensionati sulla vasca</span></div>
+    <div class="crm-grid" id="pj-acc"></div>
+    <div class="crm-grid">
+      <div class="crm-field full"><label>Coperture</label><div class="feat-grid" id="pk-cop"></div></div>
+      <div class="crm-field full"><label>Altri desideri del cliente</label><div class="feat-grid" id="req-feats"></div></div>
+    </div>
+
+    <div class="pv-sec">🪨 Bordo e pavimentazione</div>
+    <div class="crm-grid">
       <div class="crm-field"><label>Bordo e pavimentazione</label><select id="req-pav" onchange="onReqField()"></select></div>
       <div class="crm-field" id="req-bordo-wrap"><label>Tipo di bordo in pietra</label><select id="req-bordo" onchange="onReqField()"></select></div>
       <div class="crm-field"><label>Superficie bordo + solarium (m²)</label><input type="number" id="req-pavmq" min="0" max="2000" step="0.5" inputmode="decimal" oninput="onReqField()"/><div class="pv-d" id="req-pav-hint"></div></div>
       <div class="crm-field"><label>Pavimentazione realizzata da</label><select id="req-pavby" onchange="onReqField()"></select></div>
-      <div class="crm-field"><label>Il cliente ha già</label><div class="pv-d" id="req-forn" style="padding-top:10px">—</div></div>
-      <div class="crm-field"><label>Tempi desiderati</label><select id="req-timing" onchange="onReqField()"></select></div>
-      <div class="crm-field full"><label>Accessori e complementi</label><div class="feat-grid" id="req-feats"></div></div>
+      <div class="crm-field full"><label>Il cliente ha già</label><div class="pv-d" id="req-forn" style="padding-top:4px">—</div></div>
     </div>
+
+    <div class="pv-sec">🏗 Costruzione <span>listino Archimede</span></div>
+    <div class="crm-grid">
+      <div class="crm-field full"><label>Soluzione</label><select id="prev-tipo" onchange="onPrevField()"></select><div class="pv-d" id="pj-sol-hint"></div></div>
+      <div class="crm-field full" id="prev-extras-wrap"><label>Altre voci di costruzione</label><div class="feat-grid" id="prev-extras"></div></div>
+    </div>
+
+    <div class="pv-sec">💰 Budget e tempi</div>
+    <div class="crm-grid">
+      <div class="crm-field"><label>Budget del cliente (€)</label><input type="text" id="req-budget" inputmode="decimal" autocomplete="off" placeholder="es. 35.000" oninput="onReqField()" onblur="fmtEuroInput(this)"/></div>
+      <div class="crm-field"><label>Che budget è?</label><select id="req-btype" onchange="onReqField()"></select></div>
+      <div class="crm-field"><label>Tempi desiderati</label><select id="req-timing" onchange="onReqField()"></select></div>
+    </div>
+
+    <div class="pv-sec">📋 Cosa è compreso</div>
+    <div id="pj-inc"></div>
     <div class="req-sum" id="req-summary"></div>
     <div class="budget-check" id="budget-check"></div>
   </div>
 
   <div class="crm-card" id="prev-card">
     <h3>💶 Preventivo indicativo</h3>
-    <div class="pv-sec">📦 Kit piscina <span>listino San Lorenzo</span></div>
     <div class="crm-grid">
-      <div class="crm-field"><label>Modello</label><select id="pk-mod" onchange="onKitField()"></select></div>
-      <div class="crm-field"><label>Misura</label><select id="pk-mis" onchange="onKitField()"></select></div>
-      <div class="crm-field" id="pk-stell-wrap"><label>Struttura</label><select id="pk-stell" onchange="onKitField()"></select></div>
-      <div class="crm-field full"><div class="pk-from" id="pk-from"></div></div>
-      <div class="crm-field full"><label>Coperture</label><div class="feat-grid" id="pk-cop"></div></div>
-      <div class="crm-field full"><label>Optional e accessori</label><div id="pk-opt"></div><select id="pk-add" onchange="addOpt(this)"></select></div>
       <div class="crm-field"><label id="prev-sconto-l">Sconto kit piscina (%)</label><input type="number" id="prev-sconto" min="0" max="50" step="1" inputmode="decimal" placeholder="0" oninput="onPrevField()"/></div>
-    </div>
-    <div class="pv-sec">🏗 Costruzione e opere edili <span>listino Archimede</span></div>
-    <div class="crm-grid">
-      <div class="crm-field"><label>Soluzione</label><select id="prev-tipo" onchange="onPrevField()"></select></div>
       <div class="crm-field"><label id="prev-scontoo-l">Sconto costruzione e opere edili (%)</label><input type="number" id="prev-scontoo" min="0" max="50" step="1" inputmode="decimal" placeholder="0" oninput="onPrevField()"/></div>
-      <div class="crm-field full" id="prev-extras-wrap"><label>Altre voci di costruzione</label><div class="feat-grid" id="prev-extras"></div></div>
+      <div class="crm-field full"><label>Altri optional dal listino</label><div id="pk-opt"></div><select id="pk-add" onchange="addOpt(this)"></select></div>
     </div>
     <div class="pv-sec">🧾 Riepilogo</div>
     <div id="prev-table"></div>
     <div class="quick-days" style="margin-top:.7rem">
       <button type="button" onclick="copyPreventivo()">📋 Copia preventivo</button>
-      <button type="button" onclick="showPage('listino')">💶 Modifica listino</button>
+      <button type="button" onclick="showPage('listino')">💶 Apri il listino</button>
     </div>
   </div>
 
@@ -2052,6 +2084,168 @@ function slKitSel(r) {
   if (!prof) prof = profs.includes(r.prof) ? r.prof : profs.includes('p120') ? 'p120' : profs[0];
   return { m, o, fuori, auto, misAuto, prof, profAuto: !profs.includes(k.prof), profNonDisp: !!r.prof && !profs.includes(r.prof) };
 }
+// ── Dati tecnici dal listino San Lorenzo (una riga per misura, stesso ordine delle righe prezzi) ──
+// [volume m³ FP120, FT120, FP150, FT150, locale tecnico, skimmer, bocchette, presa spazzola, prese di fondo, filtro, pompa HP, portata m³/h]
+const SL_TEC = {
+  family:[[11,null,15,null,'Box 1',1,1,0,2,'6 m³/h',0.5,10],[17,null,21,null,'Box 1',1,1,0,2,'6 m³/h',0.5,10],[20,null,26,null,'Box 1',1,2,0,2,'10 m³/h',0.5,10],[24,null,30,null,'Box 1',1,2,0,2,'10 m³/h',0.5,10]],
+  idra:[[38.4,43,48,56,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[32.4,36,40.5,46.8,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[43.2,48,54,63.25,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],
+    [48,56,60,70.49,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[60,71,75,87,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[66,78,82.5,96.07,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[72,85,90,105.13,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],
+    [86.4,102,108,127.2,'Box 3',3,4,1,2,'Mediterraneo 750',1.5,22],[93.6,110,117,138.22,'Box 3',3,4,1,2,'Mediterraneo 750',1.5,22],[84,99,105,123.24,'Box 3',3,4,1,2,'Mediterraneo 750',1.5,22],[100.8,119,126,149.24,'Box 3',3,4,1,2,'Mediterraneo 750',1.5,22],
+    [117.6,138,147,175.2,'Box 3',3,5,1,2,'Mediterraneo 900',3,30],[126,147,157.5,188.17,'Box 3',3,5,1,2,'Mediterraneo 900',3,30],[134.4,158,168,201.14,'Box 3',4,5,1,2,'Mediterraneo 900',3,30],
+    [153.6,181,192,231,'Box Plus',4,6,1,2,'2 × Mediterraneo 750',3,42],[194.4,228,243,294.6,'Box Plus',6,8,1,2,'2 × Mediterraneo 750',3,42],[240,282,300,366,'Box Plus',8,10,1,2,'2 × Mediterraneo 900',6,62]],
+  linea3:[[17,null,21,null,'Mini Box',1,1,0,2,'cartuccia 12 m³/h',0.75,12],[20,null,26,null,'Mini Box',1,1,0,2,'cartuccia 12 m³/h',0.75,12],[24,null,30,null,'Mini Box',1,1,0,2,'cartuccia 12 m³/h',0.75,12]],
+  andromeda:[[37.37,43.94,46.71,52.89,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[59.97,71.13,73.71,84.89,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[85.37,103.07,106.07,123.12,'Box 3',3,4,1,2,'Mediterraneo 750',1.5,22],[115.28,145.87,144.11,171.92,'Box 3',4,5,1,2,'Mediterraneo 900',3,30]],
+  fenice:[[24.04,29.09,30.05,34.71,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[38.74,48.24,48.42,57.04,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[43.54,54.43,54.42,64.29,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],
+    [56.77,69.11,70.97,82.3,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[78.16,98.03,97.7,115.88,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[85.36,107.48,106.7,126.91,'Box 3',3,4,1,2,'Mediterraneo 750',1.5,22]],
+  pegaso:[[19.3,null,24.12,null,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[26.48,null,33.11,null,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[39.08,null,48.86,null,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],
+    [53.56,null,66.95,null,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[65.56,null,81.9,null,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[84.32,null,105.41,null,'Box 3',3,4,1,2,'Mediterraneo 750',1.5,22]],
+  cassiopea:[[29.3,36.21,36.63,42.91,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[37.39,44.3,46.74,53.02,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[52.8,63.01,66,75.42,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],
+    [55.72,65.92,69.65,79.07,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[78.66,95.15,98.33,113.4,'Box 3',3,4,1,2,'Mediterraneo 650',1.5,22]],
+  orione:[[21.18,26.07,26.48,30.95,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[31.45,38.36,39.32,45.6,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[35.05,41.96,43.82,50.1,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],
+    [49.92,59.6,62.4,71.3,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[76.43,100.77,95.54,117.68,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[82.44,106.78,103.05,125.19,'Box 3',3,4,1,2,'Mediterraneo 750',2,22],
+    [135,179.77,167.75,209.28,'Box 3',4,5,1,2,'Mediterraneo 900',3,30],[206.64,263.97,258.97,310.13,'Box Plus',6,8,1,2,'2 × Mediterraneo 750',3,42]],
+  perseo:[[44.66,52,55.8,63.2,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[49.46,58.69,61.8,70.62,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],[66.83,82.49,83.5,97.83,'Box 2',2,3,1,2,'Mediterraneo 650',1,16],
+    [72.83,89.3,91,106.17,'Box 3',3,4,1,2,'Mediterraneo 750',2,23],[85.54,103.18,106.5,123.1,'Box 3',3,4,1,2,'Mediterraneo 750',2,23]],
+  corona:[[15.07,null,18.84,null,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[33.92,null,42.41,null,'Box 1',1,2,0,2,'Mediterraneo 500',0.75,10],[60.32,null,75.41,null,'Box 2',2,3,0,2,'Mediterraneo 650',1,16]]
+};
+function slTec(m, o) {
+  const t = SL_TEC[m.id] && SL_TEC[m.id][o.i];
+  if (!t) return { vol: { p120: Math.round(o.L * o.W * 1.25 * 10) / 10 }, box:'', sk:0, bc:0, ps:0, pf:0, filtro:'', hp:0, portata:0 };
+  return { vol: { p120:t[0], t120:t[1] ?? t[0], p150:t[2] }, box:t[4], sk:t[5], bc:t[6], ps:t[7], pf:t[8], filtro:t[9], hp:t[10], portata:t[11] };
+}
+function poolVol(ks) { const t = slTec(ks.m, ks.o); return t.vol[ks.prof] ?? t.vol.p120; }
+
+// ── Accessori del progetto: scelte del cliente → articoli del listino dimensionati sulla vasca ──
+const PJ_ACC = [
+  { k:'luci', lab:'Illuminazione', feat:'luci', opts:[['','Nessuna'],['b1','1 faro LED bianco'],['b2','2 fari LED bianchi'],['r1','1 faro LED RGB (colori)'],['r2','2 fari LED RGB + sincronizzatore radio']] },
+  { k:'tratt', lab:'Trattamento dell’acqua', feat:'sale', opts:[['','Cloro tradizionale (trousse di analisi compresa)'],['sale','Impianto a sale'],['salph','Impianto a sale + regolatore pH automatico'],['ph','Solo regolatore pH automatico']] },
+  { k:'risc', lab:'Riscaldamento', feat:'riscald', opts:[['','Nessuno'],['pdc','Pompa di calore'],['inv','Pompa di calore inverter (scalda e raffresca)'],['scamb','Scambiatore in titanio (caldaia o solare)']] },
+  { k:'idro', lab:'Idromassaggio', feat:'idro', opts:[['','Nessuno'],['dromax','Bocchetta a getto rotativo Dromax'],['i4','Kit idromassaggio 4 getti'],['i6','Kit idromassaggio 6 getti'],['i8','Kit idromassaggio 8 getti'],['bubble','Piastra Acqua Bubble']] },
+  { k:'ncc', lab:'Nuoto controcorrente', feat:'controc', opts:[['','Nessuno'],['ncc22','Jet 2,2 kW monofase (uso ludico)'],['ncc3','Jet 3 kW trifase (uso ludico maggiorato)']] },
+  { k:'pul', lab:'Pulizia', feat:'robot', opts:[['','Kit di pulizia manuale (compreso)'],['rk300','Robot Ayrton RK300'],['rk600','Robot Ayrton RK600'],['mozzo','Robot Mozzo Advance TOP'],['mozzo3000','Robot Mozzo TOP SUPER 3000 (Bluetooth)'],['catfish','Pulitore a batteria Catfish']] },
+  { k:'doccia', lab:'Doccia solare', feat:'doccia', opts:[['','Nessuna'],['d28','Doccia solare 28 l'],['d40','Doccia solare 40 l'],['jolly','Doccia Jolly in alluminio'],['jollyp','Doccia Jolly con sciacquapiedi'],['bigjollyp','Doccia Big Jolly con sciacquapiedi'],['bigjollyi','Doccia Big Jolly inox']] }
+];
+const PJ_DEF = { luci:'', tratt:'', risc:'', idro:'', ncc:'', pul:'', doccia:'', recMl:null, gate:'' };
+const pjPick = (v, steps) => { for (const [max, id] of steps) if (v <= max) return id; return null; };
+// Articoli per una scelta: [{ id, q, nota, incluso }] oppure { daDef: 'motivo' }
+function pjItems(k, v, ks) {
+  if (!v) return [];
+  const vol = ks ? poolVol(ks) : null, tec = ks ? slTec(ks.m, ks.o) : null, l3 = ks && ks.m.id === 'linea3';
+  switch (k) {
+    case 'luci': {
+      const rgb = v[0] === 'r', n = Number(v[1]), id = rgb ? 'faro_rgb' : 'faro_b';
+      const out = [{ id, q:n }];
+      if (l3 && !rgb) { out[0].q = n - 1; out.unshift({ id, q:1, incluso:true, nota:'faro LED bianco compreso nel kit Linea 3' }); if (!out[1].q) out.pop(); }
+      if (rgb && n >= 2) out.push({ id:'sincro', q:1, nota:'obbligatorio con 2 o più fari RGB' });
+      return out; }
+    case 'tratt': {
+      const out = [];
+      if (v === 'sale' || v === 'salph') { const id = vol == null ? null : pjPick(vol, [[35,'sale35'],[75,'elet75'],[90,'elet90']]);
+        if (!id) return { daDef: 'impianto a sale per ' + (vol ? '≈ ' + fmtNum(Math.round(vol)) + ' m³' : 'questa vasca') + ': oltre i 90 m³ del listino, chiedere alla sede' };
+        out.push({ id, q:1, nota: 'per ≈ ' + fmtNum(Math.round(vol)) + ' m³ d’acqua' }); }
+      if (v === 'salph' || v === 'ph') out.push({ id: (v === 'salph' && out[0] && out[0].id === 'sale35') ? 'phpoz' : 'ph', q:1 });
+      return out; }
+    case 'risc': {
+      if (vol == null) return { daDef: 'inserisci le dimensioni della vasca' };
+      if (v === 'scamb') return [{ id: pjPick(vol, [[40,'kwt25'],[70,'kwt45'],[120,'kwt85']]) || 'kwt105', q:1, nota:'dimensionamento indicativo, ≈ ' + fmtNum(Math.round(vol)) + ' m³' }];
+      const steps = v === 'inv' ? [[60,'evoe30'],[70,'evoe40'],[85,'evoe50']] : [[15,'evo05'],[20,'evo08'],[30,'evo12'],[60,'evoe30'],[70,'evoe40'],[85,'evoe50']];
+      const id = pjPick(vol, steps); if (id) return [{ id, q:1, nota:'per ≈ ' + fmtNum(Math.round(vol)) + ' m³ d’acqua' }];
+      return [{ id:'evoe50', q: Math.ceil(vol / 85), nota:'≈ ' + fmtNum(Math.round(vol)) + ' m³: più pompe in parallelo, verificare con la sede' }]; }
+    case 'idro': return [{ id: { dromax:'dromax', i4:'idro4', i6:'idro6', i8:'idro8', bubble:'bubble' }[v], q:1 }];
+    case 'ncc': case 'pul': case 'doccia': return [{ id: v, q:1 }];
+  }
+  return [];
+}
+// Allaccio al locale tecnico: by-pass per riscaldamento ed elettrolisi a by-pass escluso
+function pjBypass(r, ks) { if (!ks || !r.cfg.risc) return null; return slTec(ks.m, ks.o).portata > 16 ? 'bypass63' : 'bypass50'; }
+// Scala: valori speciali o un articolo "Scale" del listino
+const ENTRY_SPECIAL = [['','—'],['inox','Scala inox a 3 gradini (compresa nel kit)'],['muratura','Gradini in muratura (opere edili)'],['rampa','Rampa / spiaggia (su progetto)']];
+function entryOptions(prof) {
+  const h150 = prof === 'p150' || prof === 't120';
+  const pref = id => /120/.test(id) ? !h150 : /150/.test(id) ? h150 : true;
+  const sc = SL_ACC.filter(a=>a[0] === 'Scale' && !/^bscala|_pvc$|_lt$/.test(a[1]));
+  return { special: ENTRY_SPECIAL, scale: sc.filter(a=>pref(a[1])).concat(sc.filter(a=>!pref(a[1]))) };
+}
+// Dalla vecchia richiesta (caselle) alle scelte del progetto
+function entryLabel(r) { const sp = ENTRY_SPECIAL.find(x=>x[0] === r.entry && x[0]); if (sp) return sp[1]; const a = SL_ACC.find(x=>x[1] === r.entry); return a ? a[2] : (ENTRIES.find(x=>x[0] === r.entry && x[0]) || [,''])[1]; }
+function featsToCfg(r) {
+  const c = r.cfg, f = r.feats || {};
+  if (f.luci && !c.luci) c.luci = 'b1';
+  if (f.sale && !c.tratt) c.tratt = 'sale';
+  if (f.riscald && !c.risc) c.risc = 'pdc';
+  if (f.idro && !c.idro) c.idro = 'i4';
+  if (f.controc && !c.ncc) c.ncc = 'ncc22';
+  if (f.robot && !c.pul) c.pul = 'rk300';
+  if (f.doccia && !c.doccia) c.doccia = 'd28';
+  const em = { romana: r.prof === 'p150' ? 'romp150_25' : 'romp120_25', angolo:'ang24', circolare:'circ13', recessa: r.prof === 'p150' ? 'rec150_2' : 'rec120_2', panca: r.prof === 'p150' ? 'panca_a150' : 'panca_a120', balneo:'balneo' };
+  if (em[r.entry]) r.entry = em[r.entry];
+}
+function cfgToFeats(r) {
+  const c = r.cfg, f = r.feats;
+  PJ_ACC.forEach(a=>{ if (c[a.k]) f[a.feat] = true; else delete f[a.feat]; });
+  if (c.tratt === 'ph') delete f.sale;
+  if (c.recMl > 0 || c.gate) f.recinzione = true;
+  if (Object.values(r.kit.cop || {}).some(Boolean)) f.copertura = true;
+}
+
+// ── Scheda "Progetto piscina": vasca, accessori dimensionati, cosa è compreso ──
+const REQ_EXTRA = ['copertura','recinzione','domotica','sfioro'];
+function pjItemsPrice(k, v, ks) { const it = pjItems(k, v, ks); if (it.daDef) return null; return it.reduce((s,x)=>{ const a = slAcc(x.id); return s + (a && !x.incluso ? a.prezzo * x.q : 0); }, 0); }
+function renderProject() {
+  const box = document.getElementById('pj-acc'); if (!box) return;
+  const r = crm.request, ks = slKitSel(r), c = r.cfg;
+  // riepilogo del kit scelto
+  const kit = document.getElementById('pj-kit');
+  if (!ks) kit.innerHTML = '<span class="pv-d">Inserisci forma e misure: il modello del kit si sceglie da solo.</span>';
+  else { const t = slTec(ks.m, ks.o), vol = poolVol(ks), price = ks.o[ks.prof];
+    kit.innerHTML = `<div class="pj-kit-h"><b>${esc(ks.m.nome)} ${esc(slDim(ks.m, ks.o))}</b> · ${esc((ks.m.prof && ks.m.prof[ks.prof]) || SL_PROF[ks.prof])}<span>${price != null ? eurFmt(price) : '—'}</span></div>
+      <div class="pj-kit-d">≈ ${fmtNum(Math.round(vol))} m³ d’acqua${t.box ? ' · locale tecnico ' + esc(t.box) + ', filtro ' + esc(t.filtro) + (t.hp ? ', pompa ' + fmtNum(t.hp) + ' HP (' + t.portata + ' m³/h)' : '') : ''}${t.sk ? ' · ' + t.sk + ' skimmer, ' + t.bc + ' bocchette' + (t.ps ? ', presa spazzola' : '') + ', ' + t.pf + ' prese di fondo' : ''}</div>
+      ${ks.fuori ? '<div class="pj-warn">⚠ Nessuna misura di questo modello contiene la vasca richiesta: scegli un altro modello o la misura.</div>' : ''}
+      ${r.shape === 'disegno' ? '<div class="pj-warn">⚠ Forma su disegno: il prezzo è una stima, il preventivo vero lo fa l’ufficio tecnico San Lorenzo.</div>' : ''}
+      ${ks.profNonDisp ? '<div class="pj-warn">⚠ La profondità richiesta non esiste per questo modello: usata ' + esc((ks.m.prof && ks.m.prof[ks.prof]) || SL_PROF[ks.prof]) + '.</div>' : ''}`; }
+  // ingresso in acqua
+  const eo = entryOptions(r.prof), ent = document.getElementById('req-entry');
+  ent.innerHTML = eo.special.map(([v,l])=>`<option value="${v}"${v === r.entry ? ' selected' : ''}>${esc(l)}</option>`).join('') +
+    `<optgroup label="Scale del listino San Lorenzo">${eo.scale.map(a=>`<option value="${a[1]}"${a[1] === r.entry ? ' selected' : ''}>${esc(a[2])} · ${eur2(slo('a.' + a[1], a[3]))}</option>`).join('')}</optgroup>`;
+  document.getElementById('req-entry-hint').textContent = r.entry === 'inox' && (r.prof === 'p150') ? 'Con 1,50 m di profondità valuta la scala Trianon a 4 gradini (pannello 150).' : /^panca_/.test(r.entry) ? 'Al prezzo si aggiungono € 240 di PVC antisdrucciolo del colore scelto.' : r.entry === 'muratura' ? 'Esclusa dal listino Archimede: va quotata a parte.' : '';
+  // accessori
+  box.innerHTML = PJ_ACC.map(a=>`<div class="crm-field"><label>${esc(a.lab)}</label><select id="pj-${a.k}" onchange="onPjField()">${a.opts.map(([v,l])=>{ const p = v && ks ? pjItemsPrice(a.k, v, ks) : null;
+      return `<option value="${v}"${v === c[a.k] ? ' selected' : ''}>${esc(l)}${v ? (p == null ? (ks ? ' · da definire' : '') : p === 0 ? ' · compreso' : ' · ' + eurFmt(p)) : ''}</option>`; }).join('')}</select>
+      <div class="pv-d">${c[a.k] && ks ? (()=>{ const it = pjItems(a.k, c[a.k], ks); return it.daDef ? '⚠ ' + esc(it.daDef) : esc(it.map(x=>{ const ac = slAcc(x.id); return ac ? (x.q > 1 ? x.q + ' × ' : '') + ac.nome + (x.incluso ? ' (compreso)' : '') : ''; }).join(' + ')); })() : ''}</div></div>`).join('') +
+    `<div class="crm-field" id="pj-rec-wrap"${r.feats.recinzione ? '' : ' style="display:none"'}><label>Recinzione di sicurezza (metri)</label><input type="number" id="pj-recMl" min="0" max="500" step="1" inputmode="decimal" value="${c.recMl ?? ''}" oninput="onPjField()" placeholder="${ks ? 'perimetro vasca ≈ ' + Math.round(2 * (ks.o.L + ks.o.W)) + ' m' : ''}"/><div class="pv-d">€ ${fmtNum(slo('a.beth', 63.6))} al metro</div></div>
+     <div class="crm-field" id="pj-gate-wrap"${r.feats.recinzione ? '' : ' style="display:none"'}><label>Cancelletto</label><select id="pj-gate" onchange="onPjField()">${[['','Nessuno'],['gate_e','Cancelletto Easy 122 × 122'],['gate_p','Cancelletto Platinum 100 × 122']].map(([v,l])=>`<option value="${v}"${v === c.gate ? ' selected' : ''}>${esc(l)}${v ? ' · ' + eur2(slo('a.' + v, 992.3)) : ''}</option>`).join('')}</select></div>`;
+  // coperture: prezzo accanto a ogni voce
+  if (ks) document.querySelectorAll('#pk-cop label.chk').forEach(l=>{ const i = l.querySelector('input'), c2 = i.dataset.cop, sp = l.querySelector('span');
+    let p = null; if (c2 === 'iso' || c2 === 'inv') p = ks.o[c2]; else { const f = slSized(SL_COP[c2].rows, ks.o.L, ks.o.W); p = f ? slo('c.' + c2 + '.' + f.i, f.x[2]) : (SL_COP[c2].m2 && ks.o.L <= 12 && ks.o.W <= 5 ? slo('c.' + c2 + '.m2', SL_COP[c2].m2) * (ks.o.L + .5) * (ks.o.W + .5) : null); }
+    sp.innerHTML = esc(SL_COP_OPT.find(x=>x[0] === c2)[1]) + ` <span style="color:var(--text3)">· ${p == null ? 'misura fuori listino' : eurFmt(p)}</span>`; });
+  // costruzione
+  const so = solObj(r);
+  document.getElementById('pj-sol-hint').textContent = so.id === 'A' ? 'Solo montaggio della piscina: platea, prese di fondo e ogni opera edile sono a cura del cliente (o di una sua impresa).' : so.id === 'B' ? 'Montaggio più opere edili: tracciamento, platea in calcestruzzo armato, plinti per il marciapiede, cordolo dei contrafforti.' : '';
+  document.getElementById('pj-inc').innerHTML = pjIncluso(r, ks);
+}
+function onPjField() {
+  const r = crm.request, c = r.cfg;
+  PJ_ACC.forEach(a=>{ const el = document.getElementById('pj-' + a.k); if (el) c[a.k] = el.value; });
+  const ml = Number(document.getElementById('pj-recMl').value); c.recMl = ml > 0 ? Math.min(500, ml) : null;
+  c.gate = document.getElementById('pj-gate').value;
+  cfgToFeats(r); renderReqFeats(); renderKitAll(); updateReqSummary(); refreshAll(); markUnsaved();
+}
+// Cosa è compreso e cosa no, per il kit scelto e la soluzione di costruzione (dai listini San Lorenzo e Archimede)
+function pjIncluso(r, ks) {
+  const so = solObj(r), l3 = ks && ks.m.id === 'linea3', arte = ks && ks.m.id === 'arte', t = ks ? slTec(ks.m, ks.o) : null;
+  const ul = a => '<ul>' + a.filter(Boolean).map(x=>`<li>${x}</li>`).join('') + '</ul>';
+  const kit = arte ? ['Struttura modulare in pannelli d’acciaio zincato', 'Rivestimento interno in PVC presaldato', 'Skimfiltre a doppia cartuccia', 'Pompa a magneti permanenti in bassa tensione', 'Proiettore LED bianco']
+    : l3 ? ['Pannelli in acciaio zincato a caldo (garanzia 20 anni)', 'Rivestimento PVC 1,5 mm in tinta unita, guida in alluminio', 'Locale tecnico Mini Box con pompa 0,55 kW, tubi e raccordi', '1 skimmer con filtro a cartuccia 12 m³/h, 1 bocchetta, 2 prese di fondo', 'Quadro elettrico con orologio, regolatore di livello', '<b>Faro LED bianco</b> con trasformatore', '<b>Bordo perimetrale rialzato</b> (bianco, sabbia o grigio)']
+    : ['Pannelli SL in acciaio biplastificato con rinforzi e zanche (garanzia 25 anni)', 'Rivestimento PVC 1,5 mm in tinta unita, guida in alluminio', 'Locale tecnico in vetroresina' + (t && t.box ? ' (' + t.box + ')' : '') + ' con pompa e filtro a sabbia' + (t && t.filtro ? ' ' + t.filtro : '') + ', sabbia di quarzo, collettore e raccorderia',
+       t && t.sk ? t.sk + ' skimmer, ' + t.bc + ' bocchette' + (t.ps ? ', presa spazzola' : '') + ', 2 pozzetti di fondo' : 'Skimmer, bocchette e pozzetti di fondo', 'Tubazioni PVC rigide e flessibili, quadro elettrico con orologio', 'Regolatore automatico di livello', 'Scala inox a 3 gradini', 'Kit di pulizia (aspirafondo, retino, spazzola, manico, tubo, termometro) e trousse cloro/pH'];
+  const cos = ['Posa di pannelli, contrafforti e profilo fermatelo', 'Posa di skimmer, bocchette e faro in vasca', 'Locale tecnico interrato e collegamento delle tubazioni', 'Posa del liner in PVC termosaldato', 'Manodopera, trasferta, trasporti, materiali di consumo, sicurezza']
+    .concat(so.id === 'B' ? ['<b>Opere edili:</b> tracciamento, platea in calcestruzzo 25 cm con doppia rete, plinti per il marciapiede, cordolo dei contrafforti'] : []);
+  const no = ['Trasporto del kit (€ ' + thouSep(listino.sped.prezzo) + ', già nel preventivo)', 'Scavo, rinterri e movimento terra', so.id === 'A' ? 'Platea in cemento armato e prese di fondo (Soluzione A)' : '', 'Bordo, marciapiede e solarium (posa)', 'Scala in muratura',
+    'Installazione di centraline sale/pH, idromassaggio, controcorrente, luci aggiuntive, by-pass', 'Linea di scarico del locale tecnico e troppo-pieno', 'Allacci elettrici e idraulici', 'Messa in moto dell’impianto e istruzioni', 'Permessi comunali, energia e acqua di cantiere, smaltimento', 'Servizio igienico per gli operai (o bagno chimico € 200/mese)'];
+  const ver = [!l3 && !arte ? 'Faro: non elencato nella fornitura standard del kit (il quadro è predisposto). Verificare con la sede.' : '', 'Prezzi di costruzione validi entro 50 km da Padova, confermati dopo il sopralluogo.', 'Elaborati strutturali da consegnare prima dei lavori.'];
+  return `<div class="pj-inc-g"><div><h4>📦 Nel kit San Lorenzo</h4>${ul(kit)}</div><div><h4>🏗 Nella costruzione (${esc(solShort(so))})</h4>${ul(cos)}</div><div><h4>🚫 Non compreso</h4>${ul(no)}</div></div><div class="pj-ver">${ver.filter(Boolean).map(x=>'ℹ️ ' + x).join('<br>')}</div>`;
+}
+
 function slKitPriceFor(L, W) {   // per la vasca più grande che sta nel budget: kit standard 1,20 + trasporto
   const s = slKitSel({ len:L, wid:W, shape:'rettangolare', kit:{} }); if (!s || s.fuori) return null;
   return s.o.p120 + (listino.sped.attivo ? listino.sped.prezzo : 0);
@@ -2181,6 +2375,13 @@ function solObj(r) { return solById(solOf(r)) || listino.soluzioni[0]; }
 function solShort(so) { return ((so && so.nome) || 'Soluzione').split(' — ')[0]; }
 function fPrezzo(f, sol) { return (f.prezzi && f.prezzi[sol]) || 0; }
 function getFeatures() { return REQ_FEATS; }
+function cfgText(r) {   // accessori scelti nel progetto, in parole
+  const c = r.cfg || {}, L = [];
+  PJ_ACC.forEach(a=>{ if (c[a.k]) L.push(a.opts.find(o=>o[0] === c[a.k])[1].replace(/\s*\(.*\)$/, '').toLowerCase()); });
+  if (c.recMl > 0 || c.gate) L.push('recinzione di sicurezza' + (c.recMl > 0 ? ' ' + fmtNum(c.recMl) + ' m' : ''));
+  ['copertura','domotica','sfioro'].forEach(k=>{ if (r.feats && r.feats[k]) L.push((REQ_FEATS.find(x=>x[0] === k) || [k,k])[1].toLowerCase()); });
+  return L;
+}
 function rowImp(x, fm, area) { return x.unita === 'm2' ? x.prezzo * area : x.unita === 'pct' ? (fm ? fm.prezzo : 0) * x.prezzo / 100 : x.prezzo; }
 function rowDett(x, area) { return x.unita === 'm2' ? fmtNum(Math.round(area*10)/10) + ' m²' + (x.prezzo > 0 ? ' × ' + eurFmt(x.prezzo) + '/m²' : '') : x.unita === 'pct' ? (x.prezzo > 0 ? '+' + fmtNum(x.prezzo) + '% sulla vasca' : '% sulla vasca') : 'a corpo'; }
 function rowPriceTxt(x) { return x.prezzo > 0 ? (x.unita === 'pct' ? '+' + fmtNum(x.prezzo) + '% sulla vasca' : eurFmt(x.prezzo) + (x.unita === 'm2' ? '/m²' : '')) : 'da definire'; }
@@ -2241,7 +2442,7 @@ function calcPreventivo(r) {
         push({ voce:'Piastrelle Espace 50 × 50 per il solarium', dett: fmtNum(mq) + ' m²' + (b ? ' · ' + b + (b > 1 ? ' bancali' : ' bancale') + ' da 9 m²' : '') + (rest ? (b ? ' + ' : ' · ') + fmtNum(rest) + ' m² × ' + eur2(pq) : ''), imp: costo, grp:'acc', key:'kpav', parte:'kit' }); }
       else push({ voce:'Piastrelle per il solarium', dett:'indica i m² di bordo + solarium nella richiesta', imp:0, grp:'acc', key:'kpav', parte:'kit' }); }
   }
-  let robot = 0, bancali = (ks && r._bancali) || 0; delete r._bancali;
+  let robot = 0, bancali = (ks && r._bancali) || 0; delete r._bancali; if (!r.cfg) r.cfg = { ...PJ_DEF };
   (r.opt || []).forEach(x=>{ const a = slAcc(x.id); if (!a) return; const q = x.q > 0 ? x.q : 1;
     if (a.extra === 'robot') robot += q; if (a.extra === 'bancale') bancali += q;
     push({ voce: a.nome, dett: (q !== 1 || a.unita !== 'pz' ? fmtNum(q) + (a.unita === 'ml' ? ' ml' : a.unita === 'm2' ? ' m²' : ' pz') + ' × ' : '') + eur2(a.prezzo) + SL_UNIT[a.unita], imp: a.prezzo * q, grp:'acc', key:'opt:' + a.id, parte:'kit' }); });
@@ -2249,16 +2450,34 @@ function calcPreventivo(r) {
   const tt = crm && crm.request === r && crm.tech ? crm.tech.type : '';
   if (tt === 'rock' && !hasOpt(/^rock$/)) { const a = slAcc('rock'); push({ voce: a.nome, dett:'scelto nel locale tecnico', imp: a.prezzo, grp:'acc', key:'tech:rock', parte:'kit' }); }
   if (tt === 'up' && !hasOpt(/^up[12]$/)) { const a = slAcc(area <= 60 ? 'up1' : 'up2'); push({ voce: a.nome, dett:'scelto nel locale tecnico', imp: a.prezzo, grp:'acc', key:'tech:up', parte:'kit' }); }
-  if (ENTRY_ACC[r.entry] && !hasOpt(ENTRY_ACC[r.entry])) push({ voce: labOf(ENTRIES, r.entry) + ' (richiesta dal cliente)', dett:'scegli il modello tra gli optional: scale', imp:0, grp:'acc', key:'entry', parte:'kit' });
+  if (false && ENTRY_ACC[r.entry]) push({ voce: labOf(ENTRIES, r.entry) + ' (richiesta dal cliente)', dett:'scegli il modello tra gli optional: scale', imp:0, grp:'acc', key:'entry', parte:'kit' });
   if (r.entry === 'muratura' && !(r.extras && r.extras.scala)) { const x = listino.extra.find(e=>e.id === 'scala'); push({ voce:'Gradini di ingresso in muratura', dett: x && x.prezzo > 0 ? 'a corpo' : 'esclusi dal listino Archimede: da quotare', imp: x ? x.prezzo : 0, grp:'acc', key:'entry', parte:'opere' }); }
   if (r.entry === 'rampa') push({ voce:'Rampa / spiaggia di ingresso', dett:'su progetto: da quotare', imp:0, grp:'acc', key:'entry', parte:'opere' });
+  // scelte del progetto → articoli del listino
+  if (ks) {
+    PJ_ACC.forEach(a=>{ const v = r.cfg && r.cfg[a.k]; if (!v) return; const it = pjItems(a.k, v, ks);
+      if (it.daDef) { push({ voce: a.lab, dett: it.daDef, imp:0, grp:'acc', key:'cfg:' + a.k, parte:'kit' }); return; }
+      it.forEach(x=>{ const ac = slAcc(x.id); if (!ac || !x.q) return; if (ac.extra === 'robot') robot += x.q;
+        push({ voce: ac.nome, dett: [x.q > 1 ? x.q + ' × ' + eur2(ac.prezzo) : (x.incluso ? '' : 'a corpo'), x.nota].filter(Boolean).join(' · '), imp: x.incluso ? 0 : ac.prezzo * x.q, incluso: !!x.incluso, grp:'acc', key:'cfg:' + a.k, parte:'kit' }); }); });
+    const bp = pjBypass(r, ks); if (bp) { const ac = slAcc(bp); push({ voce: ac.nome, dett:'per collegare il riscaldamento al locale tecnico', imp: ac.prezzo, grp:'acc', key:'cfg:bypass', parte:'kit' }); }
+    if (r.cfg.recMl > 0) { const ac = slAcc('beth'); push({ voce: ac.nome, dett: fmtNum(r.cfg.recMl) + ' m × ' + eur2(ac.prezzo), imp: ac.prezzo * r.cfg.recMl, grp:'acc', key:'cfg:rec', parte:'kit' }); }
+    if (r.cfg.gate) { const ac = slAcc(r.cfg.gate); push({ voce: ac.nome, dett:'a corpo', imp: ac.prezzo, grp:'acc', key:'cfg:rec', parte:'kit' }); }
+    if (r.feats && r.feats.recinzione && !(r.cfg.recMl > 0) && !r.cfg.gate) push({ voce:'Recinzione di sicurezza (richiesta dal cliente)', dett:'indica i metri di recinzione', imp:0, grp:'acc', key:'cfg:rec', parte:'kit' });
+    // scala scelta dal listino
+    const sc = SL_ACC.find(a=>a[0] === 'Scale' && a[1] === r.entry);
+    if (sc && !(r.opt || []).some(x=>x.id === sc[1])) { const ac = slAcc(sc[1]); push({ voce: ac.nome, dett:'a corpo', imp: ac.prezzo, grp:'acc', key:'entry', parte:'kit' });
+      if (/^panca_[ar]/.test(sc[1])) { const pv = slAcc('panca_pvc'); push({ voce: pv.nome, dett:'obbligatorio per la scala con panca', imp: pv.prezzo, grp:'acc', key:'entry', parte:'kit' }); } }
+    // installazioni escluse dal listino Archimede
+    const inst = [r.cfg.tratt ? 'centralina ' + (r.cfg.tratt === 'ph' ? 'pH' : 'del sale') : '', r.cfg.idro ? 'idromassaggio' : '', r.cfg.ncc ? 'nuoto controcorrente' : '', r.cfg.luci && r.cfg.luci[1] === '2' ? 'secondo faro' : '', r.cfg.risc ? 'by-pass del riscaldamento' : ''].filter(Boolean);
+    if (inst.length) push({ voce:'Installazione di ' + inst.join(', '), dett:'esclusa dal listino Archimede: lavori in economia, da quotare', imp:0, grp:'acc', key:'inst', parte:'opere' });
+  }
   // accessori chiesti dal cliente ma non ancora scelti dal listino
   Object.keys(r.feats || {}).forEach(f=>{ if (!r.feats[f]) return;
     const lab = (REQ_FEATS.find(x=>x[0] === f) || [f, f])[1];
     if (f === 'sfioro') push({ voce:'Bordo a sfioro', dett:'non compreso nel listino Archimede: da quotare', imp:0, grp:'acc', key:'feat:sfioro', parte:'opere' });
-    else if (f === 'copertura') { if (!Object.values(kk.cop || {}).some(Boolean)) push({ voce:'Copertura (richiesta dal cliente)', dett:'scegli il tipo di copertura', imp:0, grp:'acc', key:'feat:copertura', parte:'kit' }); }
+    else if (f === 'copertura' && ks) { if (!Object.values(kk.cop || {}).some(Boolean)) push({ voce:'Copertura (richiesta dal cliente)', dett:'scegli il tipo di copertura', imp:0, grp:'acc', key:'feat:copertura', parte:'kit' }); }
     else if (f === 'domotica') push({ voce:'Domotica (richiesta dal cliente)', dett:'sistema Merlino: prezzo da chiedere alla sede', imp:0, grp:'acc', key:'feat:domotica', parte:'kit' });
-    else if (FEAT_CAT[f] && !(r.opt || []).some(x=>{ const a = slAcc(x.id); return a && a.cat === FEAT_CAT[f]; })) push({ voce: lab + ' (richiesta dal cliente)', dett:'scegli il prodotto tra gli optional: ' + FEAT_CAT[f].toLowerCase(), imp:0, grp:'acc', key:'feat:' + f, parte:'kit' });
+    else if (false && FEAT_CAT[f]) push({ voce: lab + ' (richiesta dal cliente)', dett:'scegli il prodotto tra gli optional: ' + FEAT_CAT[f].toLowerCase(), imp:0, grp:'acc', key:'feat:' + f, parte:'kit' });
   });
   if (listino.sped.attivo) push({ voce: listino.sped.nome || 'Trasporto kit piscina', dett:'a corpo', imp: listino.sped.prezzo, grp:'vasca', key:'sped', parte:'kit' });
   if (ks && kk.cop && kk.cop.inv) push({ voce:'Trasporto copertura invernale', dett:'a corpo', imp: listino.trasp.inv, grp:'vasca', key:'tr:inv', parte:'kit' });
@@ -3598,11 +3817,11 @@ function reportHtml() {
   if (c.notes) h += sec('Note del commerciale', `<div class="rp-quote" style="margin-top:0">${E(c.notes)}</div>`);
 
   // Richiesta
-  const feats = getFeatures().filter(([k])=>r.feats[k]).map(x=>x[1]).join(', ');
+  const feats = cfgText(r).join(', ');
   const reqBody = dl([
     row('Dimensioni', r.len && r.wid ? fmtNum(r.len)+' × '+fmtNum(r.wid)+' m <span style="color:var(--ink3)">('+Math.round(r.len*r.wid)+' m²)</span>' : (r.len||r.wid ? fmtNum(r.len||r.wid)+' m' : '')),
     row('Forma', lab(SHAPES, r.shape)), row('Profondità', E(profText(r))),
-    row('Ingresso', lab(ENTRIES, r.entry)), row('Rivestimento', E(r.color)), row('Bordo e pavimentazione', r.pav ? lab(PAV_TYPES, r.pav) + ' · ' + lab(BORDO_TIPI, r.bordoTipo).toLowerCase() : ''), row('Tempi', lab(TIMINGS, r.timing)),
+    row('Ingresso', E(entryLabel(r))), row('Rivestimento', E(r.color)), row('Bordo e pavimentazione', r.pav ? lab(PAV_TYPES, r.pav) + ' · ' + lab(BORDO_TIPI, r.bordoTipo).toLowerCase() : ''), row('Tempi', lab(TIMINGS, r.timing)),
     row('Accessori', E(feats), true)
   ]) + (r.text ? `<div class="rp-quote">“${E(r.text)}”</div>` : '');
   h += sec('Richiesta del cliente', reqBody);
@@ -4395,7 +4614,7 @@ function updatePavHint() {
   if (r.pavBy === 'cliente') el.textContent += (el.textContent ? ' · ' : '') + 'a cura del cliente: esclusa dal preventivo';
 }
 const BUDGET_TYPES = [['','—'],['indicativo','Indicativo / flessibile'],['tetto','Tetto massimo rigido'],['stimato','Stimato da noi (non detto dal cliente)']];
-function defaultReq() { return { text:'', len:null, wid:null, shape:'', color:'', prof:'', bordoTipo:'bR', depthType:'', dmin:null, dmax:null, entry:'', timing:'', budget:null, btype:'', feats:{}, tipo:'', extras:{}, sconto:null, scontoO:null, kit:{ mod:'', mis:-1, prof:'', bordo:'', cop:{}, pvc:'', stell:false }, opt:[], pav:'', pavMq:null, pavBy:'', fornitori:[], sol:'' }; }
+function defaultReq() { return { text:'', len:null, wid:null, shape:'', color:'', prof:'', bordoTipo:'bR', depthType:'', dmin:null, dmax:null, entry:'', timing:'', budget:null, btype:'', feats:{}, tipo:'', extras:{}, sconto:null, scontoO:null, kit:{ mod:'', mis:-1, prof:'', bordo:'', cop:{}, pvc:'', stell:false }, opt:[], cfg:{ ...PJ_DEF }, pav:'', pavMq:null, pavBy:'', fornitori:[], sol:'' }; }
 function cleanReq(raw) {
   const r = defaultReq();
   if (!raw || typeof raw !== 'object') return r;
@@ -4418,7 +4637,14 @@ function cleanReq(raw) {
   { const k = (raw.kit && typeof raw.kit === 'object') ? raw.kit : {};
     r.kit = { mod: slMod(k.mod) ? k.mod : '', mis: Number.isInteger(k.mis) && k.mis >= 0 && k.mis < 40 ? k.mis : -1, prof: SL_PROF[k.prof] ? k.prof : '', bordo: ['bR','bP'].includes(k.bordo) ? k.bordo : '',
               cop: Object.fromEntries(SL_COP_OPT.map(([c])=>[c, !!(k.cop && k.cop[c] === true)]).filter(x=>x[1])), pvc: ['touch','eco'].includes(k.pvc) ? k.pvc : '', stell: k.stell === true };
-    r.opt = Array.isArray(raw.opt) ? raw.opt.filter(x=>x && SL_ACC.some(a=>a[1] === x.id)).slice(0,60).map(x=>({ id:x.id, q: Number(x.q) > 0 && Number(x.q) <= 10000 ? Number(x.q) : 1 })) : []; }   // prima c'era un solo sconto per tutto
+    const cf = (raw.cfg && typeof raw.cfg === 'object') ? raw.cfg : null;
+    r.cfg = { ...PJ_DEF };
+    if (cf) { PJ_ACC.forEach(a=>{ if (a.opts.some(o=>o[0] === cf[a.k])) r.cfg[a.k] = cf[a.k]; }); r.cfg.recMl = num(cf.recMl, 500); r.cfg.gate = ['gate_e','gate_p'].includes(cf.gate) ? cf.gate : ''; }
+    r.opt = Array.isArray(raw.opt) ? raw.opt.filter(x=>x && SL_ACC.some(a=>a[1] === x.id)).slice(0,60).map(x=>({ id:x.id, q: Number(x.q) > 0 && Number(x.q) <= 10000 ? Number(x.q) : 1 })) : []; }
+  { const isSc = v => SL_ACC.some(a=>a[0] === 'Scale' && a[1] === v);
+    if (isSc(raw.entry)) r.entry = raw.entry;
+    featsToCfg(r);   // lead salvati prima della scheda Progetto: le caselle diventano scelte dimensionate
+    if (!isSc(r.entry) && !ENTRY_SPECIAL.some(x=>x[0] === r.entry)) r.entry = ''; }   // prima c'era un solo sconto per tutto
   return r;
 }
 function fmtNum(n) { return String(n).replace('.',','); }
@@ -4445,7 +4671,7 @@ function parseEuro(v) {
 function fmtEuroInput(el) { const n = parseEuro(el.value); if (n != null) el.value = n.toLocaleString('it-IT', { maximumFractionDigits: 2 }); }
 function renderReqFeats() {
   const el = document.getElementById('req-feats'); if (!el) return;
-  const r = crm.request, F = getFeatures();
+  const r = crm.request, F = getFeatures().filter(([k])=>REQ_EXTRA.includes(k)).map(([k,l])=>[k, k === 'copertura' ? 'Copertura (tipo da scegliere)' : l]);
   el.innerHTML = F.length ? F.map(([k,l])=>`<label class="chk"><input type="checkbox" ${r.feats[k]?'checked':''} onchange="onReqField()" data-feat="${esc(k)}"><span>${esc(l)}</span></label>`).join('') : '<span class="pv-d">Nessun accessorio nel Listino</span>';
 }
 function updateReqHints() {
@@ -4468,7 +4694,6 @@ function renderRequestForm() {
   { const known = PVC_COLORI.some(g=>g[2].includes(r.color));
     document.getElementById('req-color').innerHTML = '<option value="">— da definire —</option>' + (r.color && !known ? `<option value="${esc(r.color)}" selected>${esc(r.color)} (scritto dal cliente)</option>` : '') +
       PVC_COLORI.map(([g,,cs])=>`<optgroup label="${esc(g)}">${cs.map(c=>`<option value="${esc(c)}"${c === r.color ? ' selected' : ''}>${esc(c.charAt(0).toUpperCase() + c.slice(1))}</option>`).join('')}</optgroup>`).join(''); }
-  document.getElementById('req-entry').innerHTML = optionsHtml(ENTRIES, r.entry);
   document.getElementById('req-bordo').innerHTML = optionsHtml(BORDO_TIPI, r.bordoTipo);
   updateReqHints();
   document.getElementById('req-timing').innerHTML = optionsHtml(TIMINGS, r.timing);
@@ -4489,13 +4714,16 @@ function onReqField() {
   r.len = num('req-len'); r.wid = r.shape === 'tonda' ? r.len : num('req-wid'); r.budget = parseEuro(document.getElementById('req-budget').value);
   if (r.shape === 'tonda') document.getElementById('req-wid').value = r.len == null ? '' : r.len;
   r.prof = document.getElementById('req-prof').value; r.bordoTipo = document.getElementById('req-bordo').value === 'bP' ? 'bP' : 'bR';
-  r.entry = document.getElementById('req-entry').value; r.timing = document.getElementById('req-timing').value;
+  r.entry = document.getElementById('req-entry').value || r.entry; r.timing = document.getElementById('req-timing').value;
   r.btype = document.getElementById('req-btype').value;
   r.color = document.getElementById('req-color').value.slice(0,60);
   updateReqHints();
   r.pav = document.getElementById('req-pav').value; r.pavMq = num('req-pavmq'); r.pavBy = document.getElementById('req-pavby').value; updatePavHint();
-  r.feats = {};
+  REQ_EXTRA.forEach(k=>{ delete r.feats[k]; });
   document.querySelectorAll('#req-feats input[data-feat]').forEach(i=>{ if (i.checked) r.feats[i.dataset.feat] = true; });
+  if (!r.feats.recinzione) { r.cfg.recMl = null; r.cfg.gate = ''; }
+  cfgToFeats(r);
+  renderKitAll();
   updateReqSummary();
   refreshAll();
   markUnsaved();
@@ -4505,12 +4733,10 @@ function renderKitControls() {
   const r = crm.request, k = r.kit, s = slKitSel(r), opt = (a, v) => a.map(([x,l])=>`<option value="${esc(String(x))}"${String(x) === String(v) ? ' selected' : ''}>${esc(l)}</option>`).join('');
   const set = (id, h, dis) => { const el = document.getElementById(id); el.innerHTML = h; el.disabled = !!dis; };
   set('pk-mod', `<option value="">Automatico${s && s.auto ? ': ' + esc(s.m.nome) : ''}</option>` + opt(SL_MOD.map(m=>[m.id, m.nome + ' · ' + m.forma.split(' · ')[0].toLowerCase()]), k.mod));
-  if (!s) { ['pk-mis','pk-stell'].forEach(id=>set(id, '<option>—</option>', true)); document.getElementById('pk-from').innerHTML = ''; document.getElementById('pk-cop').innerHTML = '<span class="pv-d">Inserisci prima lunghezza e larghezza</span>'; }
+  if (!s) { ['pk-mis','pk-stell'].forEach(id=>set(id, '<option>—</option>', true)); document.getElementById('pk-cop').innerHTML = '<span class="pv-d">Inserisci prima lunghezza e larghezza</span>'; }
   else {
     set('pk-mis', (s.auto ? '' : `<option value="-1">Automatica: ${esc(slDim(s.m, slFit(s.m, Math.max(r.len, r.wid), Math.min(r.len, r.wid)).o))}</option>`) + s.m.rows.map((_,i)=>{ const o = slRow(s.m, i); return `<option value="${i}"${!s.misAuto && i === s.o.i ? ' selected' : ''}>${esc(slDim(s.m, o))}</option>`; }).join(''), s.auto);
     if (s.auto) document.getElementById('pk-mis').innerHTML = `<option>${esc(slDim(s.m, s.o))} (automatica)</option>`;
-    const pvc = pvcOf(r.color), bordo = r.pav && r.pavBy !== 'cliente' ? (s.m.bordi.find(x=>x[0] === r.bordoTipo && s.o[x[0]] != null) || s.m.bordi.find(x=>s.o[x[0]] != null) || [, 'non disponibile per questo modello'])[1] : (r.pav ? 'a cura del cliente' : 'nessuno');
-    document.getElementById('pk-from').innerHTML = `<b>Dalla richiesta:</b> profondità ${esc((s.m.prof && s.m.prof[s.prof]) || SL_PROF[s.prof])}${r.prof ? '' : ' (da definire)'} · rivestimento ${esc(r.color || 'da definire')}${pvc ? ' (sovrapprezzo)' : ''} · bordo ${esc(bordo.toLowerCase().replace(/^bordo\s+/, ''))}. <a href="#" onclick="document.getElementById('req-card').scrollIntoView({behavior:'smooth'});return false">Modifica</a>`;
     document.getElementById('pk-stell-wrap').style.display = (s.m.netto || s.m.id === 'arte') ? 'none' : '';
     set('pk-stell', opt([['','Pannelli SL biplastificati'],['1','Linea Stell, acciaio zincato (−' + fmtNum(listino.stellPct) + '%)']], k.stell ? '1' : ''));
     document.getElementById('pk-cop').innerHTML = SL_COP_OPT.filter(([c])=>(c !== 'iso' && c !== 'inv') || s.o[c] != null).map(([c,l])=>`<label class="chk"><input type="checkbox" data-cop="${c}" ${k.cop[c] ? 'checked' : ''} onchange="onKitField()"><span>${esc(l)}</span></label>`).join('');
@@ -4520,8 +4746,9 @@ function renderKitControls() {
       <button type="button" class="ls-del" title="Togli" onclick="delOpt(${i})">✕</button></div>` : ''; }).join('');
   const want = Object.keys(r.feats || {}).filter(f=>r.feats[f] && FEAT_CAT[f]).map(f=>FEAT_CAT[f]).concat(ENTRY_ACC[r.entry] ? ['Scale'] : [], ['rock','up'].includes(crm.tech && crm.tech.type) ? ['Locale tecnico'] : []);
   const cats = [...new Set(SL_ACC.map(a=>a[0]))].sort((a,b)=>want.includes(b) - want.includes(a));
-  document.getElementById('pk-add').innerHTML = '<option value="">＋ Aggiungi un optional dal listino…</option>' + cats.map(c=>`<optgroup label="${esc(c)}${want.includes(c) ? ' ★ richiesto dal cliente' : ''}">${SL_ACC.filter(a=>a[0] === c).map(a=>`<option value="${a[1]}">${esc(a[2])} · ${eur2(slo('a.' + a[1], a[3]))}${SL_UNIT[a[4] || 'pz']}</option>`).join('')}</optgroup>`).join('');
+  document.getElementById('pk-add').innerHTML = '<option value="">＋ Aggiungi un altro articolo del listino…</option>' + cats.map(c=>`<optgroup label="${esc(c)}${want.includes(c) ? ' ★ richiesto dal cliente' : ''}">${SL_ACC.filter(a=>a[0] === c).map(a=>`<option value="${a[1]}">${esc(a[2])} · ${eur2(slo('a.' + a[1], a[3]))}${SL_UNIT[a[4] || 'pz']}</option>`).join('')}</optgroup>`).join('');
 }
+function renderKitAll() { renderKitControls(); renderProject(); }
 function onKitField() {
   const r = crm.request, k = r.kit, prevMod = k.mod;
   k.mod = document.getElementById('pk-mod').value;
@@ -4530,7 +4757,7 @@ function onKitField() {
   k.prof = ''; k.bordo = ''; k.pvc = '';
   k.stell = document.getElementById('pk-stell').value === '1';
   const cop = {}; document.querySelectorAll('#pk-cop input[data-cop]').forEach(i=>{ if (i.checked) cop[i.dataset.cop] = true; }); k.cop = cop;
-  renderKitControls(); refreshAll(); markUnsaved();
+  renderKitAll(); refreshAll(); markUnsaved();
 }
 function addOpt(sel) {
   const id = sel.value; if (!id) return; const r = crm.request, x = r.opt.find(o=>o.id === id);
@@ -4542,6 +4769,7 @@ function delOpt(i) { crm.request.opt.splice(i, 1); renderKitControls(); refreshA
 function renderPrevControls() {
   const sel = document.getElementById('prev-tipo'); if (!sel) return;
   renderKitControls();
+  renderProject();
   const r = crm.request, sol = solOf(r);
   sel.innerHTML = listino.soluzioni.map(x=>`<option value="${esc(x.id)}"${x.id===sol ? ' selected' : ''}>${esc(x.nome || 'Soluzione senza nome')}</option>`).join('');
   document.getElementById('prev-sconto').value = r.sconto == null ? '' : r.sconto;
@@ -4562,6 +4790,7 @@ function onPrevField() {
   r.scontoO = (so === '' || !isFinite(son) || son < 0) ? null : Math.min(50, son);
   r.extras = {};
   document.querySelectorAll('#prev-extras input[data-extra]').forEach(i=>{ if (i.checked) r.extras[i.dataset.extra] = true; });
+  renderProject();
   refreshAll();
   markUnsaved();
 }
@@ -4735,10 +4964,10 @@ function requestSummaryText() {
   if (r.shape) L.push('Forma: ' + lab(SHAPES, r.shape));
   if (r.color) L.push('Rivestimento: ' + r.color);
   if (profText(r)) L.push('Profondità: ' + profText(r) + (r.prof && depthAsked(r) ? ' (il cliente ha scritto ' + depthAsked(r) + ')' : ''));
-  if (r.entry) L.push('Ingresso: ' + lab(ENTRIES, r.entry).toLowerCase());
+  if (r.entry) L.push('Ingresso: ' + entryLabel(r).toLowerCase());
   if (r.pav) { const pm = pavMq(r); L.push('Bordo e pavimentazione: ' + lab(PAV_TYPES, r.pav).toLowerCase() + ' (bordo ' + lab(BORDO_TIPI, r.bordoTipo).toLowerCase() + ')' + (pm ? ', ' + fmtNum(pm.mq) + ' m²' + (pm.stima ? ' (bordo da ' + bordoCm() + ' cm)' : '') : '') + (r.pavBy === 'cliente' ? ' — a cura del cliente' : '')); }
   if (r.fornitori.length) L.push('Il cliente ha già: ' + r.fornitori.join(', '));
-  const feats = getFeatures().filter(([k])=>r.feats[k]).map(x=>x[1].toLowerCase());
+  const feats = cfgText(r);
   if (feats.length) L.push('Accessori: ' + feats.join(', '));
   if (r.budget != null) L.push('Budget ' + (r.btype==='stimato' ? 'stimato' : 'dichiarato') + ': € ' + r.budget.toLocaleString('it-IT') + (r.btype==='tetto' ? ' (tetto massimo)' : ''));
   if (r.timing) L.push('Tempi: ' + lab(TIMINGS, r.timing).toLowerCase());
@@ -4770,7 +4999,7 @@ function extractRequest(text) {
   const tch = T.match(/\btouch\s+(relax|authentic|elegance|vanity|sublime|prestige)/), ec = T.match(/\becofilm\s+(wave|cloudy|oblivion|natural|bliss|domus|graphite|lunar|divine)/);
   const col = colors.find(([c])=>new RegExp('\\b'+c+'\\b').test(T));
   if (tch) out.color = 'Touch ' + tch[1].charAt(0).toUpperCase() + tch[1].slice(1); else if (ec) out.color = 'Ecofilm ' + ec[1].charAt(0).toUpperCase() + ec[1].slice(1); else if (col) out.color = col[1];
-  if (/profondit[àa]?\s+variabile|fond(?:o|ale)\s+variabile|\bvariabile\b/.test(T)) out.depthType = 'variabile';
+  if (/profondit[àa]?\s+variabile|fond(?:o|ale)\s+variabile|\bvariabile\b|tuff|fossa/.test(T)) out.depthType = 'variabile';
   else if (/profondit[àa]?\s+(?:costante|unica|uniforme)|fondo\s+piatto/.test(T)) out.depthType = 'costante';
   const pi = T.indexOf('profond');
   if (pi >= 0) {
@@ -4794,6 +5023,7 @@ function extractRequest(text) {
   if (bw) out.pavLarg = Number(bw[1]) / 100;
   out.fornitori = FORNITORI.filter(f=>new RegExp('\\b' + f).test(T));
   if (out.fornitori.includes('piastrellista') || /pavimentazione (?:la fa|se la fa|a cura|la realizza)|(?:bordo|platea|pavimentazione)[^.]{0,30}(?:lo|la) fa (?:lui|lei|loro)/.test(T)) out.pavBy = 'cliente';
+  if (/rgb|colorat/.test(T) && out.feats.luci) out.luciRgb = true;
   const tx = {};
   if (/\brock\b/.test(T)) tx.type = 'rock'; else if (/locale (?:tecnico )?(?:esterno|fuori terra)/.test(T)) tx.type = 'up'; else if (/casett/.test(T)) tx.type = 'casetta'; else if (/interrat/.test(T) && /locale tecnico/.test(T)) tx.type = 'interrato'; else if (/garage|cantina|taverna/.test(T)) tx.type = 'esistente';
   const td = T.match(/locale tecnico[^\d]{0,30}(\d{1,3}(?:[.,]\d+)?)\s*(?:m|mt|metri)\b/); if (td) tx.dist = toN(td[1]);
@@ -4834,6 +5064,7 @@ function parseRequest() {
   (x.fornitori || []).forEach(f=>{ if (!r.fornitori.includes(f)) { r.fornitori.push(f); n++; } });
   if (x.tech) { const t = crm.tech; ['type','dist','notes'].forEach(k=>{ if (x.tech[k] !== undefined && (t[k] === null || t[k] === '')) { t[k] = x.tech[k]; n++; } }); renderTechForm(); }
   Object.keys(x.feats).forEach(k=>{ if (!r.feats[k]) { r.feats[k] = true; n++; } });
+  featsToCfg(r); if (x.luciRgb && r.cfg.luci === 'b1') r.cfg.luci = 'r1'; cfgToFeats(r);
   const adEl = document.getElementById('clientAddress');
   if (adEl && !adEl.value.trim()) { const ad = extractAddress(src); if (ad) { adEl.value = ad; updateContactLinks(); n++; } }
   renderRequestForm();
@@ -5009,7 +5240,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-5';
+const BUILD = '2026-10-23-6';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
