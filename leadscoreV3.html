@@ -327,6 +327,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .req-sum{font-size:13px;color:var(--text2);margin-top:.6rem;white-space:pre-line;line-height:1.55}
 /* CRM */
 .outcome-box{margin-bottom:.8rem}
+.funnel{margin:4px 0 14px}
+.fn-steps{display:flex;align-items:center;gap:0;overflow-x:auto;padding:4px 0 8px}
+.fn-step{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;cursor:pointer;min-width:74px;padding:0 2px;color:var(--text3);font:600 11.5px/1.2 'Plus Jakarta Sans',sans-serif;text-align:center}
+.fn-step i{font-style:normal;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--border2);background:var(--surf);font:700 13px 'Sora',sans-serif}
+.fn-step.done{color:var(--text2)}.fn-step.done i{background:var(--acqua,#0a7f99);border-color:var(--acqua,#0a7f99);color:#fff}
+.fn-step.on{color:var(--text)}.fn-step.on i{border-color:var(--acqua,#0a7f99);color:var(--acqua-dk,#0b6f86);box-shadow:0 0 0 4px rgba(10,127,153,.15)}
+.fn-line{flex:1;min-width:10px;height:2px;background:var(--border2);margin-top:-18px}
+.fn-q{font:700 13px 'Sora',sans-serif;margin:8px 0 6px;color:var(--text)}
+.fn-btns{display:flex;flex-wrap:wrap;gap:8px}.fn-btns .btn{flex:1 1 150px;justify-content:center;padding:11px 12px;font-weight:600}
+.fn-sop{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.fn-sop[hidden]{display:none}.fn-sop input{padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:15px;background:var(--surf);color:var(--text)}
+.fn-info{font-size:13px;color:var(--text2);margin:2px 0 4px}
+.fn-lose{text-align:right;margin-top:-4px}
+.today-card .tc-esiti{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin-top:-2px}
 .outcome-box .row{display:flex;gap:8px;flex-wrap:wrap}
 .outcome-box .btn{flex:1;justify-content:center;padding:11px 14px;font-size:14px;font-weight:600}
 .btn-win{background:var(--green-bg);color:var(--green-dk);border-color:var(--green)}
@@ -1111,7 +1124,7 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
     </div>
     <div class="contact-actions">
       <a class="btn disabled" id="call-link" href="#">📞 Chiama</a>
-      <a class="btn disabled" id="wa-link" href="#" target="_blank" rel="noopener">💬 WhatsApp</a>
+      <a class="btn disabled" id="wa-link" href="#" target="_blank" rel="noopener" onclick="if(!this.classList.contains('disabled'))waClicked()">💬 WhatsApp</a>
       <a class="btn disabled" id="map-link" href="#" target="_blank" rel="noopener">📍 Mappa</a>
       <a class="btn disabled" id="route-link" href="#" target="_blank" rel="noopener">🧭 Percorso</a>
       <a class="btn disabled" id="sat-link" href="#" target="_blank" rel="noopener" title="Vista satellite su Google Earth: utile per misurare il giardino prima del sopralluogo">🛰 Satellite</a>
@@ -1244,16 +1257,16 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
   </div>
 
   <div class="crm-card" id="crm-card">
-    <h3>📌 Pipeline e prossima azione</h3>
+    <h3>📌 A che punto siamo</h3>
+    <div class="funnel" id="funnel"></div>
     <div class="outcome-box" id="outcome-box"></div>
     <div class="crm-grid">
-      <div class="crm-field"><label>Fase</label>
-        <select id="crm-stage" onchange="onCrmField()"></select></div>
+      <select id="crm-stage" onchange="onCrmField()" hidden></select>
       <div class="crm-field"><label>Tipo di cliente</label>
         <select id="crm-type" onchange="onCrmField()"></select></div>
       <div class="crm-field full"><label>Fonte del contatto</label>
         <select id="crm-source" onchange="onCrmField()"></select></div>
-      <div class="crm-field full"><label>Prossima azione</label>
+      <div class="crm-field full"><label>Prossima azione <span class="pv-d" style="display:inline">(si compila da sola, puoi cambiarla)</span></label>
         <input type="text" id="crm-next-action" maxlength="200" placeholder="es. Richiamare per fissare il sopralluogo" oninput="onCrmField()"/></div>
       <div class="crm-field full"><label>Entro il</label>
         <input type="date" id="crm-next-date" onchange="onCrmField()"/>
@@ -3604,7 +3617,7 @@ function renderQuotePage() {
   const head = `<div class="crm-card qt-hero"><div class="qt-hero-l"><div class="qt-client">${esc(c.name || 'Cliente senza nome')}</div>
       <div class="qt-sub">${esc([c.address, c.comune].filter(Boolean).join(', ') || 'Indirizzo da completare')}</div></div>
       <div class="qt-hero-r"><div class="qt-total">${p ? eurFmt(p.totale) : '—'}</div><div class="qt-sub">${p ? (p.parti.length > 1 ? p.parti.map(x=>esc(x.nome.replace(/^Preventivo\s+/i, '')) + ' ' + eurFmt(x.totale)).join(' + ') : 'totale IVA inclusa') : 'mancano le dimensioni'}</div></div>
-      <div class="qt-actions">${p ? p.parti.map(x=>`<button class="btn btn-green" onclick="openQuoteDoc('cliente','${x.id}')">📄 ${esc(x.nome)}</button>`).join('') : ''}<button class="btn" onclick="openQuoteDoc('interno')">🔒 Versione interna</button></div></div>`;
+      <div class="qt-actions">${p ? p.parti.map(x=>`<button class="btn btn-green" onclick="openQuoteDoc('cliente','${x.id}')">📄 ${esc(x.nome)}</button>`).join('') : ''}<button class="btn" onclick="openQuoteDoc('interno')">🔒 Versione interna</button>${['nuovo','contattato','sopralluogo'].includes(crm.stage) ? `<button class="btn" onclick="applyEsito(crm,'inviato');renderCrmForm();markUnsaved();flushAutosave();renderQuotePage();toast('Segnato come inviato: sollecito tra 3 giorni')">✅ Segna come inviato</button>` : ''}</div></div>`;
   if (!p) { body.innerHTML = head + '<div class="info-box">Inserisci <b>lunghezza e larghezza</b> nella Richiesta del cliente (Profilo cliente): costi e descrizioni si compilano da soli. <a href="#" onclick="showPage(\'profilo\');return false">Vai al profilo</a></div>'; return; }
   const doc = `<div class="crm-card"><h3>🧾 Dati del documento</h3><div class="crm-grid">
       <div class="crm-field"><label>Numero preventivo</label><input type="text" maxlength="40" value="${esc(q.num)}" placeholder="${esc(quoteNum(q))}" data-q="num" oninput="onQuoteField(this)"/></div>
@@ -4203,6 +4216,9 @@ function cleanCrm(raw) {
   if (CLIENT_TYPES.some(x=>x[0]===raw.clientType)) c.clientType = raw.clientType;
   if (/^\d{4}-\d{2}-\d{2}$/.test(raw.nextDate || '')) c.nextDate = raw.nextDate;
   c.nextAction = str(raw.nextAction, 200);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw.sopDate || '')) c.sopDate = raw.sopDate;
+  if (/^\d{2}:\d{2}$/.test(raw.sopTime || '')) c.sopTime = raw.sopTime;
+  { const n = Number(raw.noResp); c.noResp = Number.isInteger(n) && n > 0 && n < 100 ? n : 0; }
   c.request = cleanReq(raw.request);
   c.quote = cleanQuote(raw.quote);
   c.tech = cleanTech(raw.tech);
@@ -4285,9 +4301,11 @@ function renderCrmForm() {
   document.getElementById('crm-reason-lbl').textContent = crm.stage==='vinto' ? 'Perché ha scelto noi' : 'Motivo della perdita';
   document.getElementById('crm-reason').innerHTML = optionsHtml(crm.stage==='vinto' ? WIN_REASONS : LOSS_REASONS, crm.closeReason);
   if (document.activeElement !== document.getElementById('crm-value')) document.getElementById('crm-value').value = crm.closeValue == null ? '' : crm.closeValue.toLocaleString('it-IT', { maximumFractionDigits: 2 });
+  renderFunnel();
   document.getElementById('outcome-box').innerHTML = isClosed(crm)
     ? `<div class="outcome-done ${esc(crm.stage)}"><strong>${crm.stage==='vinto' ? '✅ Lead vinto' : '❌ Lead perso'}</strong>${crm.closedAt ? ' il '+esc(fmtDT(crm.closedAt)) : ''} — compila qui sotto ${crm.stage==='vinto' ? 'il motivo e il valore del contratto' : 'il motivo della perdita'}. <button type="button" class="mini-btn" onclick="setOutcome('trattativa')">↩ Riapri</button></div>`
-    : `<div class="row"><button type="button" class="btn btn-win" onclick="setOutcome('vinto')">✅ Segna VINTO</button><button type="button" class="btn btn-lose" onclick="setOutcome('perso')">❌ Segna PERSO</button></div>`;
+    : (['preventivo','trattativa'].includes(crm.stage) ? `<div class="row"><button type="button" class="btn btn-win" onclick="setOutcome('vinto')">✅ Ha firmato: VINTO</button><button type="button" class="btn btn-lose" onclick="setOutcome('perso')">❌ Non se ne fa niente: PERSO</button></div>`
+       : `<div class="fn-lose"><button type="button" class="mini-btn" onclick="setOutcome('perso')">❌ Chiudi come perso</button></div>`);
   document.getElementById('crm-log').innerHTML = crm.log.slice().reverse().slice(0,60).map(e=>`<div><time>${esc(fmtDT(e.t))}</time>${esc(e.text)}</div>`).join('');
   document.getElementById('crm-checklists').innerHTML = Object.entries(CHECKLISTS).map(([k,g])=>{
     const done = g.items.filter(([id])=>crm.checklist[k][id]).length;
@@ -4511,6 +4529,82 @@ function onCrmField() {
     renderCrmForm();
   }
   markUnsaved();
+}
+// ── Percorso del cliente: un clic su "cosa è successo" aggiorna fase, storico e prossima azione ──
+const FUNNEL = ['nuovo','contattato','sopralluogo','preventivo','trattativa'];
+const FUNNEL_LAB = { nuovo:'Da chiamare', contattato:'Contattato', sopralluogo:'Sopralluogo', preventivo:'Preventivo inviato', trattativa:'Trattativa' };
+const ESITI = {
+  risposto:   { lab:'✅ Ha risposto', log:'Telefonata: ha risposto', to:s=>s === 'nuovo' ? 'contattato' : s },
+  noresp:     { lab:'📵 Non risponde', log:'Chiamata senza risposta', to:s=>s, next:['Richiamare (non aveva risposto)', 2] },
+  whatsapp:   { lab:'💬 Scritto su WhatsApp', log:'Messaggio WhatsApp inviato', to:s=>s === 'nuovo' ? 'contattato' : s, next:['Controllare la risposta su WhatsApp, se no chiamare', 2] },
+  sopralluogo:{ lab:'📅 Sopralluogo fissato', log:c=>'Sopralluogo fissato' + (c.sopDate ? ' per il ' + fmtDate(c.sopDate) + (c.sopTime ? ' alle ' + c.sopTime : '') : ''), to:()=>'sopralluogo' },
+  sopfatto:   { lab:'🏠 Sopralluogo fatto', log:'Sopralluogo effettuato', to:()=>'sopralluogo', next:['Preparare e inviare il preventivo', 2] },
+  inviato:    { lab:'📄 Preventivo inviato', log:'Preventivo inviato al cliente', to:()=>'preventivo' },
+  valuta:     { lab:'🤝 Sta valutando', log:'Il cliente sta valutando il preventivo', to:()=>'trattativa' },
+  sentito:    { lab:'📞 Sentito, ci aggiorniamo', log:'Sentito il cliente', to:s=>s, next:['Richiamare per chiudere: affrontare l’obiezione principale', 4] }
+};
+function esitiFor(c) {
+  if (c.stage === 'nuovo') return ['risposto','noresp','whatsapp'];
+  if (c.stage === 'contattato') return ['sopralluogo','noresp','whatsapp'];
+  if (c.stage === 'sopralluogo') return c.sopDate && c.sopDate > todayISO() ? ['sopfatto','inviato','sopralluogo'] : ['sopfatto','inviato'];
+  if (c.stage === 'preventivo') return ['valuta','noresp'];
+  if (c.stage === 'trattativa') return ['sentito','noresp'];
+  return [];
+}
+function applyEsito(c, ev, opt) {
+  const E = ESITI[ev]; if (!E) return;
+  const prev = c.stage, to = E.to(prev);
+  if (ev === 'sopralluogo' && opt) { c.sopDate = opt.date || ''; c.sopTime = opt.time || ''; }
+  pushLog(c, 'contatto', typeof E.log === 'function' ? E.log(c) : E.log);
+  if (to !== prev) { pushLog(c, 'fase', 'Fase: ' + STAGE_LABEL[prev] + ' → ' + STAGE_LABEL[to]); c.stage = to; c.closedAt = null; }
+  c.noResp = ev === 'noresp' ? (c.noResp || 0) + 1 : 0;
+  if (ev === 'sopralluogo' && c.sopDate) { c.nextAction = 'Sopralluogo' + (c.sopTime ? ' alle ' + c.sopTime : ''); c.nextDate = c.sopDate; return; }
+  let [na, days] = E.next || (SUGGEST[c.stage] ? [SUGGEST[c.stage].action, SUGGEST[c.stage].days] : ['', 0]);
+  if (ev === 'noresp' && c.noResp >= 3) { na = 'Nessuna risposta da ' + c.noResp + ' tentativi: scrivere su WhatsApp o chiudere come perso'; days = 3; }
+  c.nextAction = na; c.nextDate = na ? addDaysISO(workdayOffset(days)) : '';
+}
+function doEsito(ev) {
+  if (ev === 'sopralluogo') { const f = document.getElementById('fn-sop'); if (f) { f.hidden = false; document.getElementById('fn-sop-date').focus(); } return; }
+  applyEsito(crm, ev); renderCrmForm(); markUnsaved(); flushAutosave(); refreshCrmViews();
+  toast('Fatto. Prossima azione: ' + (crm.nextAction || '—') + (crm.nextDate ? ' (' + fmtDate(crm.nextDate) + ')' : ''));
+}
+function confirmSop() {
+  const d = document.getElementById('fn-sop-date').value, t = document.getElementById('fn-sop-time').value;
+  if (!d) { toast('Scegli la data del sopralluogo'); return; }
+  applyEsito(crm, 'sopralluogo', { date:d, time:t }); renderCrmForm(); markUnsaved(); flushAutosave(); refreshCrmViews();
+  toast('Sopralluogo fissato per il ' + fmtDate(d) + (t ? ' alle ' + t : ''));
+}
+function setStageManual(st) {   // correzione a mano: clic su un passo del percorso
+  if (st === crm.stage) return;
+  document.getElementById('crm-stage').value = st; onCrmField();
+  const sg = SUGGEST[st]; if (sg) { crm.nextAction = sg.action; crm.nextDate = addDaysISO(workdayOffset(sg.days)); renderCrmForm(); }
+  toast('Fase corretta: ' + STAGE_LABEL[st]);
+}
+function renderFunnel() {
+  const el = document.getElementById('funnel'); if (!el) return;
+  const closed = isClosed(crm), cur = FUNNEL.indexOf(crm.stage);
+  const steps = FUNNEL.map((st,i)=>`<button type="button" class="fn-step${closed ? (crm.stage === 'vinto' ? ' done' : '') : i < cur ? ' done' : i === cur ? ' on' : ''}" onclick="setStageManual('${st}')" title="Clicca per correggere la fase"><i>${i < cur || (closed && crm.stage === 'vinto') ? '✓' : i + 1}</i><span>${FUNNEL_LAB[st]}</span></button>`).join('<b class="fn-line"></b>');
+  const ev = closed ? [] : esitiFor(crm);
+  const sop = crm.stage === 'sopralluogo' && crm.sopDate ? `<div class="fn-info">📅 Sopralluogo ${crm.sopDate < todayISO() ? 'era il' : 'il'} <b>${esc(fmtDate(crm.sopDate))}${crm.sopTime ? ' alle ' + esc(crm.sopTime) : ''}</b></div>` : '';
+  const nr = crm.noResp ? `<div class="fn-info">📵 ${crm.noResp} ${crm.noResp === 1 ? 'chiamata' : 'chiamate'} senza risposta</div>` : '';
+  el.innerHTML = `<div class="fn-steps">${steps}</div>${sop}${nr}
+    ${ev.length ? `<div class="fn-q">Cosa è successo?</div><div class="fn-btns">${ev.map(e=>`<button type="button" class="btn${e === ev[0] ? ' btn-green' : ''}" onclick="doEsito('${e}')">${ESITI[e].lab}</button>`).join('')}</div>
+    <div class="fn-sop" id="fn-sop" hidden><input type="date" id="fn-sop-date" value="${esc(crm.sopDate || addDaysISO(workdayOffset(3)))}"/><input type="time" id="fn-sop-time" value="${esc(crm.sopTime || '')}" step="900"/><button type="button" class="btn btn-green" onclick="confirmSop()">Conferma</button></div>` : ''}`;
+}
+// Dalla pagina Oggi: stesso esito senza aprire il lead
+function esitoFromOggi(id, ev) {
+  if (ev === 'sopralluogo') { openLeadFromOggi(id); setTimeout(()=>{ const c = document.getElementById('crm-card'); if (c) c.scrollIntoView({block:'start'}); doEsito('sopralluogo'); }, 150); return; }
+  let after = null;
+  updateCrmFor(id, c=>{ applyEsito(c, ev); after = c; });
+  renderOggi();
+  if (after) toast('Fatto. Prossima azione: ' + (after.nextAction || '—') + (after.nextDate ? ' (' + fmtDate(after.nextDate) + ')' : ''));
+}
+// Clic su WhatsApp: per i lead da chiamare vale come primo contatto
+function waClicked(id) {
+  const c0 = id === currentLeadId || !id ? crm : cleanCrm((loadLibrary().find(x=>x.id === id) || {}).crm);
+  if (c0.stage !== 'nuovo') return;
+  if (!id || id === currentLeadId) { applyEsito(crm, 'whatsapp'); renderCrmForm(); markUnsaved(); flushAutosave(); refreshCrmViews(); }
+  else { updateCrmFor(id, c=>applyEsito(c, 'whatsapp')); setTimeout(renderOggi, 300); }
 }
 function setOutcome(stage) {
   document.getElementById('crm-stage').value = stage;
@@ -5175,11 +5269,12 @@ function renderOggi() {
       <div class="tc-btns">
         ${(!c.nextDate && !c.nextAction && suggestFor(c)) ? `<button class="btn btn-green" onclick="applySuggestion('${esc(l.id)}')">✓ Pianifica</button>` : ''}
         ${th ? `<a class="btn ${(!c.nextDate && !c.nextAction && suggestFor(c)) ? '' : 'btn-green'}" href="${esc(th)}">📞 Chiama</a>` : ''}
-        ${waHref(ct.phone, ct.name) ? `<a class="btn" href="${esc(waHref(ct.phone, ct.name))}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
+        ${waHref(ct.phone, ct.name) ? `<a class="btn" href="${esc(waHref(ct.phone, ct.name))}" target="_blank" rel="noopener" onclick="waClicked('${esc(l.id)}')">💬 WhatsApp</a>` : ''}
         <button class="btn" onclick="openLeadFromOggi('${esc(l.id)}')">Apri</button>
-        ${c.nextDate || c.nextAction ? `<button class="btn" onclick="quickDone('${esc(l.id)}')">✓ Fatto</button>` : ''}
         <button class="btn" onclick="quickPostpone('${esc(l.id)}',3)">+3 gg</button>
-        <button class="btn" onclick="openForOutcome('${esc(l.id)}')">🏁 Esito</button>
+      </div>
+      <div class="tc-esiti">${esitiFor(c).filter(e=>e !== 'whatsapp').map(e=>`<button class="mini-btn" onclick="esitoFromOggi('${esc(l.id)}','${e}')">${ESITI[e].lab}</button>`).join('')}
+        ${['preventivo','trattativa'].includes(c.stage) ? `<button class="mini-btn" onclick="openForOutcome('${esc(l.id)}')">🏁 Vinto / perso</button>` : ''}
       </div></div>`;
   };
   const sec = (title, arr, cls, extra)=> arr.length ? `<div class="today-sec ${cls||''}"><h3>${title} <span class="n">${arr.length}</span> ${extra||''}</h3>${arr.map(x=>card(x)).join('')}</div>` : '';
@@ -5258,7 +5353,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-8';
+const BUILD = '2026-10-23-9';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
