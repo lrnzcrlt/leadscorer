@@ -4238,11 +4238,10 @@ function waNum(phone) {
   if (n.startsWith('+')) n = n.slice(1); else if (n.startsWith('00')) n = n.slice(2); else if (/^3\d{8,9}$/.test(n)) n = '39' + n; else if (/^0\d{5,}$/.test(n)) return '';
   return /^\d{8,15}$/.test(n) && !/^390/.test(n) ? n : '';
 }
-function waHref(phone, name) {
+const WA_MSG = 'Buongiorno,\nsono Emiliano Carlotti l’agente di zona della San Lorenzo Piscine. Grazie per il vostro interesse.\nFacendo seguito alla vostra richiesta, per maggiori informazioni potremmo procedere con un sopralluogo.\n\nCordiali saluti';
+function waHref(phone) {
   const n = waNum(phone); if (!n) return '';
-  const cfg = loadQuoteCfg(), who = cfg.referente ? cfg.referente + ' di ' + (cfg.azienda || 'Piscine San Lorenzo') : (cfg.azienda || 'Piscine San Lorenzo');
-  const nome = String(name||'').trim().split(/\s+/)[0];
-  return 'https://wa.me/' + n + '?text=' + encodeURIComponent('Buongiorno' + (nome ? ' ' + nome : '') + ', sono ' + who + '. ');
+  return 'https://wa.me/' + n + '?text=' + encodeURIComponent(WA_MSG);
 }
 function telHref(phone) { const n = String(phone||'').replace(/[^\d+]/g,''); return n ? 'tel:'+n : ''; }
 function isClosed(c) { return c.stage==='vinto' || c.stage==='perso'; }
@@ -5259,7 +5258,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-7';
+const BUILD = '2026-10-23-8';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
