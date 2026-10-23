@@ -1112,7 +1112,6 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
     <h3>💶 Preventivo indicativo</h3>
     <div class="crm-grid">
       <div class="crm-field"><label>Soluzione</label><select id="prev-tipo" onchange="onPrevField()"></select></div>
-      <div class="crm-field"><label>Piscina (kit)</label><select id="prev-kit" onchange="onPrevField()"></select></div>
       <div class="crm-field"><label id="prev-sconto-l">Sconto kit piscina (%)</label><input type="number" id="prev-sconto" min="0" max="50" step="1" inputmode="decimal" placeholder="0" oninput="onPrevField()"/></div>
       <div class="crm-field"><label id="prev-scontoo-l">Sconto costruzione e opere edili (%)</label><input type="number" id="prev-scontoo" min="0" max="50" step="1" inputmode="decimal" placeholder="0" oninput="onPrevField()"/></div>
       <div class="crm-field full" id="prev-extras-wrap"><label>Voci extra dal listino</label><div class="feat-grid" id="prev-extras"></div></div>
@@ -1884,7 +1883,8 @@ function cleanListino(raw) {
   let formati = fmtRaw.slice(0,30).filter(x=>x && okId(x.id)).map(x=>{
       const src = (x.prezzi && typeof x.prezzi === 'object') ? x.prezzi : { A:x.a, B:x.b }, prezzi = {};
       soluzioni.forEach(so=>{ prezzi[so.id] = num(src[so.id],1000000,0); });
-      return { id:x.id, L:num(x.L,50,0), W:num(x.W,50,0), prezzi, dot:str(x.dot,300) }; }).filter(x=>x.L>0 && x.W>0);
+      const pis = Array.isArray(raw.piscine) ? raw.piscine.find(m=>m && Number(m.L) === Number(x.L) && Number(m.W) === Number(x.W)) : null;
+      return { id:x.id, L:num(x.L,50,0), W:num(x.W,50,0), prezzi, kit: num(x.kit != null ? x.kit : pis && pis.prezzo, 1000000, 0), dot:str(x.dot,300) }; }).filter(x=>x.L>0 && x.W>0);
   if (!formati.length) formati = cleanListino({ ...d, soluzioni }).formati;
   const k = (raw.kit && typeof raw.kit === 'object') ? raw.kit : {};
   const tx = (raw.testi && typeof raw.testi === 'object') ? raw.testi : {};
@@ -1928,13 +1928,9 @@ function rowPriceTxt(x) { return x.prezzo > 0 ? (x.unita === 'pct' ? '+' + fmtNu
 function parteNome(id) { return listino.parti[id] || LS_PARTI_DEF[id]; }
 function parteSuffix(id) { return id === 'kit' ? '-KIT' : '-OE'; }
 // Piscina del listino kit per la vasca richiesta: quella scelta nel preventivo, altrimenti la più piccola che la contiene
-function kitFor(r) {
-  if (r && r.kitModel) { const m = listino.piscine.find(x=>x.id === r.kitModel); if (m) return { m, scelta:true, fuori:false }; }
-  const ok = listino.piscine.filter(x=>x.L > 0 && x.W > 0).sort((x,y)=>x.L*x.W - y.L*y.W);
-  if (!r || !(r.len > 0 && r.wid > 0) || !ok.length) return null;
-  const Lr = Math.max(r.len, r.wid), Wr = Math.min(r.len, r.wid);
-  const fit = ok.find(x=>Math.max(x.L,x.W) >= Lr - 1e-6 && Math.min(x.L,x.W) >= Wr - 1e-6);
-  return fit ? { m: fit, scelta:false, fuori:false } : { m: ok[ok.length-1], scelta:false, fuori:true };
+function kitFor(r) {   // prezzo del kit San Lorenzo: quello del formato usato per la vasca
+  const fm = formatoFor(r); if (!fm) return null;
+  return { m: { nome: 'Piscina ' + fmtFormato(fm.f), L: fm.f.L, W: fm.f.W, prof: '', contenuto: '', prezzo: fm.f.kit }, fuori: fm.fuori };
 }
 function piscinaNome(m) { return m.nome || (m.L > 0 && m.W > 0 ? 'Piscina ' + fmtNum(m.L) + ' × ' + fmtNum(m.W) + ' m' : 'Piscina senza nome'); }
 function fmtFormato(f) { return fmtNum(f.L) + ' × ' + fmtNum(f.W) + ' m'; }
@@ -1962,7 +1958,7 @@ function calcPreventivo(r) {
          dett: (fm.fuori ? 'oltre il formato ' + fmtFormato(fm.f) + ' (richiesta ' + req + '): prezzo stimato, da confermare' : 'formato ' + fmtFormato(fm.f) + (fm.exact ? '' : ' (richiesta ' + req + ')')) + ' · a corpo',
          imp: fm.prezzo, grp:'vasca', key:'vasca', parte:'opere' });
   if (listino.kit.attivo) { const k = kitFor(r);
-    push({ voce: listino.kit.nome || 'Fornitura kit', dett: k ? [piscinaNome(k.m) + (k.fuori ? ' (più piccola della vasca richiesta: scegli la piscina)' : ''), k.m.prezzo > 0 ? 'a corpo' : 'prezzo da inserire nel Listino'].join(' · ') : 'nessuna piscina nel listino kit', imp: k ? k.m.prezzo : 0, grp:'vasca', key:'kit', parte:'kit', kitFuori: !!(k && k.fuori) }); }
+    push({ voce: listino.kit.nome || 'Fornitura kit', dett: k ? [piscinaNome(k.m) + (k.fuori ? ' (formato più grande del listino: da confermare)' : ''), k.m.prezzo > 0 ? 'a corpo' : 'prezzo da inserire nel Listino'].join(' · ') : 'prezzo da inserire nel Listino', imp: k ? k.m.prezzo : 0, grp:'vasca', key:'kit', parte:'kit', kitFuori: !!(k && k.fuori) }); }
   if (listino.sped.attivo) push({ voce: listino.sped.nome || 'Spedizione', dett: 'a corpo', imp: listino.sped.prezzo, grp:'vasca', key:'sped', parte:'kit' });
   listino.fissi.forEach(f=>{ if (f.prezzo > 0) push({ voce:f.nome || 'Costo fisso', dett:rowDett(f, area), imp:rowImp(f, fm, area), grp:'fissi', key:'fisso:'+f.id, parte:f.parte }); });
   listino.acc.forEach(x=>{ if (r.feats && r.feats[x.id]) push({ voce:x.nome || 'Accessorio', dett: x.prezzo > 0 ? rowDett(x, area) : 'esclusa dal listino', imp:rowImp(x, fm, area), grp:'acc', key:'acc:'+x.id, parte:x.parte }); });
@@ -4161,8 +4157,6 @@ function onReqField() {
 // ── Preventivo indicativo (scheda cliente) ──
 function renderPrevControls() {
   const sel = document.getElementById('prev-tipo'); if (!sel) return;
-  { const r = crm.request, ks = document.getElementById('prev-kit'), auto = kitFor({ len:r.len, wid:r.wid });
-    ks.innerHTML = `<option value="">Automatica${auto ? ': ' + esc(piscinaNome(auto.m)) : ''}</option>` + listino.piscine.map(m=>`<option value="${esc(m.id)}"${m.id === r.kitModel ? ' selected' : ''}>${esc(piscinaNome(m))}${m.prezzo > 0 ? ' · ' + eurFmt(m.prezzo) : ''}</option>`).join(''); }
   const r = crm.request, sol = solOf(r);
   sel.innerHTML = listino.soluzioni.map(x=>`<option value="${esc(x.id)}"${x.id===sol ? ' selected' : ''}>${esc(x.nome || 'Soluzione senza nome')}</option>`).join('');
   document.getElementById('prev-sconto').value = r.sconto == null ? '' : r.sconto;
@@ -4177,7 +4171,6 @@ function renderPrevControls() {
 function onPrevField() {
   const r = crm.request;
   r.sol = document.getElementById('prev-tipo').value;
-  r.kitModel = document.getElementById('prev-kit').value;
   const sv = document.getElementById('prev-sconto').value, sn = Number(sv);
   r.sconto = (sv === '' || !isFinite(sn) || sn < 0) ? null : Math.min(50, sn);
   const so = document.getElementById('prev-scontoo').value, son = Number(so);
@@ -4195,7 +4188,6 @@ function renderPreventivo() {
   let h = partiTable(p, 'app') + `
         ${p.daQuotare ? `<div class="bc-tip" style="color:var(--amber-dk)">⚠ ${p.daQuotare} ${p.daQuotare === 1 ? 'voce' : 'voci'} da definire, non comprese nel totale: ${esc(p.daQuotareVoci.join(', ').toLowerCase())}.</div>` : ''}
         ${p.formato.fuori ? '<div class="bc-tip" style="color:var(--amber-dk)">⚠ Vasca più grande dei formati di listino: prezzo stimato, da confermare con Archimede.</div>' : (!p.formato.exact ? `<div class="bc-tip">Misura non standard: applicato il prezzo del formato ${esc(fmtFormato(p.formato.f))}.</div>` : '')}
-        ${p.rows.some(x=>x.kitFuori) ? '<div class="bc-tip" style="color:var(--amber-dk)">⚠ Nessuna piscina del listino kit contiene la vasca richiesta: scegli la piscina nel menu "Piscina (kit)" o aggiungila nel Listino.</div>' : ''}
         ${crm.request.pav && crm.request.pavBy === 'cliente' ? '<div class="bc-tip">🪨 Pavimentazione a cura del cliente (suo piastrellista): esclusa dal preventivo.</div>' : ''}
         <div class="bc-tip">Forbice realistica ±${fmtNum(listino.varPct)}%: <b>${eurFmt(p.lo)} – ${eurFmt(p.hi)}</b> · prezzi ${esc(listino.fonte.split(' — ')[0])}, IVA esclusa nelle voci</div>`;
   el.innerHTML = h;
@@ -4236,20 +4228,13 @@ function renderListino() {
   const accKit = listino.acc.map((x,i)=>[x,i]).filter(([x])=>x.parte === 'kit'), accOp = listino.acc.map((x,i)=>[x,i]).filter(([x])=>x.parte !== 'kit');
   const accRows = list => list.map(([x,i])=>fixed('acc', [x]).replace('data-ls="acc.0.', `data-ls="acc.${i}.`)).join('');
   body.innerHTML = `
-    <div class="crm-card"><h3>📦 Kit piscina — San Lorenzo</h3><div class="ls-note">Prezzo del kit per ogni piscina (dal listino San Lorenzo). Per ogni cliente si usa la piscina più piccola che contiene la vasca richiesta.</div>
-      <div class="ls-row ls-pis ls-pis-h"><div></div><div>Lunghezza</div><div>Larghezza</div><div>Prezzo kit</div><div></div></div>
-      ${listino.piscine.map((m,i)=>`<div class="ls-row ls-pis">
-        <div class="ls-name">Piscina</div>
-        <div class="ls-price"><input type="number" min="0" step="0.5" inputmode="decimal" value="${m.L}" data-ls="piscine.${i}.L" oninput="onListinoField(this)" aria-label="Lunghezza"/><span>m</span></div>
-        <div class="ls-price"><input type="number" min="0" step="0.5" inputmode="decimal" value="${m.W}" data-ls="piscine.${i}.W" oninput="onListinoField(this)" aria-label="Larghezza"/><span>m</span></div>
-        ${num('piscine.'+i+'.prezzo', m.prezzo, 50, '€')}
-        ${del('piscine', i, 'Elimina piscina')}</div>`).join('')}
-      ${add('piscine', 'Aggiungi piscina')}
-      <div class="ls-row" style="margin-top:10px"><div class="ls-name">🚚 Spedizione (fissa, in ogni preventivo kit)</div>${num('sped.prezzo', listino.sped.prezzo, 10, '€')}</div>
+    <div class="crm-card"><h3>📦 Kit piscina — San Lorenzo</h3><div class="ls-note">Il prezzo del kit si inserisce per ogni formato, nella scheda qui sotto. Qui spedizione e accessori.</div>
+      <div class="ls-row"><div class="ls-name">🚚 Spedizione (fissa, in ogni preventivo kit)</div>${num('sped.prezzo', listino.sped.prezzo, 10, '€')}</div>
       ${accKit.length ? '<div class="ls-sub">Accessori</div>' + accRows(accKit) : ''}</div>
-    <div class="crm-card"><h3>🏊 Costruzione — vasca per formato</h3>
+    <div class="crm-card"><h3>🏊 Vasca per formato</h3>
       <div class="ls-note"><b>Soluzione A</b>: montaggio della piscina (struttura, impiantistica, locale tecnico, liner). Platea e prese di fondo a cura del cliente.<br>
       <b>Soluzione B</b>: tutto quanto in A più opere edili (tracciamento, platea in calcestruzzo 25 cm con doppia rete, plinti per il marciapiede, cordolo dei contrafforti).<br>
+      <b>Kit San Lorenzo</b>: prezzo del materiale della piscina (preventivo kit), dal listino San Lorenzo.<br>
       Per misure non standard si usa il formato più piccolo che contiene la vasca.</div>
       ${listino.formati.map((f,i)=>`<div class="ls-fmt">
         <div class="ls-fmt-h"><b>Formato ${esc(fmtFormato(f))}</b>${del('formati', i, 'Elimina formato')}</div>
@@ -4257,6 +4242,7 @@ function renderListino() {
           <div class="crm-field"><label>Lunghezza (m)</label>${num('formati.'+i+'.L', f.L, 0.5, 'm')}</div>
           <div class="crm-field"><label>Larghezza (m)</label>${num('formati.'+i+'.W', f.W, 0.5, 'm')}</div>
           ${sols.map(so=>`<div class="crm-field"><label>${esc(solShort(so))}</label>${num('formati.'+i+'.prezzi.'+so.id, fPrezzo(f, so.id), 50, '€')}</div>`).join('')}
+          <div class="crm-field"><label>Kit San Lorenzo</label>${num('formati.'+i+'.kit', f.kit, 50, '€')}</div>
           <div class="crm-field ls-dot"><label>Dotazione in vasca</label><input type="text" maxlength="300" value="${esc(f.dot)}" data-ls="formati.${i}.dot" oninput="onListinoField(this)"/></div>
         </div></div>`).join('')}
       ${add('formati', 'Aggiungi formato')}</div>
@@ -4296,7 +4282,7 @@ function lsSyncLabels() {   // aggiorna le etichette che dipendono dai nomi senz
 }
 function addListinoRow(key, parte) {
   const id = lsId();
-  const row = key === 'formati' ? { id, L: 12, W: 6, prezzi: {}, dot: '' }
+  const row = key === 'formati' ? { id, L: 12, W: 6, prezzi: {}, kit: 0, dot: '' }
     : key === 'piscine' ? { id, nome: '', L: 0, W: 0, prof: '', prezzo: 0, contenuto: '' }
     : key === 'soluzioni' ? { id, nome: 'Nuova soluzione', desc: '', escl: '' }
     : key === 'econ' ? { id, nome: '', prezzo: 0, unita: 'ora' }
@@ -4602,7 +4588,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-1';
+const BUILD = '2026-10-23-2';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
