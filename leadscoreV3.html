@@ -1863,8 +1863,8 @@ const SL_MOD = [
     [12,5,0,21500,21500,23400,1960,2270,960,1000],[12,6,0,25600,25600,27600,2060,2380,1160,1110],[13,6,0,26200,26200,28100,2190,2500,1250,1180],
     [14,5,0,26200,26200,28100,2190,2500,1120,1130],[14,6,0,26800,26800,28500,2250,2630,1360,1260],[14,7,0,27900,27900,30000,2380,2760,1590,1380],
     [15,7,0,28400,28400,30700,2500,2890,1690,1460],[16,7,0,29800,29800,32200,2590,3000,1800,1530],[16,8,0,36600,36600,39000,2690,3120,2050,1680],
-    [18,9,0,20800,20800,43600,2990,3490,2600,1990],[20,10,0,48800,48800,51300,3300,3870,3210,2340] ],
-    avvisi:{ '15.p120':'Nel listino 18 × 9 a 1,20 m costa € 20.800: quasi certamente un errore di stampa, da verificare con la sede.', '15.t120':'Nel listino 18 × 9 a 1,20 m costa € 20.800: quasi certamente un errore di stampa, da verificare con la sede.' } },
+    [18,9,0,40800,40800,43600,2990,3490,2600,1990],[20,10,0,48800,48800,51300,3300,3870,3210,2340] ],
+    avvisi:{ '15.p120':'18 × 9 a 1,20 m: nel listino stampato è € 20.800, corretto in € 40.800 (errore di stampa).' } },
   { id:'linea3', nome:'Linea 3', forma:'Rettangolare · prezzi netti non scontabili', shape:'rett', netto:true, bordi:[['bR','Bordo rialzato (incluso)'],['bP','Bordo piatto (differenza)']], note:'Acciaio zincato, filtro a cartuccia nello skimmer, faro LED e bordo rialzato inclusi. Prezzi netti non scontabili.', rows:[
     [3,5,0,9750,9750,10100,0,550,220,320],[3,6,0,9850,9850,10600,0,690,290,440],[3,7,0,9950,9950,10950,0,850,350,460] ] },
   { id:'andromeda', nome:'Andromeda', forma:'Rettangolare ad angoli arrotondati', shape:'rett', bordi:[['bR','Bordo rialzato'],['bP','Bordo piatto']], note:'', rows:[
@@ -2059,7 +2059,7 @@ function slKitPriceFor(L, W) {   // per la vasca più grande che sta nel budget:
   return s.o.p120 + (listino.sped.attivo ? listino.sped.prezzo : 0);
 }
 function slAcc(id) { const x = SL_ACC.find(a=>a[1] === id); return x ? { cat:x[0], id:x[1], nome:x[2], prezzo: slo('a.' + x[1], x[3]), unita:x[4] || 'pz', extra:x[5] || '' } : null; }
-function eur2(n) { return '€ ' + Number(n).toLocaleString('it-IT', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 }); }
+function eur2(n) { const v = Math.round(Number(n) * 100) / 100, i = Math.trunc(v), d = Math.round((v - i) * 100); return '€ ' + thouSep(i) + (d ? ',' + String(d).padStart(2, '0') : ''); }
 
 SL_MOD.find(m=>m.id === 'linea3').desc = 'Fornitura del kit piscina San Lorenzo Linea 3 con pannelli in acciaio zincato galvanizzato a caldo (garanzia 20 anni sulla struttura): bulloneria, rivestimento in membrana di PVC 1,5 mm in tinta unita, guida in alluminio, locale tecnico in vetroresina con elettropompa da 0,55 kW, tubazioni e raccorderia, skimmer con filtro a cartuccia da 12 m³/h, bocchetta di immissione, quadro elettrico con orologio, regolatore automatico di livello, faro LED bianco con trasformatore e bordo perimetrale rialzato (bianco, sabbia o grigio).';
 SL_MOD.find(m=>m.id === 'arte').desc = 'Fornitura della piscina fuori terra San Lorenzo modello Arte: struttura modulare in pannelli d’acciaio zincato, rivestimento interno in PVC presaldato, skimfiltre a doppia cartuccia, pompa a magneti permanenti in bassa tensione e proiettore LED bianco.';
@@ -2463,7 +2463,8 @@ function budgetTier(votes, req) {
   if(cnt.mid>=cnt.entry) return {label:'Mid',range:'€30.000 – €55.000 (stima dal profilo)'};
   return {label:'Entry',range:'€15.000 – €30.000 (stima dal profilo)'};
 }
-function eurFmt(n) { return '€ ' + Math.round(n).toLocaleString('it-IT'); }
+function thouSep(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function eurFmt(n) { const v = Math.round(n); return (v < 0 ? '− ' : '') + '€ ' + thouSep(Math.abs(v)); }
 
 // Costo indicativo del progetto richiesto (IVA inclusa), dal listino: totale del preventivo ± variabilità
 function estimateCost(r) {
@@ -4958,7 +4959,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-3';
+const BUILD = '2026-10-23-4';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
