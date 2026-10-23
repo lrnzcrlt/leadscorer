@@ -927,6 +927,10 @@ a.btn.disabled{opacity:.45}
 .ls-del{width:36px;height:36px;border-radius:10px;border:1px solid var(--border2);background:var(--surf);color:var(--text3);cursor:pointer;font-size:14px}
 .ls-del:hover{color:var(--red-dk);border-color:var(--red)}
 .ls-row>textarea{grid-column:1/-1}
+.ls-row.ls-pis{grid-template-columns:minmax(0,1fr) 110px 110px 170px 40px}
+.ls-pis-h{padding:2px 0 0!important;border:0!important;font-size:11.5px;font-weight:600;color:var(--text3)}.ls-pis-h>div:nth-child(n+2){padding-left:4px}
+.ls-sub{margin:16px 0 2px;font-family:'Sora',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
+@media(max-width:600px){.ls-pis-h{display:none!important}.ls-row.ls-pis.ls-pis{grid-template-columns:1fr 1fr 36px}.ls-pis>.ls-name{display:none}.ls-pis.ls-pis>.ls-price:nth-of-type(2){grid-column:1;grid-row:1}.ls-pis.ls-pis>.ls-price:nth-of-type(3){grid-column:2;grid-row:1}.ls-pis.ls-pis>.ls-price:nth-of-type(4){grid-column:1/-1;grid-row:2}.ls-pis.ls-pis>.ls-del{grid-column:3;grid-row:1}}
 .ls-sec{margin:30px 0 14px;padding:18px 22px;border-radius:20px;color:#fff;box-shadow:0 10px 30px -14px rgba(7,47,59,.55)}
 .ls-sec-kit{background:linear-gradient(135deg,#0a7f99,#0d5d7a)}
 .ls-sec-op{background:linear-gradient(135deg,#a2581b,#6f3c16)}
@@ -4217,106 +4221,61 @@ function copyPreventivo() {
 // ── Pagina Listino ──
 function renderListino() {
   const body = document.getElementById('ls-body'); if (!body) return;
-  document.getElementById('ls-intro').innerHTML = '💶 <b>' + esc(listino.fonte || 'Listino') + '</b>. Ogni voce si può rinominare, modificare o eliminare. Prezzi IVA esclusa: alimentano il <b>preventivo</b> e la <b>fattibilità economica</b> di ogni cliente. Le voci a 0 risultano "da definire" e non entrano nei totali.';
+  document.getElementById('ls-intro').innerHTML = '💶 Prezzi IVA esclusa: alimentano i due preventivi di ogni cliente, <b>kit piscina</b> (San Lorenzo) e <b>costruzione e opere edili</b> (' + esc((listino.fonte || 'listino della ditta').split(' — ')[0]) + '), e la <b>fattibilità economica</b>. Le voci a 0 risultano "da definire" e non entrano nei totali.';
   document.getElementById('ls-updated').textContent = listino.updatedAt ? 'Ultima modifica: ' + fmtDT(listino.updatedAt) : 'Prezzi originali del listino';
   const num = (path, val, step, suffix) => `<div class="ls-price"><input type="number" min="0" step="${step}" inputmode="decimal" value="${val}" data-ls="${path}" oninput="onListinoField(this)"/><span>${suffix}</span></div>`;
-  const txt = (path, val, ph, max, re) => `<input type="text" maxlength="${max||120}" value="${esc(val)}" placeholder="${esc(ph||'')}" data-ls="${path}" oninput="onListinoField(this)"/>`;
-  const area = (path, val, ph, rows) => `<textarea rows="${rows||2}" maxlength="4000" placeholder="${esc(ph||'')}" data-ls="${path}" oninput="onListinoField(this)">${esc(val)}</textarea>`;
-  const sel = (path, opts, v) => `<select data-ls="${path}" onchange="onListinoField(this,true)">${opts.map(([k,l])=>`<option value="${k}"${k===v?' selected':''}>${esc(l)}</option>`).join('')}</select>`;
   const del = (key, i, t) => `<button type="button" class="ls-del" title="${t||'Elimina voce'}" onclick="delListinoRow('${key}',${i})">✕</button>`;
-  const add = (key, t, parte) => `<button type="button" class="mini-btn ls-add" onclick="addListinoRow('${key}'${parte ? `,'${parte}'` : ''})">＋ ${t}</button>`;
-  const suf = x => x.unita === 'm2' ? '€/m²' : x.unita === 'pct' ? '%' : '€';
-  const kitOk = listino.piscine.filter(m=>m.prezzo > 0).length;
-  const items = (key, parte) => listino[key].map((x,i)=>parte && x.parte !== parte ? '' : `<div class="ls-row ls-row-u ls-row-p">
-      ${txt(key+'.'+i+'.nome', x.nome, 'Nome voce', 120, key === 'acc')}
-      ${num(key+'.'+i+'.prezzo', x.prezzo, x.unita === 'pct' ? 1 : 10, suf(x))}
-      ${sel(key+'.'+i+'.unita', LS_UNITA, x.unita)}
-      ${sel(key+'.'+i+'.parte', LS_PARTI.map(k=>[k, parteNome(k).replace(/^Preventivo\s+/i, '')]), x.parte)}
-      ${del(key, i)}
-      ${area(key+'.'+i+'.desc', x.desc, 'Descrizione nel preventivo (facoltativa)', 2)}</div>`).join('');
+  const add = (key, t) => `<button type="button" class="mini-btn ls-add" onclick="addListinoRow('${key}')">＋ ${t}</button>`;
+  const fixed = (key, arr) => arr.map((x,i)=>`<div class="ls-row"><div class="ls-name">${esc(x.nome || 'Voce')}</div>${num(key+'.'+i+'.prezzo', x.prezzo, x.unita === 'pct' ? 1 : 10, x.unita === 'pct' ? '% vasca' : x.unita === 'm2' ? '€/m²' : x.unita === 'ora' ? '€/ora' : x.unita === 'mese' ? '€/mese' : x.unita === 'giorno' ? '€/giorno' : '€')}</div>`).join('');
+  const rows = (key, withUnit) => listino[key].map((x,i)=>`<div class="ls-row${withUnit ? ' ls-row-u' : ''}">
+      <input type="text" maxlength="80" value="${esc(x.nome)}" placeholder="Nome voce" data-ls="${key}.${i}.nome" oninput="onListinoField(this)"/>
+      ${num(key+'.'+i+'.prezzo', x.prezzo, 10, withUnit && x.unita === 'm2' ? '€/m²' : '€')}
+      ${withUnit ? `<select data-ls="${key}.${i}.unita" onchange="onListinoField(this,true)"><option value="corpo"${x.unita !== 'm2' ? ' selected' : ''}>a corpo</option><option value="m2"${x.unita === 'm2' ? ' selected' : ''}>al m² di vasca</option></select>` : ''}
+      ${del(key, i)}</div>`).join('');
   const sols = listino.soluzioni;
+  const accKit = listino.acc.map((x,i)=>[x,i]).filter(([x])=>x.parte === 'kit'), accOp = listino.acc.map((x,i)=>[x,i]).filter(([x])=>x.parte !== 'kit');
+  const accRows = list => list.map(([x,i])=>fixed('acc', [x]).replace('data-ls="acc.0.', `data-ls="acc.${i}.`)).join('');
   body.innerHTML = `
-    <div class="crm-card"><h3>🧾 I due preventivi</h3><div class="ls-note">Ogni cliente riceve due preventivi separati: la <b>fornitura del kit</b> e la <b>costruzione con le opere edili</b>. Per ogni voce del listino scegli in quale dei due va. La vasca (soluzione) va sempre nelle opere, la fornitura kit sempre nel kit.</div>
-      <div class="crm-grid"><div class="crm-field"><label>Nome del preventivo kit</label>${txt('parti.kit', listino.parti.kit, LS_PARTI_DEF.kit, 80)}</div>
-        <div class="crm-field"><label>Nome del preventivo opere</label>${txt('parti.opere', listino.parti.opere, LS_PARTI_DEF.opere, 80)}</div></div></div>
-    <div class="crm-card"><h3>⚙️ Impostazioni generali</h3>
-      <div class="crm-grid">
-        <div class="crm-field"><label>IVA (%)</label>${num('iva', listino.iva, 1, '%')}</div>
-        <div class="crm-field"><label>Margine di variazione del preventivo (±%)</label>${num('varPct', listino.varPct, 1, '%')}</div>
-      </div></div>
-
-    <div class="ls-sec ls-sec-kit"><div class="ls-sec-t">📦 ${esc(parteNome('kit'))}</div><div class="ls-sec-s">Il materiale della piscina venduto da San Lorenzo: pannelli, contrafforti, liner, tecnologia, locale tecnico e accessori. <b>Questi prezzi non sono nel listino Archimede</b>: vanno presi dal listino San Lorenzo.</div></div>
-    <div class="crm-card"><h3>🏊 Piscine e prezzi del kit</h3>
-      <div class="ls-note">${!listino.piscine.length ? 'Nessuna piscina inserita.' : kitOk === listino.piscine.length ? '✅ Prezzo inserito per tutte le piscine.' : `⚠ Prezzo inserito per <b>${kitOk} ${kitOk === 1 ? 'piscina' : 'piscine'} su ${listino.piscine.length}</b>: dove manca, nel preventivo il kit risulta "da definire".`} Per ogni cliente si propone in automatico la piscina più piccola che contiene la vasca richiesta; nel preventivo si può sceglierne un'altra.</div>
-      ${listino.piscine.map((m,i)=>`<div class="ls-fmt">
-        <div class="ls-fmt-h ls-fmt-hn">${txt('piscine.'+i+'.nome', m.nome, 'Nome / modello (es. Piscina 8 × 4 m)', 120)}${del('piscine', i, 'Elimina piscina')}</div>
-        <div class="ls-fmt-g">
-          <div class="crm-field"><label>Lunghezza (m)</label>${num('piscine.'+i+'.L', m.L, 0.5, 'm')}</div>
-          <div class="crm-field"><label>Larghezza (m)</label>${num('piscine.'+i+'.W', m.W, 0.5, 'm')}</div>
-          <div class="crm-field"><label>Profondità</label>${txt('piscine.'+i+'.prof', m.prof, 'es. 1,20–1,50 m', 40)}</div>
-          <div class="crm-field"><label>Prezzo del kit</label>${num('piscine.'+i+'.prezzo', m.prezzo, 50, '€')}</div>
-          <div class="crm-field ls-dot"><label>Contenuto del kit (facoltativo)</label>${txt('piscine.'+i+'.contenuto', m.contenuto, 'es. 16 pannelli, 12 contrafforti, liner 75/100, filtro a sabbia…', 400)}</div>
-        </div></div>`).join('')}
+    <div class="crm-card"><h3>📦 Kit piscina — San Lorenzo</h3><div class="ls-note">Prezzo del kit per ogni piscina (dal listino San Lorenzo). Per ogni cliente si usa la piscina più piccola che contiene la vasca richiesta.</div>
+      <div class="ls-row ls-pis ls-pis-h"><div></div><div>Lunghezza</div><div>Larghezza</div><div>Prezzo kit</div><div></div></div>
+      ${listino.piscine.map((m,i)=>`<div class="ls-row ls-pis">
+        <div class="ls-name">Piscina</div>
+        <div class="ls-price"><input type="number" min="0" step="0.5" inputmode="decimal" value="${m.L}" data-ls="piscine.${i}.L" oninput="onListinoField(this)" aria-label="Lunghezza"/><span>m</span></div>
+        <div class="ls-price"><input type="number" min="0" step="0.5" inputmode="decimal" value="${m.W}" data-ls="piscine.${i}.W" oninput="onListinoField(this)" aria-label="Larghezza"/><span>m</span></div>
+        ${num('piscine.'+i+'.prezzo', m.prezzo, 50, '€')}
+        ${del('piscine', i, 'Elimina piscina')}</div>`).join('')}
       ${add('piscine', 'Aggiungi piscina')}
-      <div class="crm-grid" style="margin-top:12px"><div class="crm-field full"><label>Fonte dei prezzi del kit</label>${txt('kitFonte', listino.kitFonte, 'es. Listino San Lorenzo Piscine 2026', 160)}</div></div></div>
-    <div class="crm-card"><h3>🚚 Spedizione</h3><div class="ls-note">Costo fisso aggiunto a ogni preventivo del kit.</div>
-      <label class="chk" style="margin-bottom:10px"><input type="checkbox" data-ls="sped.attivo" ${listino.sped.attivo ? 'checked' : ''} onchange="onListinoField(this,true)"><span>Includi la spedizione nei preventivi</span></label>
-      ${listino.sped.attivo ? `<div class="crm-grid">
-        <div class="crm-field"><label>Nome della voce</label>${txt('sped.nome', listino.sped.nome, 'Spedizione', 120)}</div>
-        <div class="crm-field"><label>Prezzo</label>${num('sped.prezzo', listino.sped.prezzo, 10, '€')}</div>
-        <div class="crm-field full"><label>Descrizione nel preventivo</label>${area('sped.desc', listino.sped.desc, '', 2)}</div></div>` : ''}</div>
-    <div class="crm-card"><h3>🧾 Voce "fornitura kit" nel preventivo</h3>
-      <label class="chk" style="margin-bottom:10px"><input type="checkbox" data-ls="kit.attivo" ${listino.kit.attivo ? 'checked' : ''} onchange="onListinoField(this,true)"><span>Includi la fornitura del kit nei preventivi</span></label>
-      ${listino.kit.attivo ? `<div class="crm-grid">
-        <div class="crm-field"><label>Nome della voce</label>${txt('kit.nome', listino.kit.nome, 'Fornitura kit', 120)}</div>
-        <div class="crm-field"><label>Dettaglio breve</label>${txt('kit.dett', listino.kit.dett, 'es. pannelli, liner…', 200)}</div>
-        <div class="crm-field full"><label>Descrizione nel preventivo</label>${area('kit.desc', listino.kit.desc, '', 2)}</div></div>` : ''}</div>
-    <div class="crm-card"><h3>✨ Accessori del kit</h3><div class="ls-note">Compaiono come caselle nella richiesta del cliente. Prezzo a corpo, al m² di vasca o in % sul prezzo della vasca; a 0 risultano "da definire". Col menu puoi spostare una voce nel preventivo della costruzione.</div>
-      ${items('acc', 'kit')}${add('acc', 'Aggiungi accessorio', 'kit')}</div>
-    <div class="crm-card"><h3>📝 Condizioni del preventivo kit</h3><div class="ls-note">Lascia vuoto un testo per toglierlo dal documento.</div>
-      <div class="crm-field full"><label>Modalità di pagamento</label>${area('testiKit.pay', listino.testiKit.pay, 'es. acconto alla conferma d’ordine, saldo alla consegna', 2)}</div>
-      <div class="crm-field full"><label>Esclusioni</label>${area('testiKit.escl', listino.testiKit.escl, 'Cosa non comprende la fornitura', 2)}</div>
-      <div class="crm-field full"><label>Condizioni generali</label>${area('testiKit.cond', listino.testiKit.cond, 'es. tempi e modalità di consegna, garanzie', 3)}</div></div>
-
-    <div class="ls-sec ls-sec-op"><div class="ls-sec-t">🏗 ${esc(parteNome('opere'))}</div><div class="ls-sec-s">I lavori in cantiere: montaggio del kit (Soluzione A) ed eventuali opere edili (Soluzione B). Fonte: <b>${esc(listino.fonte || 'listino della ditta')}</b>.</div></div>
-    <div class="crm-card"><h3>🏗 Soluzioni</h3><div class="ls-note">Le soluzioni tra cui scegliere nel preventivo di ogni cliente. Il testo dei lavori compresi e le esclusioni finiscono nel documento per il cliente.</div>
-      ${sols.map((x,i)=>`<div class="ls-fmt">
-        <div class="ls-fmt-h ls-fmt-hn">${txt('soluzioni.'+i+'.nome', x.nome, 'Nome della soluzione', 120)}${del('soluzioni', i, 'Elimina soluzione')}</div>
-        <div class="crm-field"><label>Lavori compresi</label>${area('soluzioni.'+i+'.desc', x.desc, 'Cosa comprende questa soluzione', 4)}</div>
-        <div class="crm-field"><label>Esclusioni</label>${area('soluzioni.'+i+'.escl', x.escl, 'Cosa non è compreso', 3)}</div></div>`).join('')}
-      ${add('soluzioni', 'Aggiungi soluzione')}
-      <div class="crm-grid" style="margin-top:12px"><div class="crm-field full"><label>Soluzione proposta di default</label>${sel('solDefault', sols.map(x=>[esc(x.id), x.nome || 'Soluzione senza nome']), listino.solDefault)}</div>
-        <div class="crm-field full"><label>Fonte dei prezzi della costruzione</label>${txt('fonte', listino.fonte, 'Nome del listino', 160)}</div></div></div>
-    <div class="crm-card"><h3>🏊 Prezzi della costruzione per formato</h3><div class="ls-note">Un prezzo per ogni soluzione. Per misure non standard si usa il formato più piccolo che contiene la vasca; oltre il più grande il prezzo è stimato.</div>
+      <div class="ls-row" style="margin-top:10px"><div class="ls-name">🚚 Spedizione (fissa, in ogni preventivo kit)</div>${num('sped.prezzo', listino.sped.prezzo, 10, '€')}</div>
+      ${accKit.length ? '<div class="ls-sub">Accessori</div>' + accRows(accKit) : ''}</div>
+    <div class="crm-card"><h3>🏊 Costruzione — vasca per formato</h3>
+      <div class="ls-note"><b>Soluzione A</b>: montaggio della piscina (struttura, impiantistica, locale tecnico, liner). Platea e prese di fondo a cura del cliente.<br>
+      <b>Soluzione B</b>: tutto quanto in A più opere edili (tracciamento, platea in calcestruzzo 25 cm con doppia rete, plinti per il marciapiede, cordolo dei contrafforti).<br>
+      Per misure non standard si usa il formato più piccolo che contiene la vasca.</div>
       ${listino.formati.map((f,i)=>`<div class="ls-fmt">
         <div class="ls-fmt-h"><b>Formato ${esc(fmtFormato(f))}</b>${del('formati', i, 'Elimina formato')}</div>
         <div class="ls-fmt-g">
           <div class="crm-field"><label>Lunghezza (m)</label>${num('formati.'+i+'.L', f.L, 0.5, 'm')}</div>
           <div class="crm-field"><label>Larghezza (m)</label>${num('formati.'+i+'.W', f.W, 0.5, 'm')}</div>
-          ${sols.map(so=>`<div class="crm-field"><label data-ls-sol="${esc(so.id)}">${esc(solShort(so))}</label>${num('formati.'+i+'.prezzi.'+so.id, fPrezzo(f, so.id), 50, '€')}</div>`).join('')}
-          <div class="crm-field ls-dot"><label>Dotazione in vasca</label>${txt('formati.'+i+'.dot', f.dot, 'es. 2 skimmer, 3 bocchette…', 300)}</div>
+          ${sols.map(so=>`<div class="crm-field"><label>${esc(solShort(so))}</label>${num('formati.'+i+'.prezzi.'+so.id, fPrezzo(f, so.id), 50, '€')}</div>`).join('')}
+          <div class="crm-field ls-dot"><label>Dotazione in vasca</label><input type="text" maxlength="300" value="${esc(f.dot)}" data-ls="formati.${i}.dot" oninput="onListinoField(this)"/></div>
         </div></div>`).join('')}
       ${add('formati', 'Aggiungi formato')}</div>
-    ${listino.acc.some(x=>x.parte === 'opere') ? `<div class="crm-card"><h3>✨ Accessori e lavorazioni di costruzione</h3><div class="ls-note">Accessori che vanno nel preventivo della costruzione (es. bordo a sfioro).</div>
-      ${items('acc', 'opere')}${add('acc', 'Aggiungi accessorio', 'opere')}</div>` : ''}
-    <div class="crm-card"><h3>🪨 Pavimentazione intorno alla vasca</h3><div class="ls-note">Esclusa dal listino Archimede (bordo, marciapiede, solarium): lascia 0 se la fa il piastrellista del cliente o una ditta terza.</div>
-      <div class="crm-grid"><div class="crm-field"><label>Pavimentazione (€/m²)</label>${num('pavPrezzo', listino.pavPrezzo, 5, '€/m²')}</div>
-        <div class="crm-field"><label>Larghezza standard del solo bordo (m)</label>${num('bordoLarg', listino.bordoLarg, 0.05, 'm')}</div>
-        <div class="crm-field"><label>Va nel preventivo</label>${sel('pavParte', LS_PARTI.map(k=>[k, parteNome(k)]), listino.pavParte)}</div></div></div>
-    <div class="crm-card"><h3>🧱 Costi fissi</h3><div class="ls-note">Voci aggiunte sempre a ogni preventivo (es. vostre spese di pratica).</div>
-      ${items('fissi')}${add('fissi', 'Aggiungi costo fisso')}</div>
+    <div class="crm-card"><h3>⚙️ Impostazioni</h3>
+      <div class="crm-grid">
+        <div class="crm-field"><label>IVA (%)</label>${num('iva', listino.iva, 1, '%')}</div>
+        <div class="crm-field"><label>Margine di variazione del preventivo (±%)</label>${num('varPct', listino.varPct, 1, '%')}</div>
+        <div class="crm-field full"><label>Soluzione proposta di default</label><select data-ls="solDefault" onchange="onListinoField(this,true)">${sols.map(x=>`<option value="${esc(x.id)}"${x.id === listino.solDefault ? ' selected' : ''}>${esc(x.nome)}</option>`).join('')}</select></div>
+      </div></div>
+    <div class="crm-card"><h3>⏱ Lavori in economia</h3><div class="ls-note">Tariffe IVA esclusa, usate nelle condizioni del preventivo costruzione.</div>
+      ${fixed('econ', listino.econ)}</div>
+    <div class="crm-card"><h3>🪨 Pavimentazione e accessori di costruzione</h3><div class="ls-note">Esclusi dal listino Archimede: lascia 0 se li fa il cliente o una ditta terza.</div>
+      <div class="ls-row"><div class="ls-name">Pavimentazione intorno alla vasca</div>${num('pavPrezzo', listino.pavPrezzo, 5, '€/m²')}</div>
+      <div class="ls-row"><div class="ls-name">Larghezza standard del solo bordo</div>${num('bordoLarg', listino.bordoLarg, 0.05, 'm')}</div>
+      ${accRows(accOp)}</div>
+    <div class="crm-card"><h3>🧱 Costi fissi</h3><div class="ls-note">Voci da aggiungere sempre a ogni preventivo (es. vostre spese di pratica).</div>
+      ${rows('fissi')}${add('fissi', 'Aggiungi costo fisso')}</div>
     <div class="crm-card"><h3>➕ Voci extra</h3><div class="ls-note">Voci facoltative da spuntare nel preventivo del cliente.</div>
-      ${items('extra')}${add('extra', 'Aggiungi voce extra')}</div>
-    <div class="crm-card"><h3>⏱ Lavori in economia</h3><div class="ls-note">Tariffe IVA esclusa, riportate nelle condizioni generali del preventivo.</div>
-      ${listino.econ.map((x,i)=>`<div class="ls-row ls-row-u">${txt('econ.'+i+'.nome', x.nome, 'Nome voce')}${num('econ.'+i+'.prezzo', x.prezzo, 1, '€')}${sel('econ.'+i+'.unita', LS_UNITA_EC, x.unita)}${del('econ', i)}</div>`).join('')}
-      ${add('econ', 'Aggiungi tariffa')}</div>
-    <div class="crm-card"><h3>📝 Condizioni del preventivo costruzione</h3><div class="ls-note">Valori di partenza di ogni nuovo preventivo; nel singolo preventivo restano modificabili. Lascia vuoto un testo per toglierlo dal documento.</div>
-      <div class="crm-field full"><label>Modalità di pagamento</label>${area('testi.pay', listino.testi.pay, '', 3)}</div>
-      <div class="crm-field full"><label>Oneri del cliente</label>${area('testi.oneri', listino.testi.oneri, '', 4)}</div>
-      <div class="crm-field full"><label>Condizioni generali</label>${area('testi.cond', listino.testi.cond, '', 4)}</div>
-      <div class="crm-field full"><label>Fasi e tempi</label>
-        ${listino.fasi.map((x,i)=>`<div class="ls-row qt-fase">${txt('fasi.'+i+'.t', x.t, 'Fase', 160)}${txt('fasi.'+i+'.d', x.d, 'Durata (facoltativa)', 160)}${del('fasi', i, 'Elimina fase')}</div>`).join('')}
-        ${add('fasi', 'Aggiungi fase')}</div></div>`;
+      ${rows('extra', true)}${add('extra', 'Aggiungi voce extra')}</div>`;
 }
 function onListinoField(el, rerender) {
   const path = el.dataset.ls.split('.'), v = el.value;
@@ -4643,7 +4602,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-22-5';
+const BUILD = '2026-10-23-1';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
