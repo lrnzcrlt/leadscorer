@@ -1249,7 +1249,6 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
         <button class="btn" type="button" onclick="addContactLog()">＋ Registra</button></div></div>
     </div>
     <div class="crm-log" id="crm-log"></div>
-    <div id="crm-checklists"></div>
   </div>
 
   <div class="score-panel" id="score-panel">
@@ -3855,14 +3854,6 @@ function reportHtml() {
     h += sec('Foto del sopralluogo', ph, photos.length + ' foto');
   }
 
-  // Checklist
-  const cl = Object.entries(CHECKLISTS).map(([k,g])=>{
-    const done = g.items.filter(([id])=>crm.checklist[k][id]).length;
-    if (!done) return '';
-    return `<div><h3 style="font-size:12px;margin:0 0 4px">${E(g.title)} (${done}/${g.items.length})</h3><ul class="rp-chk">` + g.items.map(([id,txt])=>`<li class="${crm.checklist[k][id]?'y':'n'}"><span class="m">${crm.checklist[k][id]?'✓':'○'}</span><span>${E(txt)}</span></li>`).join('') + `</ul></div>`;
-  }).filter(Boolean);
-  if (cl.length) h += sec('Checklist', `<div class="rp-cols">${cl.join('')}</div>`);
-
   // Note e storico
   if (crm.log.length) h += sec('Storico contatti', `<div class="rp-log">` + crm.log.slice().reverse().slice(0,20).map(e=>`<div><time>${E(fmtDT(e.t))}</time><span>${E(e.text)}</span></div>`).join('') + `</div>`, crm.log.length > 20 ? 'ultimi 20 di ' + crm.log.length : '');
 
@@ -4242,11 +4233,6 @@ function renderCrmForm() {
     : (['preventivo','trattativa'].includes(crm.stage) ? `<div class="row"><button type="button" class="btn btn-win" onclick="setOutcome('vinto')">✅ Ha firmato: VINTO</button><button type="button" class="btn btn-lose" onclick="setOutcome('perso')">❌ Non se ne fa niente: PERSO</button></div>`
        : `<div class="fn-lose"><button type="button" class="mini-btn" onclick="setOutcome('perso')">❌ Chiudi come perso</button></div>`);
   document.getElementById('crm-log').innerHTML = crm.log.slice().reverse().slice(0,60).map(e=>`<div><time>${esc(fmtDT(e.t))}</time>${esc(e.text)}</div>`).join('');
-  document.getElementById('crm-checklists').innerHTML = Object.entries(CHECKLISTS).map(([k,g])=>{
-    const done = g.items.filter(([id])=>crm.checklist[k][id]).length;
-    return `<div class="chk-group" data-k="${k}"><div class="chk-sum">${esc(g.title)} (<span class="chk-n">${done}</span>/${g.items.length})</div>`+
-      g.items.map(([id,txt])=>`<label class="chk"><input type="checkbox" ${crm.checklist[k][id]?'checked':''} onchange="toggleCheck('${k}','${id}',this.checked)"><span>${esc(txt)}</span></label>`).join('')+`</div>`;
-  }).join('');
 }
 // ── Locale tecnico: form ──
 function renderTechForm() {
@@ -5288,7 +5274,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-10';
+const BUILD = '2026-10-23-11';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
