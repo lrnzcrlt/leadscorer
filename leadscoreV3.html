@@ -1111,6 +1111,7 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
     </div>
     <div class="contact-actions">
       <a class="btn disabled" id="call-link" href="#">📞 Chiama</a>
+      <a class="btn disabled" id="wa-link" href="#" target="_blank" rel="noopener">💬 WhatsApp</a>
       <a class="btn disabled" id="map-link" href="#" target="_blank" rel="noopener">📍 Mappa</a>
       <a class="btn disabled" id="route-link" href="#" target="_blank" rel="noopener">🧭 Percorso</a>
       <a class="btn disabled" id="sat-link" href="#" target="_blank" rel="noopener" title="Vista satellite su Google Earth: utile per misurare il giardino prima del sopralluogo">🛰 Satellite</a>
@@ -1227,6 +1228,7 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
     <div class="quick-days" style="margin-top:.6rem">
       <button type="button" onclick="copyDittaSheet()">📋 Copia scheda per la ditta</button>
       <a class="btn disabled" id="ditta-call" href="#">📞 Chiama la ditta</a>
+      <a class="btn disabled" id="ditta-wa" href="#" target="_blank" rel="noopener">💬 Invia scheda su WhatsApp</a>
     </div>
   </div>
 
@@ -3803,7 +3805,7 @@ function reportHtml() {
   </div>`;
 
   // Contatti e pipeline
-  const tel = c.phone ? `<a href="${E(telHref(c.phone))}">${E(c.phone)}</a>` : '';
+  const tel = c.phone ? `<a href="${E(telHref(c.phone))}">${E(c.phone)}</a>` + (waNum(c.phone) ? ` · <a href="https://wa.me/${waNum(c.phone)}">WhatsApp</a>` : '') : '';
   const mail = c.email ? `<a href="mailto:${E(c.email)}">${E(c.email)}</a>` : '';
   const next = crm.nextAction ? E(crm.nextAction) + (crm.nextDate ? ' — entro il ' + E(fmtDate(crm.nextDate)) : '') : '';
   h += sec('Contatti e trattativa', dl([
@@ -4229,6 +4231,19 @@ function todayISO() { return dateISO(new Date()); }
 function addDaysISO(n) { const d = new Date(); d.setDate(d.getDate()+n); return dateISO(d); }
 function fmtDate(iso) { const [y,m,d] = iso.split('-'); return d+'/'+m+'/'+y; }
 function fmtDT(ts) { return new Date(ts).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+// WhatsApp: numero in formato internazionale (i cellulari italiani senza prefisso diventano +39); i fissi italiani (0…) non hanno WhatsApp
+function waNum(phone) {
+  let n = String(phone||'').trim().replace(/[^\d+]/g,'');
+  if (!n) return '';
+  if (n.startsWith('+')) n = n.slice(1); else if (n.startsWith('00')) n = n.slice(2); else if (/^3\d{8,9}$/.test(n)) n = '39' + n; else if (/^0\d{5,}$/.test(n)) return '';
+  return /^\d{8,15}$/.test(n) && !/^390/.test(n) ? n : '';
+}
+function waHref(phone, name) {
+  const n = waNum(phone); if (!n) return '';
+  const cfg = loadQuoteCfg(), who = cfg.referente ? cfg.referente + ' di ' + (cfg.azienda || 'Piscine San Lorenzo') : (cfg.azienda || 'Piscine San Lorenzo');
+  const nome = String(name||'').trim().split(/\s+/)[0];
+  return 'https://wa.me/' + n + '?text=' + encodeURIComponent('Buongiorno' + (nome ? ' ' + nome : '') + ', sono ' + who + '. ');
+}
 function telHref(phone) { const n = String(phone||'').replace(/[^\d+]/g,''); return n ? 'tel:'+n : ''; }
 function isClosed(c) { return c.stage==='vinto' || c.stage==='perso'; }
 function optionsHtml(list, cur) { return list.map(([v,l])=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`).join(''); }
@@ -4241,6 +4256,8 @@ function updateContactLinks() {
   const c = contactFields();
   const t = telHref(c.phone);
   call.href = t || '#'; call.classList.toggle('disabled', !t);
+  const wa = document.getElementById('wa-link');
+  if (wa) { const w = waHref(c.phone, c.name); wa.href = w || '#'; wa.classList.toggle('disabled', !w); wa.title = w ? 'Apri la chat WhatsApp con un messaggio già iniziato' : (c.phone ? 'Numero fisso o non valido per WhatsApp' : 'Inserisci il telefono'); }
   const q = [c.address, c.comune].filter(Boolean).join(', ');
   map.href = q ? 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q) : '#'; map.classList.toggle('disabled', !q);
   const route = document.getElementById('route-link'), sat = document.getElementById('sat-link');
@@ -4357,6 +4374,7 @@ function updateDittaSub() {
   el.textContent = (d.name ? '· ' + d.name + ' ' : '') + '· dati ' + nG + '/' + DITTA_GIVE.length + ' · ricevuti ' + nR + '/' + DITTA_GET.length;
   const call = document.getElementById('ditta-call'), t = telHref(d.phone);
   if (call) { call.href = t || '#'; call.classList.toggle('disabled', !t); }
+  const wa = document.getElementById('ditta-wa'); if (wa) { const n = waNum(d.phone); wa.href = n ? 'https://wa.me/' + n + '?text=' + encodeURIComponent(dittaSheetText()) : '#'; wa.classList.toggle('disabled', !n); wa.title = 'Invia la scheda lavori alla ditta su WhatsApp'; }
 }
 function dittaSheetText() {
   const c = contactFields(), r = crm.request, d = crm.ditta, L = [];
@@ -5158,6 +5176,7 @@ function renderOggi() {
       <div class="tc-btns">
         ${(!c.nextDate && !c.nextAction && suggestFor(c)) ? `<button class="btn btn-green" onclick="applySuggestion('${esc(l.id)}')">✓ Pianifica</button>` : ''}
         ${th ? `<a class="btn ${(!c.nextDate && !c.nextAction && suggestFor(c)) ? '' : 'btn-green'}" href="${esc(th)}">📞 Chiama</a>` : ''}
+        ${waHref(ct.phone, ct.name) ? `<a class="btn" href="${esc(waHref(ct.phone, ct.name))}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ''}
         <button class="btn" onclick="openLeadFromOggi('${esc(l.id)}')">Apri</button>
         ${c.nextDate || c.nextAction ? `<button class="btn" onclick="quickDone('${esc(l.id)}')">✓ Fatto</button>` : ''}
         <button class="btn" onclick="quickPostpone('${esc(l.id)}',3)">+3 gg</button>
@@ -5240,7 +5259,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-6';
+const BUILD = '2026-10-23-7';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
