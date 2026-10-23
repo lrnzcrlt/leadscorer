@@ -1208,43 +1208,6 @@ tr.pv-parte td{padding-top:14px!important;font-family:'Sora',sans-serif;font-wei
     </div>
   </div>
 
-  <div class="crm-card fold" id="tech-card">
-    <div class="fold-hd"><h3>🔧 Locale tecnico <span class="fold-sub" id="tech-sub"></span></h3></div>
-    <div class="crm-grid" style="margin-top:.8rem">
-      <div class="crm-field full"><label>Tipo di locale tecnico</label><select id="tech-type" onchange="onTechField()"></select></div>
-      <div class="crm-field"><label>Distanza dalla vasca (m)</label><input type="number" id="tech-dist" min="0" max="200" step="0.5" inputmode="decimal" oninput="onTechField()"/></div>
-      <div class="crm-field"><label>Spazio disponibile</label><input type="text" id="tech-size" maxlength="80" placeholder="es. 2 × 1,5 m" oninput="onTechField()"/></div>
-      <div class="crm-field"><label>Corrente elettrica</label><select id="tech-power" onchange="onTechField()"></select></div>
-      <div class="crm-field"><label>Distanza dal quadro elettrico (m)</label><input type="number" id="tech-pdist" min="0" max="500" step="1" inputmode="decimal" oninput="onTechField()"/></div>
-      <div class="crm-field"><label>Allaccio acqua</label><select id="tech-water" onchange="onTechField()"></select></div>
-      <div class="crm-field"><label>Scarico</label><select id="tech-drain" onchange="onTechField()"></select></div>
-      <div class="crm-field full"><label>Accesso per la manutenzione</label><select id="tech-access" onchange="onTechField()"></select></div>
-      <div class="crm-field full"><label>Note (rumore, vicini, pendenze, vincoli…)</label><textarea id="tech-notes" rows="2" maxlength="1000" oninput="onTechField()"></textarea></div>
-    </div>
-  </div>
-
-  <div class="crm-card fold" id="ditta-card">
-    <div class="fold-hd"><h3>🏗 Ditta che esegue i lavori <span class="fold-sub" id="ditta-sub"></span></h3></div>
-    <div class="crm-grid" style="margin-top:.8rem">
-      <div class="crm-field"><label>Ditta</label><input type="text" id="ditta-name" maxlength="120" placeholder="Nome della ditta" oninput="onDittaField()"/></div>
-      <div class="crm-field"><label>Referente</label><input type="text" id="ditta-ref" maxlength="120" placeholder="Nome e cognome" oninput="onDittaField()"/></div>
-      <div class="crm-field"><label>Telefono</label><input type="tel" id="ditta-phone" maxlength="60" placeholder="+39 …" oninput="onDittaField()"/></div>
-      <div class="crm-field"><label>Email</label><input type="email" id="ditta-email" maxlength="160" oninput="onDittaField()"/></div>
-      <div class="crm-field"><label>Inizio lavori previsto</label><input type="date" id="ditta-start" onchange="onDittaField()"/></div>
-      <div class="crm-field"><label>Fine lavori prevista</label><input type="date" id="ditta-end" onchange="onDittaField()"/></div>
-    </div>
-    <div class="sub-h">📤 Da comunicare alla ditta</div>
-    <div id="ditta-give"></div>
-    <div class="sub-h">📥 Da ricevere dalla ditta</div>
-    <div id="ditta-get"></div>
-    <div class="crm-field" style="margin-top:.8rem"><label>Note sulla ditta</label><textarea id="ditta-notes" rows="2" maxlength="1500" oninput="onDittaField()"></textarea></div>
-    <div class="quick-days" style="margin-top:.6rem">
-      <button type="button" onclick="copyDittaSheet()">📋 Copia scheda per la ditta</button>
-      <a class="btn disabled" id="ditta-call" href="#">📞 Chiama la ditta</a>
-      <a class="btn disabled" id="ditta-wa" href="#" target="_blank" rel="noopener">💬 Invia scheda su WhatsApp</a>
-    </div>
-  </div>
-
   <div class="crm-card fold" id="photo-card">
     <div class="fold-hd"><h3>📷 Foto del sopralluogo <span class="fold-sub" id="photo-sub"></span></h3></div>
     <div class="photo-bar">
@@ -2462,7 +2425,7 @@ function calcPreventivo(r) {
     if (a.extra === 'robot') robot += q; if (a.extra === 'bancale') bancali += q;
     push({ voce: a.nome, dett: (q !== 1 || a.unita !== 'pz' ? fmtNum(q) + (a.unita === 'ml' ? ' ml' : a.unita === 'm2' ? ' m²' : ' pz') + ' × ' : '') + eur2(a.prezzo) + SL_UNIT[a.unita], imp: a.prezzo * q, grp:'acc', key:'opt:' + a.id, parte:'kit' }); });
   const hasOpt = re => (r.opt || []).some(x=>re.test(x.id));
-  const tt = crm && crm.request === r && crm.tech ? crm.tech.type : '';
+  const tt = '';
   if (tt === 'rock' && !hasOpt(/^rock$/)) { const a = slAcc('rock'); push({ voce: a.nome, dett:'scelto nel locale tecnico', imp: a.prezzo, grp:'acc', key:'tech:rock', parte:'kit' }); }
   if (tt === 'up' && !hasOpt(/^up[12]$/)) { const a = slAcc(area <= 60 ? 'up1' : 'up2'); push({ voce: a.nome, dett:'scelto nel locale tecnico', imp: a.prezzo, grp:'acc', key:'tech:up', parte:'kit' }); }
   if (false && ENTRY_ACC[r.entry]) push({ voce: labOf(ENTRIES, r.entry) + ' (richiesta dal cliente)', dett:'scegli il modello tra gli optional: scale', imp:0, grp:'acc', key:'entry', parte:'kit' });
@@ -3545,12 +3508,7 @@ ${c.notes||'  (nessuna)'}
 ${'─'.repeat(46)}
 ${preventivoText() || 'PREVENTIVO INDICATIVO\n  (inserire le dimensioni della vasca)'}
 ${'─'.repeat(46)}
-LOCALE TECNICO
-${techSummaryLines().map(x=>'  '+x).join('\n')||'  (non compilato)'}
-${'─'.repeat(46)}
-DITTA LAVORI
-  ${crm.ditta.name||'—'}${crm.ditta.ref?' · '+crm.ditta.ref:''}${crm.ditta.phone?' · '+crm.ditta.phone:''}
-  Dati comunicati: ${DITTA_GIVE.filter(([id])=>crm.ditta.give[id]?.d).length}/${DITTA_GIVE.length}  |  Ricevuti: ${DITTA_GET.filter(([id])=>crm.ditta.get[id]?.d).length}/${DITTA_GET.length}
+FOTO SOPRALLUOGO
   Foto sopralluogo: ${photos.length}
 ${'─'.repeat(46)}
 VARIABILI PROFILO
@@ -3694,8 +3652,6 @@ function quoteHtml(mode, parte) {
       <div><dt>Score</dt><dd>${sc ? sc.adj + '/100' : '—'}</dd></div><div><dt>Fase</dt><dd>${E(STAGE_LABEL[crm.stage] || '')}</dd></div>
       <div><dt>Budget del cliente</dt><dd>${bf.declared != null ? eurFmt(bf.declared) : 'non indicato'}</dd></div><div><dt>Preventivo / budget</dt><dd>${bf.ratio != null ? budgetUse(bf) + '% del budget' : '—'}</dd></div>
       <div><dt>Sconto applicato</dt><dd>${p && p.sconto > 0 ? p.parti.filter(x=>x.sconto > 0).map(x=>E(x.nome.replace(/^Preventivo\s+/i, '')) + ' ' + fmtNum(x.scontoPct) + '% (' + eurFmt(x.sconto) + ')').join(' · ') : 'nessuno'}</dd></div><div><dt>Forbice</dt><dd>${p ? eurFmt(p.lo) + ' – ' + eurFmt(p.hi) : '—'}</dd></div>
-      ${techSummaryLines().map(x=>`<div class="wide"><dt>Locale tecnico</dt><dd>${E(x)}</dd></div>`).join('')}
-      ${crm.ditta.name ? `<div class="wide"><dt>Ditta lavori</dt><dd>${E(crm.ditta.name)}${crm.ditta.phone ? ' · ' + E(crm.ditta.phone) : ''}${crm.ditta.start ? ' · inizio ' + E(fmtDate(crm.ditta.start)) : ''}</dd></div>` : ''}
       ${c.notes ? `<div class="wide"><dt>Note commerciale</dt><dd>${E(c.notes)}</dd></div>` : ''}
       ${p && p.daQuotare ? `<div class="wide"><dt>Da definire</dt><dd>${E(p.daQuotareVoci.join(', '))}</dd></div>` : ''}
       ${p && p.formato && (p.formato.fuori || !p.formato.exact) ? `<div class="wide"><dt>Formato</dt><dd>${p.formato.fuori ? 'oltre il listino: prezzo da confermare con Archimede' : 'prezzo del formato ' + E(fmtFormato(p.formato.f)) + ' (misura non standard)'}</dd></div>` : ''}
@@ -3887,27 +3843,6 @@ function reportHtml() {
   const missing = 17 - Object.keys(state).length;
   h += sec('Profilo del cliente', prow ? `<table class="rp-tbl"><tr><th>Variabile</th><th>Valore</th><th class="n">Score</th><th>Peso nel risultato</th></tr>${prow}</table>` +
     (sc ? `<div style="font-size:12px;color:var(--ink2);margin-top:6px">Score profilo ${sc.raw}/100 − penalità obiezioni ${sc.penalty} pt = <b>${sc.adj}/100</b>${missing>0 ? ' · ' + missing + ' variabili ancora da raccogliere' : ''}</div>` : '') : '');
-
-  // Locale tecnico
-  h += sec('Locale tecnico', dl([
-    row('Tipo', lab(TECH_TYPES, t.type)), row('Distanza dalla vasca', t.dist!=null ? fmtNum(t.dist)+' m' : ''), row('Spazio', E(t.size)),
-    row('Corrente', t.power ? lab(TECH_AVAIL, t.power) + (t.pdist!=null ? ' · quadro a '+fmtNum(t.pdist)+' m' : '') : ''),
-    row('Acqua', lab(TECH_AVAIL, t.water)), row('Scarico', lab(TECH_DRAIN, t.drain)), row('Accesso manutenzione', lab(TECH_ACCESS, t.access)),
-    row('Note', E(t.notes), true)
-  ]));
-
-  // Ditta
-  const chk = (list, k) => `<ul class="rp-chk">` + list.map(([id,label])=>{ const it = d[k][id] || {}; return `<li class="${it.d?'y':'n'}"><span class="m">${it.d?'✓':'○'}</span><span>${E(label)}${it.v ? ' — <em>'+E(it.v)+'</em>' : ''}</span></li>`; }).join('') + `</ul>`;
-  const dittaUsed = d.name || d.ref || d.phone || Object.keys(d.give).length || Object.keys(d.get).length;
-  if (dittaUsed) {
-    const nG = DITTA_GIVE.filter(([id])=>d.give[id]?.d).length, nR = DITTA_GET.filter(([id])=>d.get[id]?.d).length;
-    h += sec('Ditta che esegue i lavori', dl([
-      row('Ditta', E(d.name)), row('Referente', E(d.ref)), row('Telefono', d.phone ? `<a href="${E(telHref(d.phone))}">${E(d.phone)}</a>` : ''), row('Email', E(d.email)),
-      row('Inizio lavori', d.start ? E(fmtDate(d.start)) : ''), row('Fine lavori', d.end ? E(fmtDate(d.end)) : '')
-    ]) + `<div class="rp-cols" style="margin-top:12px"><div><h3 style="font-size:12px;margin:0 0 4px">📤 Comunicato alla ditta (${nG}/${DITTA_GIVE.length})</h3>${chk(DITTA_GIVE,'give')}</div>
-      <div><h3 style="font-size:12px;margin:0 0 4px">📥 Ricevuto dalla ditta (${nR}/${DITTA_GET.length})</h3>${chk(DITTA_GET,'get')}</div></div>` +
-      (d.notes ? `<div class="rp-quote">${E(d.notes)}</div>` : ''));
-  }
 
   // Foto
   if (photos.length) {
@@ -4855,7 +4790,7 @@ function renderKitControls() {
   document.getElementById('pk-opt').innerHTML = r.opt.map((x,i)=>{ const a = slAcc(x.id); return a ? `<div class="pk-row"><div class="pk-n">${esc(a.nome)}<div class="pv-d">${esc(a.cat)} · ${eur2(a.prezzo)}${SL_UNIT[a.unita]}</div></div>
       <div class="ls-price"><input type="number" min="0.5" max="10000" step="${a.unita === 'pz' ? 1 : 0.5}" inputmode="decimal" value="${x.q}" oninput="setOptQ(${i},this.value)" aria-label="Quantità"/><span>${a.unita === 'ml' ? 'ml' : a.unita === 'm2' ? 'm²' : 'pz'}</span></div>
       <button type="button" class="ls-del" title="Togli" onclick="delOpt(${i})">✕</button></div>` : ''; }).join('');
-  const want = Object.keys(r.feats || {}).filter(f=>r.feats[f] && FEAT_CAT[f]).map(f=>FEAT_CAT[f]).concat(ENTRY_ACC[r.entry] ? ['Scale'] : [], ['rock','up'].includes(crm.tech && crm.tech.type) ? ['Locale tecnico'] : []);
+  const want = Object.keys(r.feats || {}).filter(f=>r.feats[f] && FEAT_CAT[f]).map(f=>FEAT_CAT[f]).concat(ENTRY_ACC[r.entry] ? ['Scale'] : []);
   const cats = [...new Set(SL_ACC.map(a=>a[0]))].sort((a,b)=>want.includes(b) - want.includes(a));
   document.getElementById('pk-add').innerHTML = '<option value="">＋ Aggiungi un altro articolo del listino…</option>' + cats.map(c=>`<optgroup label="${esc(c)}${want.includes(c) ? ' ★ richiesto dal cliente' : ''}">${SL_ACC.filter(a=>a[0] === c).map(a=>`<option value="${a[1]}">${esc(a[2])} · ${eur2(slo('a.' + a[1], a[3]))}${SL_UNIT[a[4] || 'pz']}</option>`).join('')}</optgroup>`).join('');
 }
@@ -5173,7 +5108,7 @@ function parseRequest() {
     const b = x.pavLarg; r.pavMq = Math.round(((r.len + 2*b) * (r.wid + 2*b) - r.len * r.wid) * 2) / 2; n++;   // larghezza diversa dallo standard
   }
   (x.fornitori || []).forEach(f=>{ if (!r.fornitori.includes(f)) { r.fornitori.push(f); n++; } });
-  if (x.tech) { const t = crm.tech; ['type','dist','notes'].forEach(k=>{ if (x.tech[k] !== undefined && (t[k] === null || t[k] === '')) { t[k] = x.tech[k]; n++; } }); renderTechForm(); }
+  if (false && x.tech) { const t = crm.tech; ['type','dist','notes'].forEach(k=>{ if (x.tech[k] !== undefined && (t[k] === null || t[k] === '')) { t[k] = x.tech[k]; n++; } }); renderTechForm(); }
   Object.keys(x.feats).forEach(k=>{ if (!r.feats[k]) { r.feats[k] = true; n++; } });
   featsToCfg(r); if (x.luciRgb && r.cfg.luci === 'b1') r.cfg.luci = 'r1'; cfgToFeats(r);
   const adEl = document.getElementById('clientAddress');
@@ -5353,7 +5288,7 @@ function renderDash() {
 }
 
 // ── Controllo nuova versione ──
-const BUILD = '2026-10-23-9';
+const BUILD = '2026-10-23-10';
 let newBuild = null;
 function applyUpdate() {
   flushAutosave();
